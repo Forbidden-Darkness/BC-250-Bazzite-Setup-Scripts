@@ -152,8 +152,8 @@ install_overclock() {
 
     # 1. Setup the directory using the absolute path to your real user home
     local oc_dir="$REAL_HOME/Bazzite_Toolbox/Overclock"
-    mkdir -p "$oc_dir"
-    cd "$oc_dir" || return 1
+    mkdir -p "/Bazzite_Toolbox/$oc_dir"
+    cd "/Bazzite_Toolbox/$oc_dir" || return 1
     chown -R "$REAL_USER":"$REAL_USER" "$oc_dir"
 
     # 2. Download the clean RAW file using your true user context
