@@ -1,4 +1,4 @@
-git clone https://github.com/Forbidden-Darkness/BC-250-Bazzite-Broken-Toolbox.git
+git clone https://github.com/Forbidden-Darkness/Bazzite_Toolbox.git
 
 cd BC-250-Bazzite-Broken-Toolbox/ && chmod +x *.sh && sudo ./New-Install-Blue-Red-Pill-ACPI-Fix.sh
 
