@@ -195,7 +195,7 @@ install_wake_on_lan() {
 
     # 2. Download the clean RAW file using your true user context
     rm -f Wake-on-LAN-Manager.sh
-    sudo -u "$REAL_USER" wget https://github.com/Forbidden-Darkness/BC-250-Bazzite-Broken-Toolbox/raw/refs/heads/main/Wake_on_Lan/Wake_on_LAN.sh
+    sudo -u "$REAL_USER" wget https://github.com/Forbidden-Darkness/BC-250-Bazzite-Broken-Toolbox/raw/refs/heads/main/Wake_on_Lan/Wake_on_LAN-Manager.sh
 
     # 3. Crash proof step: Verify the file exists and is not empty
     if [ ! -s "Wake-on-LAN-Manager.sh" ]; then
