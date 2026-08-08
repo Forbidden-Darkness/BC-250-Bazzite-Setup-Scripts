@@ -146,19 +146,19 @@ install_red_pill() {
     prompt_reboot
 }
 
-# Function to Launch Overclock
+## Function to Launch Overclock
 install_overclock() {
     echo -e "${B_RED}=== Launching Overclock Menu ===${NC}"
 
     # 1. Setup the directory using the absolute path to your real user home
     local oc_dir="$REAL_HOME/Bazzite_Toolbox/Overclock"
-    mkdir -p "/Bazzite_Toolbox/$oc_dir"
-    cd "/Bazzite_Toolbox/$oc_dir" || return 1
+    mkdir -p "$oc_dir"
+    cd "$oc_dir" || return 1
     chown -R "$REAL_USER":"$REAL_USER" "$oc_dir"
 
     # 2. Download the clean RAW file using your true user context
     rm -f Overclock-Live-Manager.sh
-    sudo -u "$REAL_USER" wget https://github.com/Forbidden-Darkness/BC-250-Bazzite-Broken-Toolbox/raw/refs/heads/main/Overclock-Live-Manager.sh
+    sudo -u "$REAL_USER" wget https://github.com/Forbidden-Darkness/BC-250-Bazzite-Broken-Toolbox/raw/refs/heads/main/Overclock/Overclock-Live-Manager.sh
 
     # 3. Crash proof step: Verify the file exists and is not empty
     if [ ! -s "Overclock-Live-Manager.sh" ]; then
@@ -182,7 +182,6 @@ install_overclock() {
     echo -e "${YELLOW}Overclock Manager closed. Returning to main menu...${NC}"
     sleep 2
 }
-
 
 # Function to handle ACPI Override Fix
 apply_acpi_fix() {
