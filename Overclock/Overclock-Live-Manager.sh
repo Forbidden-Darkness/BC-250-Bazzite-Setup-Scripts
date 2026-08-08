@@ -409,7 +409,7 @@ while true; do
     echo ""
     echo "0) Exit Overclock-Live-Manager"
     echo ""
-    read -p "Enter selection [1-3]: " choice
+    read -p "Enter selection [ 1-3 or 0 to exit ]: " choice
 
     if [ "$choice" == "1a" ]; then
         run_phase1
