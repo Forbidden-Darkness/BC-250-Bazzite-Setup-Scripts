@@ -183,6 +183,43 @@ install_overclock() {
     sleep 2
 }
 
+# Function to Launch Wake on LAN
+install_wake_on_lan() {
+    echo -e "${B_RED}=== Launching Wake on LAN Menu ===${NC}"
+
+    # 1. Setup the directory using the absolute path to your real user home
+    local wol_dir="$REAL_HOME/Bazzite_Toolbox/Wake_on_LAN"
+    mkdir -p "$wol_dir"
+    cd "$wol_dir" || return 1
+    chown -R "$REAL_USER":"$REAL_USER" "$wol_dir"
+
+    # 2. Download the clean RAW file using your true user context
+    rm -f Wake-on-LAN-Manager.sh
+    sudo -u "$REAL_USER" wget https://github.com/Forbidden-Darkness/BC-250-Bazzite-Broken-Toolbox/raw/refs/heads/main/Wake_on_Lan/Wake_on_LAN.sh
+
+    # 3. Crash proof step: Verify the file exists and is not empty
+    if [ ! -s "Wake-on-LAN-Manager.sh" ]; then
+        echo -e "${RED}ERROR: Script failed to download or is blank! Check internet.${NC}"
+        sleep 4
+        return 1
+    fi
+
+    # 4. Make it executable
+    chmod +x Wake-on-LAN-Manager.sh
+
+    # 5. EXECUTION FIX FOR SHORTCUTS:
+    # Instead of spinning a nested sudo layer, clear the current environment
+    # variable space and source the script directly into the open terminal console frame.
+    echo "Transitioning terminal to Wake on LAN Manager..."
+    sleep 1
+
+    ENVIRONMENT=bazzite Overrides=true bash ./Wake-on-LAN-Manager.sh
+
+    # 6. Fallback step to keep the window open if the inner script closes
+    echo -e "${YELLOW}Wake on LAN Manager closed. Returning to main menu...${NC}"
+    sleep 2
+}
+
 # Function to handle ACPI Override Fix
 apply_acpi_fix() {
     echo -e "${B_VIOLET}=== Executing BC-250 ACPI Fix ===${NC}"
@@ -270,7 +307,7 @@ show_menu() {
         echo -e "${CYAN}------------------------------------------${NC}"
 
         # Prompt user for input
-        read -rp "Enter choice [1-f 0 to exit ]: " choice
+        read -rp "Enter choice [1-f or 0 to exit ]: " choice
 
         case $choice in
             1)
@@ -286,10 +323,7 @@ show_menu() {
                 install_overclock
                 ;;
             5)
-                clear
-                echo "Launching Overclock Live Manager..."
-                chmod +x "./Wake-on-LAN.sh"
-                ./Wake-on-LAN.sh
+                install_wake_on_lan
                 ;;
             a)
                 echo -e "${GREEN}Executing Temporary Start...${NC}"
