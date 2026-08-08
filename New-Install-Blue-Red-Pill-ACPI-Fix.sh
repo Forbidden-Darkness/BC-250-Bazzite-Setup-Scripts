@@ -64,7 +64,7 @@ ensure_desktop_shortcut() {
     [[ -n "$desktop_dir" ]] || desktop_dir="$REAL_HOME/Desktop"
     [[ -d "$desktop_dir" ]] || mkdir -p "$desktop_dir" 2>/dev/null || return 0
 
-    local shortcut="$desktop_dir/BC-250 Blue or Red Pill-ACPI Fix.desktop"
+    local shortcut="$desktop_dir/Start Bazzite Boken Toolbox.desktop"
     if [[ -f "$shortcut" ]] && grep -q '^Exec=konsole --hold -e sudo bash ' "$shortcut"; then
         return 0
     fi
@@ -72,8 +72,8 @@ ensure_desktop_shortcut() {
     cat > "$shortcut" <<SHORTCUT_EOF
 [Desktop Entry]
 Type=Application
-Name=BC-250 Blue or Red Pill-ACPI Fix
-Comment=Manage RAM & ACPI fixes for the BC-250
+Name=Bazzite Boken Toolbox
+Comment=Manage Memory - Overclock - Wake on Lan
 Exec=konsole -e sudo bash "$SCRIPT_PATH"
 Icon=utilities-terminal
 Terminal=false
@@ -83,7 +83,7 @@ SHORTCUT_EOF
     chmod +x "$shortcut"
     chown "$REAL_USER":"$REAL_USER" "$shortcut" 2>/dev/null || true
     sudo -u "$REAL_USER" gio set "$shortcut" metadata::trusted true >/dev/null 2>&1 || true
-    print_info "Desktop shortcut created: $shortcut"
+    print_info "Bazzite Boken Toolbox shortcut created: $shortcut"
 }
 
 # Run the shortcut configuration function
@@ -146,6 +146,44 @@ install_red_pill() {
     prompt_reboot
 }
 
+# Function to Launch Overclock
+install_overclock() {
+    echo -e "${B_RED}=== Launching Overclock Menu ===${NC}"
+
+    # 1. Setup the directory using the absolute path to your real user home
+    local oc_dir="$REAL_HOME/Bazzite_Toolbox/Overclock"
+    mkdir -p "$oc_dir"
+    cd "$oc_dir" || return 1
+    chown -R "$REAL_USER":"$REAL_USER" "$oc_dir"
+
+    # 2. Download the clean RAW file using your true user context
+    rm -f Overclock-Live-Manager.sh
+    sudo -u "$REAL_USER" wget https://github.com/Forbidden-Darkness/BC-250-Bazzite-Broken-Toolbox/raw/refs/heads/main/Overclock-Live-Manager.sh
+
+    # 3. Crash proof step: Verify the file exists and is not empty
+    if [ ! -s "Overclock-Live-Manager.sh" ]; then
+        echo -e "${RED}ERROR: Script failed to download or is blank! Check internet.${NC}"
+        sleep 4
+        return 1
+    fi
+
+    # 4. Make it executable
+    chmod +x Overclock-Live-Manager.sh
+
+    # 5. EXECUTION FIX FOR SHORTCUTS:
+    # Instead of spinning a nested sudo layer, clear the current environment
+    # variable space and source the script directly into the open terminal console frame.
+    echo "Transitioning terminal to Overclock Live Manager..."
+    sleep 1
+
+    ENVIRONMENT=bazzite Overrides=true bash ./Overclock-Live-Manager.sh
+
+    # 6. Fallback step to keep the window open if the inner script closes
+    echo -e "${YELLOW}Overclock Manager closed. Returning to main menu...${NC}"
+    sleep 2
+}
+
+
 # Function to handle ACPI Override Fix
 apply_acpi_fix() {
     echo -e "${B_VIOLET}=== Executing BC-250 ACPI Fix ===${NC}"
@@ -201,6 +239,8 @@ show_menu() {
         echo -e "1) ${B_BLUE}Blue Pill${NC} (16GB Script)"
         echo -e "2) ${B_RED}Red Pill${NC}  (32GB Script)"
         echo -e "3) Apply ${B_VIOLET}BC-250 ACPI Fix${NC}"
+        echo -e "4) ${B_GREEN}Launch BC250 Overclock Live Manager${NC}"
+        echo -e "5) ${B_GREEN}Wake-on-LAN${NC}"
         echo ""
         echo -e "${CYAN}--- Governor Service Management ---${NC}"
         echo ""
@@ -208,14 +248,14 @@ show_menu() {
         echo ""
         echo -e "${YELLOW} Before you continue, make sure you make your changes to your config.toml file located at the following path \"/etc/cyan-skillfish-governor-smu/\"${NC}"
         echo ""
-        echo -e "4) ${GREEN}Temporary Start${NC} (cyan-skillfish-governor-smu)"
-        echo -e "5) ${B_GREEN}Permanent Start${NC} --now (cyan-skillfish-governor-smu)"
-        echo -e "6) ${YELLOW}Restart Service${NC} (cyan-skillfish-governor-smu)"
-        echo -e "7) ${RED}Temporary Stop${NC} (cyan-skillfish-governor-smu)"
-        echo -e "8) ${B_RED}Stop and Disable Service${NC} --now (cyan-skillfish-governor-smu)"
-        echo -e "9) ${CYAN}Verify Service Status${NC} (cyan-skillfish-governor-smu) ${RED}Press: Ctrl-c to return to Menu"${NC}
+        echo -e "a) ${GREEN}Temporary Start${NC} (cyan-skillfish-governor-smu)"
+        echo -e "b) ${B_GREEN}Permanent Start${NC} --now (cyan-skillfish-governor-smu)"
+        echo -e "c) ${YELLOW}Restart Service${NC} (cyan-skillfish-governor-smu)"
+        echo -e "d) ${RED}Temporary Stop${NC} (cyan-skillfish-governor-smu)"
+        echo -e "e) ${B_RED}Stop and Disable Service${NC} --now (cyan-skillfish-governor-smu)"
+        echo -e "f) ${CYAN}Verify Service Status${NC} (cyan-skillfish-governor-smu) ${RED}Press: Ctrl-c to return to Menu"${NC}
         echo ""
-        echo "10) Exit"
+        echo -e "0) ${RED}Exit"${NC}
         echo -e "${CYAN}------------------------------------------${NC}"
         echo -e "${YELLOW} This Bazzite optimization script for the BC-250 SBC does the following: "
         echo "    • Enable the filippor-bazzite COPR repo "
@@ -231,7 +271,7 @@ show_menu() {
         echo -e "${CYAN}------------------------------------------${NC}"
 
         # Prompt user for input
-        read -rp "Enter choice [1-10]: " choice
+        read -rp "Enter choice [1-f 0 to exit ]: " choice
 
         case $choice in
             1)
@@ -244,42 +284,52 @@ show_menu() {
                 apply_acpi_fix
                 ;;
             4)
+                install_overclock
+                ;;
+            5)
+                clear
+                echo "Launching Overclock Live Manager..."
+                chmod +x "./Wake-on-LAN.sh"
+                ./Wake-on-LAN.sh
+                ;;
+            a)
                 echo -e "${GREEN}Executing Temporary Start...${NC}"
                 sudo systemctl start cyan-skillfish-governor-smu
                 sleep 2
                 ;;
-            5)
+            b)
                 echo -e "${B_GREEN}Executing Permanent Start...${NC}"
                 sudo systemctl enable --now cyan-skillfish-governor-smu
                 sleep 2
                 ;;
-            6)
+            c)
                 echo -e "${YELLOW}Executing Restart Service...${NC}"
                 sudo systemctl restart cyan-skillfish-governor-smu
                 sleep 2
                 ;;
-            7)
+            d)
                 echo -e "${RED}Executing Temporary Stop...${NC}"
                 sudo systemctl stop --now cyan-skillfish-governor-smu
                 sleep 2
                 ;;
-            8)
+            e)
                 echo -e "${B_RED}Executing Stop and Disable Service...${NC}"
                 sudo systemctl disable --now cyan-skillfish-governor-smu
                 sleep 2
                 ;;
-            9)
-                echo -e "${CYAN}Displaying Service Status...${NC}"
+            f)
+                clear
+                echo -e "${CYAN}Displaying Service Status...${NC} ${RED}( Press Ctrl-c to continue )${NC}"
                 sudo systemctl status cyan-skillfish-governor-smu
                 echo ""
                 read -rp "Press [Enter] to return to the main menu..."
                 ;;
-            10)
+            0)
                 echo "Exiting script. No changes made."
                 exit 0
                 ;;
             *)
-                echo -e "${RED}Invalid selection. Please choose an option between 1 and 10.${NC}"
+                echo -e "${RED}Invalid selection. Please choose an option between 1 and 4 or a to g.${NC}"
                 sleep 2
                 ;;
         esac
