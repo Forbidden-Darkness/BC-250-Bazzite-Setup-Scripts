@@ -60,7 +60,7 @@ print_info() {
 # ADDED HERE: AUTO-UPDATE MECHANISM
 # =====================================================================
 # IMPORTANT: Change this URL to your actual raw GitHub link!
-GITHUB_RAW_URL="https://github.com/Forbidden-Darkness/Bazzite_Toolbox/raw/refs/heads/main/Start.sh"
+GITHUB_RAW_URL="https://github.com/Forbidden-Darkness/Bazzite_Toolbox/raw/refs/heads/main/start.sh"
 
 if [ "$1" != "--no-update" ]; then
     print_info "Checking for updates..."
