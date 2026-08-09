@@ -57,19 +57,35 @@ print_info() {
 }
 # =====================================================================
 
-ensure_desktop_shortcut() {
+# NEW: Interactive Desktop Shortcut Handler
+ask_desktop_shortcut() {
     local desktop_dir
-    # Uses the correct user context to find the true Desktop path
     desktop_dir="$(sudo -u "$REAL_USER" xdg-user-dir DESKTOP 2>/dev/null || echo "")"
     [[ -n "$desktop_dir" ]] || desktop_dir="$REAL_HOME/Desktop"
     [[ -d "$desktop_dir" ]] || mkdir -p "$desktop_dir" 2>/dev/null || return 0
 
     local shortcut="$desktop_dir/Start Bazzite Boken Toolbox.desktop"
-    if [[ -f "$shortcut" ]] && grep -q '^Exec=konsole --hold -e sudo bash ' "$shortcut"; then
+
+    # If the shortcut already exists, don't keep bothering the user
+    if [[ -f "$shortcut" ]]; then
         return 0
     fi
 
-    cat > "$shortcut" <<SHORTCUT_EOF
+    echo -e "${BIYellow}==================================================${NC}"
+    echo -e "${BIYellow}         DESKTOP SHORTCUT CONFIGURATION           ${NC}"
+    echo -e "${BIYellow}==================================================${NC}"
+    echo -e "Would you like to add a shortcut to your desktop?"
+    echo ""
+    echo -e " 1) Yes, create desktop shortcut"
+    echo ""
+    echo -e " 2) No, skip shortcut creation"
+    echo ""
+    echo -e "${BIYellow}==================================================${NC}"
+    read -rp "Select an option [1-2]: " shortcut_choice
+
+    case $shortcut_choice in
+        1)
+            cat > "$shortcut" <<SHORTCUT_EOF
 [Desktop Entry]
 Type=Application
 Name=Bazzite Boken Toolbox
@@ -80,11 +96,25 @@ Terminal=false
 Categories=System;
 SHORTCUT_EOF
 
-    chmod +x "$shortcut"
-    chown "$REAL_USER":"$REAL_USER" "$shortcut" 2>/dev/null || true
-    sudo -u "$REAL_USER" gio set "$shortcut" metadata::trusted true >/dev/null 2>&1 || true
-    print_info "Bazzite Boken Toolbox shortcut created: $shortcut"
+            chmod +x "$shortcut"
+            chown "$REAL_USER":"$REAL_USER" "$shortcut" 2>/dev/null || true
+            sudo -u "$REAL_USER" gio set "$shortcut" metadata::trusted true >/dev/null 2>&1 || true
+            print_info "Bazzite Boken Toolbox shortcut created successfully!"
+            sleep 2
+            ;;
+        2)
+            print_info "Skipping desktop shortcut generation."
+            sleep 1.5
+            ;;
+        *)
+            print_info "Invalid choice. Skipping shortcut setup for now."
+            sleep 1.5
+            ;;
+    esac
 }
+
+# Run the optional shortcut menu before opening the primary toolkit
+ask_desktop_shortcut
 
 # Run the shortcut configuration function
 ensure_desktop_shortcut
