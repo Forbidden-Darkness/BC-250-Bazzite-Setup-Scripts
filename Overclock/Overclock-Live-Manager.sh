@@ -108,6 +108,7 @@ SHORTCUT_EOF
 # Run the optional shortcut menu before opening the primary toolkit
 ask_desktop_shortcut
 
+clear
 # Warning message reflecting official repository safety parameters
 show_warning() {
     echo -e "${RED}!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
