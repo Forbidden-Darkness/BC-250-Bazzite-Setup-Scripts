@@ -57,9 +57,11 @@ ask_desktop_shortcut() {
     echo -e "${BIYellow}         DESKTOP SHORTCUT CONFIGURATION           ${NC}"
     echo -e "${BIYellow}==================================================${NC}"
     echo -e "Would you like to add a shortcut to your desktop?"
+    echo ""
     echo -e " 1) Yes, create desktop shortcut"
     echo ""
     echo -e " 2) No, skip shortcut creation"
+    echo ""
     echo -e "${BIYellow}==================================================${NC}"
     read -rp "Select an option [1-2]: " shortcut_choice
 
