@@ -42,7 +42,7 @@ if [ -z "$TERMINAL_FULLSCREEN_FORCED" ] && [ -t 0 ]; then
     # Method 3: Alternative ANSI sequence to switch to full-screen mode
     echo -ne "\033[11t"
 
-    clear
+    
 fi
 
 # =====================================================================
