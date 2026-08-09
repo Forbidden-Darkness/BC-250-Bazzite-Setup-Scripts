@@ -1,3 +1,9 @@
+```bash
+git clone https://github.com/Forbidden-Darkness/Bazzite_Toolbox.git && cd Bazzite_Toolbox/ && chmod +x *.sh && sudo ./New-Install-Blue-Red-Pill-ACPI-Fix.sh
+```
+
+
+
 git clone https://github.com/Forbidden-Darkness/Bazzite_Toolbox.git
 
 cd BC-250-Bazzite_Toolbox/ && chmod +x *.sh && sudo ./New-Install-Blue-Red-Pill-ACPI-Fix.sh
