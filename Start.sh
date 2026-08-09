@@ -276,7 +276,7 @@ show_menu() {
         echo -e "2) ${B_RED}Red Pill${NC}  (32GB Script)"
         echo -e "3) Apply ${B_VIOLET}BC-250 ACPI Fix${NC}"
         echo -e "4) ${B_GREEN}Launch BC250 Overclock Live Manager${NC}"
-        echo -e "5) ${B_GREEN}Wake-on-LAN${NC}"
+        echo -e "5) ${B_GREEN}Launch Wake-on-LAN Manager${NC}"
         echo ""
         echo -e "${CYAN}--- Governor Service Management ---${NC}"
         echo ""
