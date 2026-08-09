@@ -64,7 +64,8 @@ ask_desktop_shortcut() {
 
     case $shortcut_choice in
         1)
-            cat > "$shortcut" <<SHORTCUT_EOF
+            # FIX: Execute file generation explicitly as the real local user context to bypass sudo restrictions
+            sudo -u "$REAL_USER" tee "$shortcut" > /dev/null <<SHORTCUT_EOF
 [Desktop Entry]
 Type=Application
 Name=Wake on LAN Manager
@@ -97,7 +98,7 @@ ask_desktop_shortcut
 
 # 2. Ask user for Action (Enable or Disable)
 echo -e "${YELLOW}=============================================${NC}"
-echo " Wake-on-LAN (WoL) Configuration Manager"
+echo " Wake-on-LAN Configuration Manager"
 echo -e "${YELLOW}=============================================${NC}"
 echo ""
 echo -e "${YELLOW}What action would you like to perform?${NC}"
