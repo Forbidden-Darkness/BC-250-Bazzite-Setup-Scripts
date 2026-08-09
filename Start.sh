@@ -292,6 +292,7 @@ show_menu() {
         echo -e "f) ${CYAN}Verify Service Status${NC} (cyan-skillfish-governor-smu) ${RED}Press: Ctrl-c to return to Menu"${NC}
         echo ""
         echo -e "0) ${RED}Exit"${NC}
+        echo ""
         echo -e "${CYAN}------------------------------------------${NC}"
         echo -e "${YELLOW} This Bazzite optimization script for the BC-250 SBC does the following: "
         echo "    • Enable the filippor-bazzite COPR repo "
@@ -358,13 +359,18 @@ show_menu() {
                 read -rp "Press [Enter] to return to the main menu..."
                 ;;
             0)
-                echo "Exiting script. No changes made."
-                exit 0
-                ;;
-            *)
-                echo -e "${RED}Invalid selection. Please choose an option between 1 and 4 or a to g.${NC}"
-                sleep 2
-                ;;
+                echo -e "${GREEN}Exiting Bazzite Toolbox. Cleaning environment...${NC}"
+            sleep 1
+
+            # FIX: Send a hangup signal to parent terminal wrapper to kill the Konsole window
+            if [ -n "$PPID" ]; then
+                kill -SIGHUP "$PPID" 2>/dev/null
+            fi
+            exit 0
+            ;;
+        *)
+            echo -e "${RED}Invalid choice! Please select a valid number.${NC}"
+            sleep 1.5
         esac
     done
 }
