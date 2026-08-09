@@ -57,12 +57,19 @@ print_info() {
 }
 
 # =====================================================================
-# ADDED HERE: AUTO-UPDATE MECHANISM (WITH SILENT OFFLINE FAIL) :)
+# ADDED HERE: AUTO-UPDATE MECHANISM (SUCCESS NOTIFY + SILENT OFFLINE FAIL)
 # =====================================================================
 GITHUB_RAW_URL="https://github.com/Forbidden-Darkness/Bazzite_Toolbox/raw/refs/heads/main/start.sh"
 
-if [ "$1" != "--no-update" ]; then
-    # FIXED: Use curl -I -L to handle GitHub redirects properly for the connection check
+# 1. Alert the user if the script just successfully updated
+if [ "$1" == "--updated" ]; then
+    shift # Remove the flag so it doesn't mess with your tool's arguments
+    print_info "Update successful! You are now running the latest version."
+fi
+
+# 2. Check for updates only if safety flags are absent
+if [ "$1" != "--no-update" ] && [ "$1" != "--updated" ]; then
+    # Completely silent connectivity check. Fails instantly if offline.
     if curl -s -I -L --connect-timeout 2 "$GITHUB_RAW_URL" > /dev/null; then
         print_info "Checking for updates..."
 
@@ -75,13 +82,13 @@ if [ "$1" != "--no-update" ]; then
                 chmod +x "$SCRIPT_PATH"
                 rm -f "$TEMP_FILE"
 
-                print_info "Update complete. Restarting script..."
-                # FIXED: Put the safety flag FIRST so it doesn't break your script's other arguments
-                exec bash "$SCRIPT_PATH" --no-update "$@"
+                print_info "Applying update and restarting..."
+                exec bash "$SCRIPT_PATH" --updated "$@"
             fi
         fi
         rm -f "$TEMP_FILE"
     fi
+    # Offline or no updates? The script drops straight down to your main logic here.
 fi
 
 # =====================================================================
