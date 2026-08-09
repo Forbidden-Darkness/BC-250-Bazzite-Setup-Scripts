@@ -124,6 +124,9 @@ EOF
 if [ "$1" == "--updated" ]; then
     shift # Deletes the temporary flag from memory so it doesn't break your script's parameters
     print_info "Update successful! You are now running the latest version."
+
+    # Automatically install/refresh the menu shortcut upon update
+    create_start_menu_shortcut
     
     # Pause the script and wait for the user to press Enter
     echo -e "${YELLOW}Press [Enter] to continue to the Bazzite Toolbox...${NC}"
