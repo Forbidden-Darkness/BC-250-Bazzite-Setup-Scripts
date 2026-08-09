@@ -57,7 +57,7 @@ print_info() {
 }
 
 # =====================================================================
-# ADDED HERE: AUTO-UPDATE MECHANISM (WITH SILENT OFFLINE FAIL)
+# ADDED HERE: AUTO-UPDATE MECHANISM (WITH SILENT OFFLINE FAIL) :)
 # =====================================================================
 GITHUB_RAW_URL="https://github.com/Forbidden-Darkness/Bazzite_Toolbox/raw/refs/heads/main/start.sh"
 
