@@ -57,6 +57,65 @@ print_info() {
 }
 
 # =====================================================================
+# ADDED HERE: SHORTCUT CREATION FUNCTION
+# =====================================================================
+create_start_menu_shortcut() {
+    print_info "Creating start menu shortcut and category..."
+
+    LOCAL_APPS="$REAL_HOME/.local/share/applications"
+    LOCAL_DIRS="$REAL_HOME/.local/share/desktop-directories"
+    LOCAL_MENUS="$REAL_HOME/.config/menus"
+
+    mkdir -p "$LOCAL_APPS" "$LOCAL_DIRS" "$LOCAL_MENUS"
+
+    cat << EOF > "$LOCAL_DIRS/bazzite-toolbox.directory"
+[Desktop Entry]
+Value=1.0
+Type=Directory
+Name=Bazzite Toolbox
+Icon=utilities-terminal
+EOF
+
+    cat << EOF > "$LOCAL_APPS/bazzite-toolbox.desktop"
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Bazzite Toolbox
+Comment=Launch Custom Bazzite Tweak Tool
+Exec=sudo bash "$SCRIPT_PATH"
+Icon=utilities-terminal
+Terminal=true
+Categories=BazziteToolbox;
+X-KDE-Submenu=Bazzite Toolbox
+EOF
+
+    cat << EOF > "$LOCAL_MENUS/applications-merged-bazzite.menu"
+<!DOCTYPE Menu PUBLIC "-//freedesktop//DTD Menu 1.0//EN"
+ "http://freedesktop.org">
+<Menu>
+    <Name>Applications</Name>
+    <Menu>
+        <Name>Bazzite Toolbox</Name>
+        <Directory>bazzite-toolbox.directory</Directory>
+        <Include>
+            <Category>BazziteToolbox</Category>
+        </Include>
+    </Menu>
+</Menu>
+EOF
+
+    chmod +x "$LOCAL_APPS/bazzite-toolbox.desktop"
+    
+    if command -v kbuildsycoca6 &> /dev/null; then
+        kbuildsycoca6 --noincremental &> /dev/null
+    elif command -v update-desktop-database &> /dev/null; then
+        update-desktop-database "$LOCAL_APPS" &> /dev/null
+    fi
+
+    print_info "Shortcut installed! Look for 'Bazzite Toolbox' in your Start Menu."
+}
+
+# =====================================================================
 # 1. NOTIFICATION TRIGGER (MUST BE IMMEDIATELY BELOW PRINT_INFO)
 # =====================================================================
 # =====================================================================
