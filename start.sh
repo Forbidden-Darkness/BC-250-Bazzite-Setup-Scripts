@@ -60,7 +60,7 @@ print_info() {
 # 1. NOTIFICATION TRIGGER (MUST BE IMMEDIATELY BELOW PRINT_INFO)
 # =====================================================================
 # =====================================================================
-# 1. NOTIFICATION TRIGGER (WITH PAUSE MECHANISM)
+# 2. NOTIFICATION TRIGGER (WITH PAUSE MECHANISM)
 # =====================================================================
 if [ "$1" == "--updated" ]; then
     shift # Deletes the temporary flag from memory so it doesn't break your script's parameters
