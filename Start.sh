@@ -55,6 +55,39 @@ SCRIPT_PATH=$(realpath "$0")
 print_info() {
     echo -e "${GREEN}[INFO] $1${NC}"
 }
+
+# =====================================================================
+# ADDED HERE: AUTO-UPDATE MECHANISM
+# =====================================================================
+# IMPORTANT: Change this URL to your actual raw GitHub link!
+GITHUB_RAW_URL="https://github.com/Forbidden-Darkness/Bazzite_Toolbox/raw/refs/heads/main/Start.sh"
+
+if [ "$1" != "--no-update" ]; then
+    print_info "Checking for updates..."
+    
+    TEMP_FILE=$(mktemp)
+    if curl -s -L "$GITHUB_RAW_URL" -o "$TEMP_FILE"; then
+        if ! cmp -s "$SCRIPT_PATH" "$TEMP_FILE"; then
+            print_info "New version detected! Updating..."
+            
+            cp "$TEMP_FILE" "$SCRIPT_PATH"
+            chmod +x "$SCRIPT_PATH"
+            rm -f "$TEMP_FILE"
+            
+            print_info "Update complete. Restarting script..."
+            exec bash "$SCRIPT_PATH" "$@" --no-update
+        fi
+    fi
+    rm -f "$TEMP_FILE"
+fi
+
+# =====================================================================
+# YOUR MAIN SCRIPT LOGIC CONTINUES BELOW
+# =====================================================================
+print_info "Starting main script workflow..."
+
+# ... Rest of your tool logic goes here ...
+
 # =====================================================================
 
 # NEW: Interactive Desktop Shortcut Handler
