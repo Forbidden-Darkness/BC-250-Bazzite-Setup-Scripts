@@ -105,7 +105,7 @@ ask_desktop_shortcut() {
     fi
 
     echo -e "${BIYellow}==================================================${NC}"
-    echo -e "${BIYellow}         DESKTOP SHORTCUT CONFIGURATION :)        ${NC}"
+    echo -e "${BIYellow}         DESKTOP SHORTCUT CONFIGURATION           ${NC}"
     echo -e "${BIYellow}==================================================${NC}"
     echo -e "Would you like to add a shortcut to your desktop?"
     echo ""
