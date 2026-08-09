@@ -57,28 +57,31 @@ print_info() {
 }
 
 # =====================================================================
-# ADDED HERE: AUTO-UPDATE MECHANISM
+# ADDED HERE: AUTO-UPDATE MECHANISM (WITH SILENT OFFLINE FAIL)
 # =====================================================================
-# IMPORTANT: Change this URL to your actual raw GitHub link!
 GITHUB_RAW_URL="https://github.com/Forbidden-Darkness/Bazzite_Toolbox/raw/refs/heads/main/start.sh"
 
 if [ "$1" != "--no-update" ]; then
-    print_info "Checking for updates..."
+    # FIXED: Use curl -I -L to handle GitHub redirects properly for the connection check
+    if curl -s -I -L --connect-timeout 2 "$GITHUB_RAW_URL" > /dev/null; then
+        print_info "Checking for updates..."
 
-    TEMP_FILE=$(mktemp)
-    if curl -s -L "$GITHUB_RAW_URL" -o "$TEMP_FILE"; then
-        if ! cmp -s "$SCRIPT_PATH" "$TEMP_FILE"; then
-            print_info "New version detected! Updating..."
+        TEMP_FILE=$(mktemp)
+        if curl -s -L --connect-timeout 2 "$GITHUB_RAW_URL" -o "$TEMP_FILE"; then
+            if ! cmp -s "$SCRIPT_PATH" "$TEMP_FILE"; then
+                print_info "New version detected! Updating..."
 
-            cp "$TEMP_FILE" "$SCRIPT_PATH"
-            chmod +x "$SCRIPT_PATH"
-            rm -f "$TEMP_FILE"
+                cp "$TEMP_FILE" "$SCRIPT_PATH"
+                chmod +x "$SCRIPT_PATH"
+                rm -f "$TEMP_FILE"
 
-            print_info "Update complete. Restarting script..."
-            exec bash "$SCRIPT_PATH" "$@" --no-update
+                print_info "Update complete. Restarting script..."
+                # FIXED: Put the safety flag FIRST so it doesn't break your script's other arguments
+                exec bash "$SCRIPT_PATH" --no-update "$@"
+            fi
         fi
+        rm -f "$TEMP_FILE"
     fi
-    rm -f "$TEMP_FILE"
 fi
 
 # =====================================================================
