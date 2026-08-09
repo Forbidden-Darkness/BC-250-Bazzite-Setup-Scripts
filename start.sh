@@ -59,9 +59,16 @@ print_info() {
 # =====================================================================
 # 1. NOTIFICATION TRIGGER (MUST BE IMMEDIATELY BELOW PRINT_INFO)
 # =====================================================================
+# =====================================================================
+# 1. NOTIFICATION TRIGGER (WITH PAUSE MECHANISM)
+# =====================================================================
 if [ "$1" == "--updated" ]; then
     shift # Deletes the temporary flag from memory so it doesn't break your script's parameters
     print_info "Update successful! You are now running the latest version."
+    
+    # Pause the script and wait for the user to press Enter
+    echo -e "${YELLOW}Press [Enter] to continue to the Bazzite Toolbox...${NC}"
+    read -r
 fi
 
 # =====================================================================
