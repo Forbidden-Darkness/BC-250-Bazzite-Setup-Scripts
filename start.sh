@@ -78,8 +78,7 @@ Icon=utilities-terminal
 EOF
 
     # 2. Create the Application Shortcut
-    # Added 'Utility;Settings;' as fallbacks so Linux understands its base type, 
-    # but kept BazziteToolbox first so our custom layout catches it.
+    # FIXED: Kept ONLY Utility; so it appears strictly under Utilities
     cat << EOF > "$LOCAL_APPS/bazzite-toolbox.desktop"
 [Desktop Entry]
 Version=1.0
@@ -89,13 +88,11 @@ Comment=Launch Custom Bazzite Tweak Tool
 Exec=sudo bash "$SCRIPT_PATH"
 Icon=utilities-terminal
 Terminal=true
-Categories=BazziteToolbox;Utility;Settings;
+Categories=Utility;
 X-KDE-Submenu=Bazzite Toolbox
 EOF
 
-    # 3. Create a strict Applications layout override
-    # This explicitly commands the desktop to create a brand new category folder
-    # named "Bazzite Toolbox" right in the main apps list.
+    # 3. Create a clean Applications layout override
     cat << EOF > "$LOCAL_MENUS/applications-merged-bazzite.menu"
 <!DOCTYPE Menu PUBLIC "-//freedesktop//DTD Menu 1.0//EN"
  "http://freedesktop.org">
@@ -106,7 +103,7 @@ EOF
         <Directory>bazzite-toolbox.directory</Directory>
         <Include>
             <And>
-                <Category>BazziteToolbox</Category>
+                <Category>Utility</Category>
             </And>
         </Include>
     </Menu>
@@ -120,15 +117,16 @@ EOF
         update-desktop-database "$LOCAL_APPS" &> /dev/null
     fi
 
-    # Force KDE to rebuild its system configuration cache configuration
+    # Force KDE to rebuild its system cache configuration
     if command -v kbuildsycoca6 &> /dev/null; then
         kbuildsycoca6 --noincremental &> /dev/null
     elif command -v kbuildsycoca5 &> /dev/null; then
         kbuildsycoca5 --noincremental &> /dev/null
     fi
 
-    print_info "Shortcut updated! Look for the dedicated 'Bazzite Toolbox' category."
+    print_info "Shortcut updated! Kept strictly in the Utilities section."
 }
+
 
 # =====================================================================
 # 1. NOTIFICATION TRIGGER (MUST BE IMMEDIATELY BELOW PRINT_INFO)
