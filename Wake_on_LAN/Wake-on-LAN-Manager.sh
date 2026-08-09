@@ -95,9 +95,6 @@ SHORTCUT_EOF
 # Run the optional shortcut menu before opening the primary toolkit
 ask_desktop_shortcut
 
-# Run the shortcut configuration function
-ensure_desktop_shortcut
-
 # 2. Ask user for Action (Enable or Disable)
 echo -e "${YELLOW}=============================================${NC}"
 echo " Wake-on-LAN (WoL) Configuration Manager"
