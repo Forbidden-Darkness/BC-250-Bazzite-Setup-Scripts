@@ -60,7 +60,7 @@ print_info() {
 # ADDED HERE: AUTO-UPDATE MECHANISM
 # =====================================================================
 # IMPORTANT: Change this URL to your actual raw GitHub link!
-GITHUB_RAW_URL="https://github.com/Forbidden-Darkness/Bazzite_Toolbox/raw/refs/heads/main/Start.sh"
+GITHUB_RAW_URL="https://github.com/Forbidden-Darkness/Bazzite_Toolbox/raw/refs/heads/main/start.sh"
 
 if [ "$1" != "--no-update" ]; then
     print_info "Checking for updates..."
@@ -105,7 +105,7 @@ ask_desktop_shortcut() {
     fi
 
     echo -e "${BIYellow}==================================================${NC}"
-    echo -e "${BIYellow}         DESKTOP SHORTCUT CONFIGURATION           ${NC}"
+    echo -e "${BIYellow}         DESKTOP SHORTCUT CONFIGURATION 2         ${NC}"
     echo -e "${BIYellow}==================================================${NC}"
     echo -e "Would you like to add a shortcut to your desktop?"
     echo ""
@@ -337,6 +337,7 @@ show_menu() {
         echo "Please choose an option:"
         echo -e "1) ${B_BLUE}Blue Pill${NC} (16GB Script)"
         echo -e "2) ${B_RED}Red Pill${NC}  (32GB Script)"
+        echo ""
         echo -e "3) Apply ${B_VIOLET}BC-250 ACPI Fix${NC}"
         echo -e "4) ${B_GREEN}Launch BC250 Overclock Live Manager${NC}"
         echo -e "5) ${B_GREEN}Launch Wake-on-LAN Manager${NC}"
