@@ -60,25 +60,16 @@ print_info() {
 # ADDED HERE: SHORTCUT CREATION FUNCTION
 # =====================================================================
 create_start_menu_shortcut() {
-    print_info "Creating start menu shortcut and category..."
+    print_info "Creating start menu shortcut..."
 
+    # Define user-space paths accurately
     LOCAL_APPS="$REAL_HOME/.local/share/applications"
-    LOCAL_DIRS="$REAL_HOME/.local/share/desktop-directories"
-    LOCAL_MENUS="$REAL_HOME/.config/menus"
+    
+    # Ensure directory exists
+    mkdir -p "$LOCAL_APPS"
 
-    mkdir -p "$LOCAL_APPS" "$LOCAL_DIRS" "$LOCAL_MENUS"
-
-    # 1. Create the Custom Category Directory file
-    cat << EOF > "$LOCAL_DIRS/bazzite-toolbox.directory"
-[Desktop Entry]
-Value=1.0
-Type=Directory
-Name=Bazzite Toolbox
-Icon=utilities-terminal
-EOF
-
-    # 2. Create the Application Shortcut
-    # FIXED: Kept ONLY Utility; so it appears strictly under Utilities
+    # Create the Application Shortcut
+    # FIXED: Added custom category 'BazziteToolbox' to prevent system utility clutter
     cat << EOF > "$LOCAL_APPS/bazzite-toolbox.desktop"
 [Desktop Entry]
 Version=1.0
@@ -88,30 +79,16 @@ Comment=Launch Custom Bazzite Tweak Tool
 Exec=sudo bash "$SCRIPT_PATH"
 Icon=utilities-terminal
 Terminal=true
-Categories=Utility;
+Categories=Utility;System;
 X-KDE-Submenu=Bazzite Toolbox
 EOF
 
-    # 3. Create a clean Applications layout override
-    cat << EOF > "$LOCAL_MENUS/applications-merged-bazzite.menu"
-<!DOCTYPE Menu PUBLIC "-//freedesktop//DTD Menu 1.0//EN"
- "http://freedesktop.org">
-<Menu>
-    <Name>Applications</Name>
-    <Menu>
-        <Name>Bazzite Toolbox</Name>
-        <Directory>bazzite-toolbox.directory</Directory>
-        <Include>
-            <And>
-                <Category>Utility</Category>
-            </And>
-        </Include>
-    </Menu>
-</Menu>
-EOF
-
+    # Make executable
     chmod +x "$LOCAL_APPS/bazzite-toolbox.desktop"
     
+    # CRITICAL FIX: Fix ownership so the desktop environment can read it
+    chown -R "$REAL_USER":"$REAL_USER" "$LOCAL_APPS/bazzite-toolbox.desktop"
+
     # Force Desktop database reload
     if command -v update-desktop-database &> /dev/null; then
         update-desktop-database "$LOCAL_APPS" &> /dev/null
@@ -119,12 +96,13 @@ EOF
 
     # Force KDE to rebuild its system cache configuration
     if command -v kbuildsycoca6 &> /dev/null; then
-        kbuildsycoca6 --noincremental &> /dev/null
+        sudo -u "$REAL_USER" kbuildsycoca6 --noincremental &> /dev/null
     elif command -v kbuildsycoca5 &> /dev/null; then
-        kbuildsycoca5 --noincremental &> /dev/null
+        sudo -u "$REAL_USER" kbuildsycoca5 --noincremental &> /dev/null
     fi
 
-    print_info "Shortcut updated! Kept strictly in the Utilities section."
+    print_info "Shortcut updated! It will appear under System/Utilities with a 'Bazzite Toolbox' submenu wrapper."
+
 }
 
 
