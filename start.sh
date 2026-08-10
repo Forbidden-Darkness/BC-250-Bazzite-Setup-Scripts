@@ -59,17 +59,83 @@ print_info() {
 # =====================================================================
 # ADDED HERE: SHORTCUT CREATION FUNCTION
 # =====================================================================
+#!/usr/bin/env bash
+
+clear
+# Color definitions
+RED='\033[0;31m'
+B_RED='\033[1;31m'   
+GREEN='\033[0;32m'
+B_GREEN='\033[1;32m' 
+YELLOW='\033[1;33m'
+B_BLUE='\033[1;34m'  
+B_VIOLET='\033[1;35m' 
+CYAN='\033[0;36m'
+NC='\033[0m' # No Color (Reset)
+
+# Verify root/sudo privileges
+if [ "$EUID" -ne 0 ]; then
+    echo -e "${RED}Error: This script must be run with sudo or as root."
+    echo -e "Please run: sudo bash $0${NC}"
+    exit 1
+fi
+
+# =====================================================================
+# ENVIRONMENT VARIABLES & PRINT FUNCTIONS
+# =====================================================================
+REAL_USER="${SUDO_USER:-$USER}"
+REAL_HOME=$(getent passwd "$REAL_USER" | cut -d: -f6)
+SCRIPT_PATH=$(realpath "$0")
+CONFIG_FILE="$REAL_HOME/.bazzite_toolbox_config"
+
+print_info() {
+    echo -e "${GREEN}[INFO] $1${NC}"
+}
+
+# =====================================================================
+# SHORTCUT CREATION & OPT-OUT LOGIC
+# =====================================================================
+manage_shortcut_prompt() {
+    # Check if a preference already exists in the config file
+    if [ -f "$CONFIG_FILE" ]; then
+        local saved_pref
+        saved_pref=$(grep "START_MENU_SHORTCUT=" "$CONFIG_FILE" | cut -d= -f2)
+        
+        if [ "$saved_pref" == "false" ]; then
+            print_info "Skipping shortcut creation (User previously opted out)."
+            return 0
+        elif [ "$saved_pref" == "true" ]; then
+            create_start_menu_shortcut
+            return 0
+        fi
+    fi
+
+    # If no preference is saved, ask the user directly
+    echo -e "\n${YELLOW}Would you like to add a Bazzite Toolbox shortcut to your Start Menu?${NC}"
+    read -p "(Y/n): " -r user_choice
+    user_choice=${user_choice:-Y} # Default to Yes if they press Enter
+
+    if [[ "$user_choice" =~ ^[Yy]$ ]]; then
+        # Save choice and install
+        mkdir -p "$(dirname "$CONFIG_FILE")"
+        echo "START_MENU_SHORTCUT=true" > "$CONFIG_FILE"
+        chown "$REAL_USER":"$REAL_USER" "$CONFIG_FILE"
+        create_start_menu_shortcut
+    else
+        # Save choice and opt out
+        mkdir -p "$(dirname "$CONFIG_FILE")"
+        echo "START_MENU_SHORTCUT=false" > "$CONFIG_FILE"
+        chown "$REAL_USER":"$REAL_USER" "$CONFIG_FILE"
+        print_info "Opted out. No shortcut will be created. You can change this later by deleting $CONFIG_FILE"
+    fi
+}
+
 create_start_menu_shortcut() {
     print_info "Creating start menu shortcut..."
 
-    # Define user-space paths accurately
     LOCAL_APPS="$REAL_HOME/.local/share/applications"
-    
-    # Ensure directory exists
     mkdir -p "$LOCAL_APPS"
 
-    # Create the Application Shortcut
-    # FIXED: Added custom category 'BazziteToolbox' to prevent system utility clutter
     cat << EOF > "$LOCAL_APPS/bazzite-toolbox.desktop"
 [Desktop Entry]
 Version=1.0
@@ -83,27 +149,38 @@ Categories=Utility;System;
 X-KDE-Submenu=Bazzite Toolbox
 EOF
 
-    # Make executable
     chmod +x "$LOCAL_APPS/bazzite-toolbox.desktop"
-    
-    # CRITICAL FIX: Fix ownership so the desktop environment can read it
     chown -R "$REAL_USER":"$REAL_USER" "$LOCAL_APPS/bazzite-toolbox.desktop"
 
-    # Force Desktop database reload
     if command -v update-desktop-database &> /dev/null; then
         update-desktop-database "$LOCAL_APPS" &> /dev/null
     fi
 
-    # Force KDE to rebuild its system cache configuration
     if command -v kbuildsycoca6 &> /dev/null; then
         sudo -u "$REAL_USER" kbuildsycoca6 --noincremental &> /dev/null
     elif command -v kbuildsycoca5 &> /dev/null; then
         sudo -u "$REAL_USER" kbuildsycoca5 --noincremental &> /dev/null
     fi
 
-    print_info "Shortcut updated! It will appear under System/Utilities with a 'Bazzite Toolbox' submenu wrapper."
-
+    print_info "Shortcut updated successfully!"
 }
+
+# =====================================================================
+# UPDATE NOTIFICATION TRIGGER
+# =====================================================================
+if [ "$1" == "--updated" ]; then
+    shift 
+    print_info "Update successful! You are now running the latest version."
+
+    # Manages the shortcut based on saved opt-out configuration or interactive prompt
+    manage_shortcut_prompt
+    
+    echo -e "${YELLOW}Press [Enter] to continue to the Bazzite Toolbox...${NC}"
+    read -r
+fi
+
+# Rest of your script logic starts here...
+
 
 
 # =====================================================================
