@@ -354,7 +354,7 @@ EOF"
     sudo rpm-ostree install umr stress >> "$LOG_FILE" 2>&1
 
     log "${RED}[Step 3] Rebooting system. Execution environment will resume on startup...${NC}"
-    read -p
+    read -rp "Select an option [1-2]: "
     #sudo systemctl reboot
 }
 
