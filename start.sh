@@ -111,7 +111,7 @@ refresh_desktop_database() {
 
     if command -v kbuildsycoca6 &> /dev/null; then
         sudo -u "$REAL_USER" kbuildsycoca6 --noincremental &> /dev/null
-    elif command -v kbuildsycoca5 &> /dev/null; then
+    elif command -v kbuildsycoca5 &> &> /dev/null; then
         sudo -u "$REAL_USER" kbuildsycoca5 --noincremental &> /dev/null
     fi
 }
@@ -123,7 +123,7 @@ force_remove_shortcut() {
 }
 
 # =====================================================================
-# SHORTCUT CREATION & PROMPT LOGIC
+# SHORTCUT CREATION & AUTO-MAINTENANCE LOGIC
 # =====================================================================
 create_start_menu_shortcut() {
     print_info "Creating start menu shortcut..."
@@ -144,46 +144,74 @@ EOF
 
     chmod +x "$OLD_DESKTOP"
     chown -R "$REAL_USER":"$REAL_USER" "$OLD_DESKTOP"
-
-    # Always drop the broken legacy menu configuration overrides if they exist
     rm -f "$OLD_DIRECTORY" "$OLD_MENU"
-
     refresh_desktop_database
     print_info "Shortcut installed successfully!"
 }
 
-manage_shortcut_prompt() {
-    # Check if a preference already exists in the config file
+# Checks existing preference silently on update/startup
+auto_check_shortcut() {
     if [ -f "$CONFIG_FILE" ]; then
         local saved_pref
         saved_pref=$(grep "START_MENU_SHORTCUT=" "$CONFIG_FILE" | cut -d= -f2)
-        
         if [ "$saved_pref" == "false" ]; then
             force_remove_shortcut
-            return 0
         elif [ "$saved_pref" == "true" ]; then
             create_start_menu_shortcut
-            return 0
         fi
     fi
+}
 
-    # If NO preference is saved in the config file, ask the user immediately
-    echo -e "\n${YELLOW}Would you like to add a Bazzite Toolbox shortcut to your Start Menu?${NC}"
-    read -p "(Y/n): " -r user_choice
-    user_choice=${user_choice:-Y} 
+# =====================================================================
+# NEW INTERACTIVE MENU FOR SHORTCUT MANAGEMENT
+# =====================================================================
+shortcut_manager_menu() {
+    while true; do
+        clear
+        echo -e "${B_BLUE}=========================================${NC}"
+        echo -e "${B_BLUE}    BAZZITE TOOLBOX SHORTCUT MANAGER     ${NC}"
+        echo -e "${B_BLUE}=========================================${NC}"
+        
+        # Display current configuration status
+        if [ -f "$OLD_DESKTOP" ]; then
+            echo -e "Current Status: ${GREEN}Shortcut is INSTALLED${NC}"
+        else
+            echo -e "Current Status: ${RED}Shortcut is NOT INSTALLED${NC}"
+        fi
+        echo -e "-----------------------------------------"
+        echo -e "1) ${GREEN}Install / Restore Start Menu Shortcut${NC}"
+        echo -e "2) ${RED}Remove / Uninstall Start Menu Shortcut${NC}"
+        echo -e "3) Go Back to Main Menu"
+        echo -e "-----------------------------------------"
+        read -p "Select an option [1-3]: " -r menu_choice
 
-    mkdir -p "$(dirname "$CONFIG_FILE")"
-
-    if [[ "$user_choice" =~ ^[Yy]$ ]]; then
-        echo "START_MENU_SHORTCUT=true" > "$CONFIG_FILE"
-        chown "$REAL_USER":"$REAL_USER" "$CONFIG_FILE"
-        create_start_menu_shortcut
-    else
-        echo "START_MENU_SHORTCUT=false" > "$CONFIG_FILE"
-        chown "$REAL_USER":"$REAL_USER" "$CONFIG_FILE"
-        force_remove_shortcut
-        print_info "Opted out. All old shortcut records removed."
-    fi
+        case "$menu_choice" in
+            1)
+                mkdir -p "$(dirname "$CONFIG_FILE")"
+                echo "START_MENU_SHORTCUT=true" > "$CONFIG_FILE"
+                chown "$REAL_USER":"$REAL_USER" "$CONFIG_FILE"
+                create_start_menu_shortcut
+                echo -e "${YELLOW}Press [Enter] to continue...${NC}"
+                read -r
+                ;;
+            2)
+                mkdir -p "$(dirname "$CONFIG_FILE")"
+                echo "START_MENU_SHORTCUT=false" > "$CONFIG_FILE"
+                chown "$REAL_USER":"$REAL_USER" "$CONFIG_FILE"
+                force_remove_shortcut
+                print_info "Shortcut completely removed."
+                echo -e "${YELLOW}Press [Enter] to continue...${NC}"
+                read -r
+                ;;
+            3)
+                break
+                ;;
+            *)
+                echo -e "${RED}Invalid option! Try again.${NC}"
+                sleep 1
+                ;;
+        esac
+    done
 }
 
 # =====================================================================
@@ -191,7 +219,6 @@ manage_shortcut_prompt() {
 # =====================================================================
 case "$1" in
     --install-shortcut)
-        print_info "Manual override: Installing shortcut..."
         mkdir -p "$(dirname "$CONFIG_FILE")"
         echo "START_MENU_SHORTCUT=true" > "$CONFIG_FILE"
         chown "$REAL_USER":"$REAL_USER" "$CONFIG_FILE"
@@ -199,33 +226,62 @@ case "$1" in
         exit 0
         ;;
     --remove-shortcut)
-        print_info "Manual override: Removing shortcut..."
         mkdir -p "$(dirname "$CONFIG_FILE")"
         echo "START_MENU_SHORTCUT=false" > "$CONFIG_FILE"
         chown "$REAL_USER":"$REAL_USER" "$CONFIG_FILE"
         force_remove_shortcut
-        print_info "Shortcut completely uninstalled."
         exit 0
         ;;
     --updated)
         shift 
-        print_info "Update successful! Running latest sequence."
-        manage_shortcut_prompt
+        print_info "Update successful!"
+        auto_check_shortcut
         echo -e "${YELLOW}Press [Enter] to continue to the Bazzite Toolbox...${NC}"
         read -r
         ;;
     *)
-        # CRITICAL FIX: If the script is run normally without flags, 
-        # it will run through the configuration and prompt check here.
-        manage_shortcut_prompt
+        auto_check_shortcut
         ;;
 esac
 
 # =====================================================================
-# CORE TOOL LOGIC
+# CORE TOOL MAIN MENU EXAMPLE
 # =====================================================================
-echo -e "${GREEN}Starting Bazzite Toolbox Core UI...${NC}"
-# Rest of your script menu logic goes here...
+while true; do
+    clear
+    echo -e "${GREEN}=========================================${NC}"
+    echo -e "${GREEN}          BAZZITE TOOLBOX CORE           ${NC}"
+    echo -e "${GREEN}=========================================${NC}"
+    echo -e "1) Run Tweak Tools"
+    echo -e "2) Run ACPI Fixes"
+    echo -e "3) Manage Start Menu Shortcut Settings"
+    echo -e "4) Exit"
+    echo -e "-----------------------------------------"
+    read -p "Select an option [1-4]: " -r core_choice
+
+    case "$core_choice" in
+        1)
+            echo "Running system tweaks..."
+            sleep 2
+            ;;
+        2)
+            echo "Running ACPI optimizations..."
+            sleep 2
+            ;;
+        3)
+            # Call the new dedicated shortcut interface loop
+            shortcut_manager_menu
+            ;;
+        4)
+            print_info "Exiting Bazzite Toolbox."
+            exit 0
+            ;;
+        *)
+            echo -e "${RED}Invalid choice.${NC}"
+            sleep 1
+            ;;
+    esac
+done
 
 
 # =====================================================================
