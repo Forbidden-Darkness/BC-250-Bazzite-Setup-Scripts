@@ -36,6 +36,63 @@ REAL_HOME=$(getent passwd "$REAL_USER" | cut -d: -f6)
 print_info() {
     echo -e "${GREEN}[INFO] $1${NC}"
 }
+
+# ==========================================
+# FIX: Handle Bazzite Atomic Package Layering
+# ==========================================
+ensure_bazzite_dependencies() {
+    local missing_packages=()
+
+    # Check for UMR binary
+    if ! command -v umr &> /dev/null; then
+        print_info "UMR debugger tool is not installed."
+        missing_packages+=("umr")
+    fi
+
+    # Check for Stress utility
+    if ! command -v stress &> /dev/null; then
+        print_info "Stress testing utility is not installed."
+        missing_packages+=("stress")
+    fi
+
+    # If everything is present, skip completely
+    if [ ${#missing_packages[@]} -eq 0 ]; then
+        return 0
+    fi
+
+    echo -e "${BIYellow}==================================================${NC}"
+    echo -e "${BIYellow}         SYSTEM DEPENDENCY DEPLOYMENT             ${NC}"
+    echo -e "${BIYellow}==================================================${NC}"
+    echo -e "The toolkit requires: ${missing_packages[*]}"
+    echo -e "Bazzite requires a package layer modification and system reboot."
+    echo ""
+    read -rp "Would you like to install them via rpm-ostree now? (y/N): " install_choice
+
+    case "$install_choice" in
+        [yY][eE][sS]|[yY])
+            print_info "Staging system layers under user context..."
+            # Dropping permissions via sudo -u is required so rpm-ostree registers correctly
+            if sudo -u "$REAL_USER" rpm-ostree install "${missing_packages[@]}"; then
+                echo -e "${B_GREEN}Packages successfully staged!${NC}"
+                echo -e "${BIYellow}Your system must reboot now to apply the OS alterations.${NC}"
+                read -rp "Press [Enter] to reboot immediately, or Ctrl+C to stop..."
+                systemctl reboot
+                exit 0
+            else
+                echo -e "${RED}Error: Package staging failed inside rpm-ostree execution.${NC}"
+                exit 1
+            fi
+            ;;
+        *)
+            echo -e "${RED}Error: Missing dependencies. Aborting toolkit execution.${NC}"
+            exit 1
+            ;;
+    esac
+}
+
+# Run the system verification check 
+ensure_bazzite_dependencies
+
 # ==========================================
 
 # Configuration
