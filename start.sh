@@ -7,7 +7,7 @@ if [ -z "$TERMINAL_RESIZE_FORCED" ] && [ -t 0 ]; then
 
     # Define exact character dimensions (Positive integers only!)
     COLS=120
-    ROWS=34
+    ROWS=43
 
     # 1. Strip any existing maximized flags using wmctrl if it exists
     if command -v wmctrl &> /dev/null; then
