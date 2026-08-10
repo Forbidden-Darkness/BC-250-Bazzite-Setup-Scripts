@@ -394,6 +394,7 @@ install_wake_on_lan() {
 update_cyan-skillfish() {
     echo -e "${B_RED}=== Updating cyan-skillfish ===${NC}"
 
+cyan-skillfish-governor-smu --version
 sudo rpm-ostree refresh-md --force
 sudo rpm-ostree install cyan-skillfish-governor-smu-v0.4.12
 sudo sed -i '/^\[gpu-usage\]/a fix-freq = true' /etc/cyan-skillfish-governor-smu/config.toml
@@ -472,6 +473,7 @@ show_menu() {
         echo -e "d) ${RED}Temporary Stop${NC} (cyan-skillfish-governor-smu)"
         echo -e "e) ${B_RED}Stop and Disable Service${NC} --now (cyan-skillfish-governor-smu)"
         echo -e "f) ${CYAN}Verify Service Status${NC} (cyan-skillfish-governor-smu) ${RED}Press: Ctrl-c to return to Menu"${NC}
+        echo -e "g) ${CYAN}Verify Cyan Skillfish Governor SMU Version${NC} (cyan-skillfish-governor-smu version) ${RED}Press: Ctrl-c to return to Menu"${NC}
         echo ""
         echo -e "0) ${RED}Exit"${NC}
         echo ""
@@ -540,6 +542,13 @@ show_menu() {
                 clear
                 echo -e "${CYAN}Displaying Service Status...${NC} ${RED}( Press Ctrl-c to continue )${NC}"
                 sudo systemctl status cyan-skillfish-governor-smu
+                echo ""
+                read -rp "Press [Enter] to return to the main menu..."
+                ;;
+            g)
+                clear
+                echo -e "${CYAN}Displaying Cyan Skillfish Governor SMU Version...${NC} ${RED}( Press Ctrl-c to continue )${NC}"
+                sudo cyan-skillfish-governor-smu --version
                 echo ""
                 read -rp "Press [Enter] to return to the main menu..."
                 ;;
