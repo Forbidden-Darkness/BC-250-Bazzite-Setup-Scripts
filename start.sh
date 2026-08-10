@@ -1,26 +1,6 @@
 #!/usr/bin/env bash
 
-# --- SPECIFIC WINDOW SIZE & WRAPPER ---
-# This MUST run at the absolute top before sudo strips your window permissions
-if [ -z "$TERMINAL_RESIZE_FORCED" ] && [ -t 0 ]; then
-    export TERMINAL_RESIZE_FORCED=1
-
-    # Define exact character dimensions (Positive integers only!)
-    COLS=120
-    ROWS=43
-
-    # 1. Strip any existing maximized flags using wmctrl if it exists
-    if command -v wmctrl &> /dev/null; then
-        wmctrl -r :ACTIVE: -b remove,maximized_vert,maximized_horz 2>/dev/null
-    fi
-
-    # 2. Push the ANSI window resizing sequence
-    echo -ne "\033[8;${ROWS};${COLS}t"
-    
-    # Give the window a microsecond to adapt before painting colors
-    sleep 0.05
-    clear
-fi
+clear
 
 # Color definitions
 RED='\033[0;31m'
