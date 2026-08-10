@@ -290,7 +290,7 @@ EOF"
     sudo rpm-ostree kargs --append=mitigations=off >> "$LOG_FILE" 2>&1
 
     log "${GREEN}[Step 3] Installing dependencies via rpm-ostree...${NC}"
-    sudo rpm-ostree install stress pipx >> "$LOG_FILE" 2>&1
+    sudo -u "$REAL_USER" rpm-ostree install stress pipx >> "$LOG_FILE" 2>&1
 
     log "${RED}[Step 4] Rebooting system. Script will resume automatically...${NC}"
     sudo systemctl reboot
@@ -372,7 +372,7 @@ run_manager_phase2() {
     chmod +x bc250-cu-live-manager.sh
 
     log "${GREEN}[Step 6] Transferring shell execution context directly to live manager profile...${NC}"
-    sudo ./bc250-cu-live-manager.sh
+    sudo -u "$REAL_USER" ./bc250-cu-live-manager.sh
 }
 
 # Rollback / Uninstall Routine
