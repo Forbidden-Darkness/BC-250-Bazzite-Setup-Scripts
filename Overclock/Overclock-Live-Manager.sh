@@ -27,6 +27,22 @@ if [ "$EUID" -ne 0 ]; then
     exit 1
 fi
 
+# --- SPECIFIC WINDOW SIZE WRAPPER (Pixels) ---
+if [ -z "$TERMINAL_RESIZE_FORCED" ] && [ -t 0 ]; then
+    export TERMINAL_RESIZE_FORCED=1
+
+    # Set your desired width and height in pixels
+    WIDTH=800
+    HEIGHT=600
+
+    if command -v wmctrl &> /dev/null; then
+        # Remove maximized states first so the window can accept custom dimensions
+        wmctrl -r :ACTIVE: -b remove,maximized_vert,maximized_horz
+        # Resize window (0, X, Y, Width, Height)
+        wmctrl -r :ACTIVE: -e 0,-1,-1,$WIDTH,$HEIGHT
+    fi
+fi
+
 # ==========================================
 # FIX: Define the missing environment context
 # ==========================================
