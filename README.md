@@ -4,3 +4,7 @@ git clone https://github.com/Forbidden-Darkness/Bazzite_Toolbox.git && cd Bazzit
 ```bash
 sudo ./start.sh --install-shortcut
 ```
+
+```bash
+sudo ./start.sh --remove-shortcut
+```
