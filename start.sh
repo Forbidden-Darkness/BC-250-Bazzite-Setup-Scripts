@@ -45,6 +45,7 @@ if [ -z "$TERMINAL_FULLSCREEN_FORCED" ] && [ -t 0 ]; then
     
 fi
 
+# Start
 # =====================================================================
 # FIX: Environment Variable Definitions & Custom Print Functions
 # =====================================================================
@@ -59,81 +60,27 @@ print_info() {
 # =====================================================================
 # ADDED HERE: SHORTCUT CREATION FUNCTION
 # =====================================================================
-#!/usr/bin/env bash
-
-clear
-# Color definitions
-RED='\033[0;31m'
-B_RED='\033[1;31m'   
-GREEN='\033[0;32m'
-B_GREEN='\033[1;32m' 
-YELLOW='\033[1;33m'
-B_BLUE='\033[1;34m'  
-B_VIOLET='\033[1;35m' 
-CYAN='\033[0;36m'
-NC='\033[0m' # No Color (Reset)
-
-# Verify root/sudo privileges
-if [ "$EUID" -ne 0 ]; then
-    echo -e "${RED}Error: This script must be run with sudo or as root."
-    echo -e "Please run: sudo bash $0${NC}"
-    exit 1
-fi
-
-# =====================================================================
-# ENVIRONMENT VARIABLES & PRINT FUNCTIONS
-# =====================================================================
-REAL_USER="${SUDO_USER:-$USER}"
-REAL_HOME=$(getent passwd "$REAL_USER" | cut -d: -f6)
-SCRIPT_PATH=$(realpath "$0")
-CONFIG_FILE="$REAL_HOME/.bazzite_toolbox_config"
-
-# Target paths for legacy and new shortcut files
-LOCAL_APPS="$REAL_HOME/.local/share/applications"
-LOCAL_DIRS="$REAL_HOME/.local/share/desktop-directories"
-LOCAL_MENUS="$REAL_HOME/.config/menus"
-
-OLD_DESKTOP="$LOCAL_APPS/bazzite-toolbox.desktop"
-OLD_DIRECTORY="$LOCAL_DIRS/bazzite-toolbox.directory"
-OLD_MENU="$LOCAL_MENUS/applications-merged-bazzite.menu"
-
-print_info() {
-    echo -e "${GREEN}[INFO] $1${NC}"
-}
-
-print_warning() {
-    echo -e "${YELLOW}[WARN] $1${NC}"
-}
-
-# =====================================================================
-# REFRESH & REMOVAL UTILITIES
-# =====================================================================
-refresh_desktop_database() {
-    if command -v update-desktop-database &> /dev/null; then
-        update-desktop-database "$LOCAL_APPS" &> /dev/null
-    fi
-
-    if command -v kbuildsycoca6 &> /dev/null; then
-        sudo -u "$REAL_USER" kbuildsycoca6 --noincremental &> /dev/null
-    elif command -v kbuildsycoca5 &> /dev/null; then
-        sudo -u "$REAL_USER" kbuildsycoca5 --noincremental &> /dev/null
-    fi
-}
-
-force_remove_shortcut() {
-    print_info "Purging all existing legacy and current shortcut structures..."
-    rm -f "$OLD_DESKTOP" "$OLD_DIRECTORY" "$OLD_MENU"
-    refresh_desktop_database
-}
-
-# =====================================================================
-# SHORTCUT CREATION & PROMPT LOGIC
-# =====================================================================
 create_start_menu_shortcut() {
-    print_info "Creating start menu shortcut..."
-    mkdir -p "$LOCAL_APPS"
+    print_info "Creating start menu shortcut and category..."
 
-    cat << EOF > "$OLD_DESKTOP"
+    LOCAL_APPS="$REAL_HOME/.local/share/applications"
+    LOCAL_DIRS="$REAL_HOME/.local/share/desktop-directories"
+    LOCAL_MENUS="$REAL_HOME/.config/menus"
+
+    mkdir -p "$LOCAL_APPS" "$LOCAL_DIRS" "$LOCAL_MENUS"
+
+    # 1. Create the Custom Category Directory file
+    cat << EOF > "$LOCAL_DIRS/bazzite-toolbox.directory"
+[Desktop Entry]
+Value=1.0
+Type=Directory
+Name=Bazzite Toolbox
+Icon=utilities-terminal
+EOF
+
+    # 2. Create the Application Shortcut
+    # FIXED: Kept ONLY Utility; so it appears strictly under Utilities
+    cat << EOF > "$LOCAL_APPS/bazzite-toolbox.desktop"
 [Desktop Entry]
 Version=1.0
 Type=Application
@@ -142,87 +89,44 @@ Comment=Launch Custom Bazzite Tweak Tool
 Exec=sudo bash "$SCRIPT_PATH"
 Icon=utilities-terminal
 Terminal=true
-Categories=Utility;System;
+Categories=Utility;
 X-KDE-Submenu=Bazzite Toolbox
 EOF
 
-    chmod +x "$OLD_DESKTOP"
-    chown -R "$REAL_USER":"$REAL_USER" "$OLD_DESKTOP"
+    # 3. Create a clean Applications layout override
+    cat << EOF > "$LOCAL_MENUS/applications-merged-bazzite.menu"
+<!DOCTYPE Menu PUBLIC "-//freedesktop//DTD Menu 1.0//EN"
+ "http://freedesktop.org">
+<Menu>
+    <Name>Applications</Name>
+    <Menu>
+        <Name>Bazzite Toolbox</Name>
+        <Directory>bazzite-toolbox.directory</Directory>
+        <Include>
+            <And>
+                <Category>Utility</Category>
+            </And>
+        </Include>
+    </Menu>
+</Menu>
+EOF
 
-    # Always drop the broken legacy menu configuration overrides if they exist
-    rm -f "$OLD_DIRECTORY" "$OLD_MENU"
-
-    refresh_desktop_database
-    print_info "Shortcut installed successfully!"
-}
-
-manage_shortcut_prompt() {
-    # Check if a preference already exists in the config file
-    if [ -f "$CONFIG_FILE" ]; then
-        local saved_pref
-        saved_pref=$(grep "START_MENU_SHORTCUT=" "$CONFIG_FILE" | cut -d= -f2)
-        
-        if [ "$saved_pref" == "false" ]; then
-            force_remove_shortcut
-            print_info "Skipping shortcut creation (User opted out in configuration)."
-            return 0
-        elif [ "$saved_pref" == "true" ]; then
-            create_start_menu_shortcut
-            return 0
-        fi
+    chmod +x "$LOCAL_APPS/bazzite-toolbox.desktop"
+    
+    # Force Desktop database reload
+    if command -v update-desktop-database &> /dev/null; then
+        update-desktop-database "$LOCAL_APPS" &> /dev/null
     fi
 
-    # If no preference is saved, trigger the question
-    echo -e "\n${YELLOW}Would you like to add a Bazzite Toolbox shortcut to your Start Menu?${NC}"
-    read -p "(Y/n): " -r user_choice
-    user_choice=${user_choice:-Y} 
-
-    mkdir -p "$(dirname "$CONFIG_FILE")"
-
-    if [[ "$user_choice" =~ ^[Yy]$ ]]; then
-        echo "START_MENU_SHORTCUT=true" > "$CONFIG_FILE"
-        chown "$REAL_USER":"$REAL_USER" "$CONFIG_FILE"
-        create_start_menu_shortcut
-    else
-        echo "START_MENU_SHORTCUT=false" > "$CONFIG_FILE"
-        chown "$REAL_USER":"$REAL_USER" "$CONFIG_FILE"
-        force_remove_shortcut
-        print_info "Opted out. All old shortcut records removed."
+    # Force KDE to rebuild its system cache configuration
+    if command -v kbuildsycoca6 &> /dev/null; then
+        kbuildsycoca6 --noincremental &> /dev/null
+    elif command -v kbuildsycoca5 &> /dev/null; then
+        kbuildsycoca5 --noincremental &> /dev/null
     fi
-}
 
-# =====================================================================
-# MANUAL EXECUTION FLAGS (CLI OVERRIDES)
-# =====================================================================
-case "$1" in
-    --install-shortcut)
-        print_info "Manual override: Installing shortcut..."
-        mkdir -p "$(dirname "$CONFIG_FILE")"
-        echo "START_MENU_SHORTCUT=true" > "$CONFIG_FILE"
-        chown "$REAL_USER":"$REAL_USER" "$CONFIG_FILE"
-        create_start_menu_shortcut
-        exit 0
-        ;;
-    --remove-shortcut)
-        print_info "Manual override: Removing shortcut..."
-        mkdir -p "$(dirname "$CONFIG_FILE")"
-        echo "START_MENU_SHORTCUT=false" > "$CONFIG_FILE"
-        chown "$REAL_USER":"$REAL_USER" "$CONFIG_FILE"
-        force_remove_shortcut
-        print_info "Shortcut completely uninstalled."
-        exit 0
-        ;;
-    --updated)
-        shift 
-        print_info "Update successful! Running latest sequence."
-        manage_shortcut_prompt
-        echo -e "${YELLOW}Press [Enter] to continue to the Bazzite Toolbox...${NC}"
-        read -r
-        ;;
-esac
+    print_info "Shortcut updated! Kept strictly in the Utilities section."
 
-# Rest of your script logic starts here...
-echo -e "${GREEN}Starting Bazzite Toolbox Core UI...${NC}"
 
 
 # =====================================================================
@@ -242,6 +146,8 @@ if [ "$1" == "--updated" ]; then
     echo -e "${YELLOW}Press [Enter] to continue to the Bazzite Toolbox...${NC}"
     read -r
 fi
+}
+#End
 
 # =====================================================================
 # 2. AUTO-UPDATE MECHANISM (WITH SILENT OFFLINE FAIL)
