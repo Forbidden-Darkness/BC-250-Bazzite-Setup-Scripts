@@ -93,18 +93,36 @@ print_info() {
 }
 
 # =====================================================================
-# SHORTCUT CREATION & OPT-OUT LOGIC
+# SHORTCUT CREATION, CLEANUP & OPT-OUT LOGIC
 # =====================================================================
 manage_shortcut_prompt() {
+    LOCAL_APPS="$REAL_HOME/.local/share/applications"
+    LOCAL_DIRS="$REAL_HOME/.local/share/desktop-directories"
+    LOCAL_MENUS="$REAL_HOME/.config/menus"
+
+    # Define paths for ALL potential old shortcut files
+    local old_desktop="$LOCAL_APPS/bazzite-toolbox.desktop"
+    local old_directory="$LOCAL_DIRS/bazzite-toolbox.directory"
+    local old_menu="$LOCAL_MENUS/applications-merged-bazzite.menu"
+
     # Check if a preference already exists in the config file
     if [ -f "$CONFIG_FILE" ]; then
         local saved_pref
         saved_pref=$(grep "START_MENU_SHORTCUT=" "$CONFIG_FILE" | cut -d= -f2)
         
+        # If they previously opted out, strictly ensure all old files are gone
         if [ "$saved_pref" == "false" ]; then
+            if [ -f "$old_desktop" ] || [ -f "$old_directory" ] || [ -f "$old_menu" ]; then
+                print_info "Removing existing legacy shortcut infrastructure..."
+                rm -f "$old_desktop" "$old_directory" "$old_menu"
+                refresh_desktop_database
+            fi
             print_info "Skipping shortcut creation (User previously opted out)."
             return 0
         elif [ "$saved_pref" == "true" ]; then
+            # Clean up the legacy directory and menu files even if they want the shortcut,
+            # keeping only the streamlined .desktop file we use now.
+            rm -f "$old_directory" "$old_menu"
             create_start_menu_shortcut
             return 0
         fi
@@ -115,18 +133,39 @@ manage_shortcut_prompt() {
     read -p "(Y/n): " -r user_choice
     user_choice=${user_choice:-Y} # Default to Yes if they press Enter
 
+    # Prepare configuration directory
+    mkdir -p "$(dirname "$CONFIG_FILE")"
+
     if [[ "$user_choice" =~ ^[Yy]$ ]]; then
-        # Save choice and install
-        mkdir -p "$(dirname "$CONFIG_FILE")"
+        # Save choice, wipe the bad legacy tracking files, and create a fresh clean shortcut
         echo "START_MENU_SHORTCUT=true" > "$CONFIG_FILE"
         chown "$REAL_USER":"$REAL_USER" "$CONFIG_FILE"
+        rm -f "$old_directory" "$old_menu"
         create_start_menu_shortcut
     else
-        # Save choice and opt out
-        mkdir -p "$(dirname "$CONFIG_FILE")"
+        # Save choice, strip out ALL remnants of the old shortcut, and trigger a menu sync
         echo "START_MENU_SHORTCUT=false" > "$CONFIG_FILE"
         chown "$REAL_USER":"$REAL_USER" "$CONFIG_FILE"
-        print_info "Opted out. No shortcut will be created. You can change this later by deleting $CONFIG_FILE"
+        
+        print_info "Opting out. Removing all existing legacy shortcut infrastructure..."
+        rm -f "$old_desktop" "$old_directory" "$old_menu"
+        refresh_desktop_database
+        
+        print_info "Opted out. All old shortcuts removed. No new shortcut will be created."
+    fi
+}
+
+refresh_desktop_database() {
+    # Force Desktop database reload
+    if command -v update-desktop-database &> /dev/null; then
+        update-desktop-database "$REAL_HOME/.local/share/applications" &> /dev/null
+    fi
+
+    # Force KDE to rebuild its system cache configuration
+    if command -v kbuildsycoca6 &> /dev/null; then
+        sudo -u "$REAL_USER" kbuildsycoca6 --noincremental &> /dev/null
+    elif command -v kbuildsycoca5 &> /dev/null; then
+        sudo -u "$REAL_USER" kbuildsycoca5 --noincremental &> /dev/null
     fi
 }
 
@@ -152,18 +191,10 @@ EOF
     chmod +x "$LOCAL_APPS/bazzite-toolbox.desktop"
     chown -R "$REAL_USER":"$REAL_USER" "$LOCAL_APPS/bazzite-toolbox.desktop"
 
-    if command -v update-desktop-database &> /dev/null; then
-        update-desktop-database "$LOCAL_APPS" &> /dev/null
-    fi
-
-    if command -v kbuildsycoca6 &> /dev/null; then
-        sudo -u "$REAL_USER" kbuildsycoca6 --noincremental &> /dev/null
-    elif command -v kbuildsycoca5 &> /dev/null; then
-        sudo -u "$REAL_USER" kbuildsycoca5 --noincremental &> /dev/null
-    fi
-
+    refresh_desktop_database
     print_info "Shortcut updated successfully!"
 }
+
 
 # =====================================================================
 # UPDATE NOTIFICATION TRIGGER
