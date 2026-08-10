@@ -7,7 +7,7 @@ A command-line utility designed to install, configure, and manage Bazzite Toolbo
 Clone the repository, configure executable permissions, and initialize the primary setup script.
 
 ```bash
-git clone https://github.com && cd Bazzite_Toolbox/ && chmod +x *.sh && sudo ./start.sh
+git clone https://github.com/Forbidden-Darkness/Bazzite_Toolbox.git && cd Bazzite_Toolbox/ && chmod +x *.sh && sudo ./start.sh
 ```
 
 ## 🛠️ Configuration Management
