@@ -1,6 +1,27 @@
 #!/usr/bin/env bash
 
-clear
+# --- SPECIFIC WINDOW SIZE & WRAPPER ---
+# This MUST run at the absolute top before sudo strips your window permissions
+if [ -z "$TERMINAL_RESIZE_FORCED" ] && [ -t 0 ]; then
+    export TERMINAL_RESIZE_FORCED=1
+
+    # Define exact character dimensions (Positive integers only!)
+    COLS=120
+    ROWS=34
+
+    # 1. Strip any existing maximized flags using wmctrl if it exists
+    if command -v wmctrl &> /dev/null; then
+        wmctrl -r :ACTIVE: -b remove,maximized_vert,maximized_horz 2>/dev/null
+    fi
+
+    # 2. Push the ANSI window resizing sequence
+    echo -ne "\033[8;${ROWS};${COLS}t"
+    
+    # Give the window a microsecond to adapt before painting colors
+    sleep 0.05
+    clear
+fi
+
 # Color definitions
 RED='\033[0;31m'
 B_RED='\033[1;31m'   # Bold Red for high-visibility Red Pill elements
@@ -26,36 +47,6 @@ if [ "$EUID" -ne 0 ]; then
     echo -e "Please run: sudo bash $0${NC}"
     exit 1
 fi
-# --- FULL SCREEN FORCE WRAPPER ---
-# If not already maximized/fullscreen and running interactively, try to force full screen
-if [ -z "$TERMINAL_FULLSCREEN_FORCED" ] && [ -t 0 ]; then
-    export TERMINAL_FULLSCREEN_FORCED=1
-
-    # Method 1: Check for wmctrl (Common on Linux desktops) and maximize
-    if command -v wmctrl &> /dev/null; then
-        wmctrl -r :ACTIVE: -b add,maximized_vert,maximized_horz
-    fi
-
-    # Method 2: Send ANSI escape sequence to maximize terminal window size (supported by Konsole/GNOME)
-    echo -ne "\033[9;1t"
-
-    # Method 3: Alternative ANSI sequence to switch to full-screen mode
-    echo -ne "\033[11t"
-
-    
-fi
-# --- SPECIFIC WINDOW SIZE WRAPPER (Rows/Columns) ---
-if [ -z "$TERMINAL_RESIZE_FORCED" ] && [ -t 0 ]; then
-    export TERMINAL_RESIZE_FORCED=1
-
-    # Set desired columns (width) and rows (height)
-    COLS=-100
-    ROWS=-100
-    
-    # Send ANSI escape sequence to resize terminal
-    echo -ne "\033[8;${ROWS};${COLS}t"
-fi
-
 
 # Start
 # =====================================================================
