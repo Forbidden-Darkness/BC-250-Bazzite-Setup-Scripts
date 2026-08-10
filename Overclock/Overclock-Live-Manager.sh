@@ -27,6 +27,7 @@ if [ "$EUID" -ne 0 ]; then
     exit 1
 fi
 
+#start
 # ==========================================
 # FIX: Define the missing environment context
 # ==========================================
@@ -70,9 +71,10 @@ ensure_bazzite_dependencies() {
 
     case "$install_choice" in
         [yY][eE][sS]|[yY])
-            print_info "Staging system layers under user context..."
-            # Dropping permissions via sudo -u is required so rpm-ostree registers correctly
-            if sudo -u "$REAL_USER" rpm-ostree install "${missing_packages[@]}"; then
+            print_info "Staging system layers under clean user context..."
+            
+            # CRITICAL FIX: Use 'runuser' or clear env parameters to prevent permission deadlocks
+            if runuser -l "$REAL_USER" -c "rpm-ostree install ${missing_packages[*]}"; then
                 echo -e "${B_GREEN}Packages successfully staged!${NC}"
                 echo -e "${BIYellow}Your system must reboot now to apply the OS alterations.${NC}"
                 read -rp "Press [Enter] to reboot immediately, or Ctrl+C to stop..."
@@ -80,6 +82,7 @@ ensure_bazzite_dependencies() {
                 exit 0
             else
                 echo -e "${RED}Error: Package staging failed inside rpm-ostree execution.${NC}"
+                echo -e "${YELLOW}Tip: Try running 'rpm-ostree install umr stress' manually in a clean terminal.${NC}"
                 exit 1
             fi
             ;;
@@ -89,9 +92,7 @@ ensure_bazzite_dependencies() {
             ;;
     esac
 }
-
-# Run the system verification check 
-ensure_bazzite_dependencies
+#end
 
 # ==========================================
 
