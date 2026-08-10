@@ -108,10 +108,9 @@ Version=1.0
 Type=Application
 Name=Bazzite Toolbox
 Comment=Launch Custom Bazzite Tweak Tool
-# Pushes explicit character cell boundaries to Konsole 
-Exec=konsole --geometry 130x38 -e sudo bash "$SCRIPT_PATH"
+Exec=sudo bash "$SCRIPT_PATH"
 Icon=utilities-terminal
-Terminal=false
+Terminal=true
 Categories=Utility;System;
 X-KDE-Submenu=Bazzite Toolbox
 EOF
@@ -265,9 +264,8 @@ ask_desktop_shortcut() {
 [Desktop Entry]
 Type=Application
 Name=Bazzite Boken Toolbox
-Comment=Launch Custom Bazzite Tweak Tool
-# Pushes explicit character cell boundaries to Konsole 
-Exec=konsole --geometry 130x38 -e sudo bash "$SCRIPT_PATH"
+Comment=Manage Memory - Overclock - Wake on Lan
+Exec=konsole -e sudo bash "$SCRIPT_PATH"
 Icon=utilities-terminal
 Terminal=false
 Categories=System;
