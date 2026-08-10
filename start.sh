@@ -50,7 +50,7 @@ if [ -z "$TERMINAL_RESIZE_FORCED" ] && [ -t 0 ]; then
 
     # Set desired columns (width) and rows (height)
     COLS=100
-    ROWS=30
+    ROWS=100
 
     # Send ANSI escape sequence to resize terminal
     echo -ne "\033[8;${ROWS};${COLS}t"
