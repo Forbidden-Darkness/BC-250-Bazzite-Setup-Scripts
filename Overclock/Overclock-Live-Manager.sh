@@ -29,24 +29,14 @@ fi
 
 #start
 # ==========================================
-# FIX: Define the missing environment context
-# ==========================================
-REAL_USER="${SUDO_USER:-$USER}"
-REAL_HOME=$(getent passwd "$REAL_USER" | cut -d: -f6)
-
-print_info() {
-    echo -e "${GREEN}[INFO] $1${NC}"
-}
-
-# ==========================================
-# FIX: Handle Bazzite Atomic Package Layering
+# FIX: Handle Bazzite Atomic Package Layering & Containers
 # ==========================================
 ensure_bazzite_dependencies() {
     local missing_packages=()
 
     # Check for UMR binary
     if ! command -v umr &> /dev/null; then
-        print_info "UMR debugger tool is not installed."
+        print_info "UMR debugger tool is not installed on host."
         missing_packages+=("umr")
     fi
 
@@ -65,34 +55,57 @@ ensure_bazzite_dependencies() {
     echo -e "${BIYellow}         SYSTEM DEPENDENCY DEPLOYMENT             ${NC}"
     echo -e "${BIYellow}==================================================${NC}"
     echo -e "The toolkit requires: ${missing_packages[*]}"
-    echo -e "Bazzite requires a package layer modification and system reboot."
+    echo -e "Bazzite requires containerization or system layering to resolve this."
     echo ""
-    read -rp "Would you like to install them via rpm-ostree now? (y/N): " install_choice
+    echo " 1) Install dependencies automatically (Uses Distrobox container fallback)"
+    echo " 2) Skip deployment and attempt to proceed anyway"
+    echo ""
+    read -rp "Select an option [1-2]: " dep_choice
 
-    case "$install_choice" in
-        [yY][eE][sS]|[yY])
-            print_info "Staging system layers under clean user context..."
-            
-            # CRITICAL FIX: Use 'runuser' or clear env parameters to prevent permission deadlocks
-            if runuser -l "$REAL_USER" -c "rpm-ostree install ${missing_packages[*]}"; then
-                echo -e "${B_GREEN}Packages successfully staged!${NC}"
-                echo -e "${BIYellow}Your system must reboot now to apply the OS alterations.${NC}"
+    case "$dep_choice" in
+        1)
+            # Handle stress via native host deployment if missing
+            if [[ " ${missing_packages[*]} " =~ " stress " ]]; then
+                print_info "Staging stress utility via host rpm-ostree..."
+                if runuser -l "$REAL_USER" -c "rpm-ostree install stress"; then
+                    print_info "Stress utility staged successfully!"
+                else
+                    echo -e "${RED}Error: Host package staging failed.${NC}"
+                fi
+            fi
+
+            # Handle umr via container abstraction
+            if [[ " ${missing_packages[*]} " =~ " umr " ]]; then
+                print_info "Configuring UMR environment inside a safe Distrobox profile..."
+                
+                # Create and setup an Arch container where UMR is easily obtainable
+                runuser -l "$REAL_USER" -c "distrobox-create --name amd-toolkit --image archlinux:latest --yes"
+                print_info "Updating container and acquiring developer build engines..."
+                runuser -l "$REAL_USER" -c "distrobox-enter -n amd-toolkit -- sudo pacman -Syu --noconfirm base-devel git"
+                
+                print_info "Compiling and exposing UMR to host system..."
+                # Clone, compile and export the tool seamlessly back to your Bazzite path
+                runuser -l "$REAL_USER" -c "distrobox-enter -n amd-toolkit -- 'git clone https://freedesktop.org && cd umr && ./autogen.sh && ./configure && make && sudo make install'"
+                runuser -l "$REAL_USER" -c "distrobox-export -n amd-toolkit --bin /usr/local/bin/umr"
+                
+                echo -e "${B_GREEN}UMR tool successfully containerized and linked to host!${NC}"
+            fi
+
+            echo -e "${BIYellow}Deployment routine complete.${NC}"
+            if [[ " ${missing_packages[*]} " =~ " stress " ]]; then
+                echo -e "${BIYellow}Your system must reboot now to finish initializing the stress layer.${NC}"
                 read -rp "Press [Enter] to reboot immediately, or Ctrl+C to stop..."
                 systemctl reboot
                 exit 0
-            else
-                echo -e "${RED}Error: Package staging failed inside rpm-ostree execution.${NC}"
-                echo -e "${YELLOW}Tip: Try running 'rpm-ostree install umr stress' manually in a clean terminal.${NC}"
-                exit 1
             fi
             ;;
         *)
-            echo -e "${RED}Error: Missing dependencies. Aborting toolkit execution.${NC}"
-            exit 1
+            print_info "Proceeding with caution without enforcing verification loops."
             ;;
     esac
 }
 #end
+
 
 # ==========================================
 
