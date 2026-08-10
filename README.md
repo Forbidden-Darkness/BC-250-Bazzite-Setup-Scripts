@@ -27,3 +27,7 @@ Remove the application shortcut from the **System & Utilities** menu.
 ```bash
 cd Bazzite_Toolbox/ && sudo ./start.sh --remove-shortcut && systemctl reboot
 ```
+
+### Special Thanks to the following:
+* **Development of Blue/Red Pill Script for Bazzite** [@NexGen-3D](https://github.com/NexGen-3D-Printing))
+* **Development of cyan-skillfish-governor:** [@FilippoR](https://github.com/filippor)
