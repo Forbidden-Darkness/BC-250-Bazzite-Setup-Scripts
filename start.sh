@@ -271,6 +271,7 @@ SHORTCUT_EOF
             chmod +x "$shortcut"
             chown "$REAL_USER":"$REAL_USER" "$shortcut" 2>/dev/null || true
             sudo -u "$REAL_USER" gio set "$shortcut" metadata::trusted true >/dev/null 2>&1 || true
+            sudo ./start.sh --install-shortcut
             print_info "Bazzite Boken Toolbox shortcut created successfully!"
             sleep 2
             ;;
