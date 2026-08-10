@@ -101,10 +101,6 @@ print_info() {
     echo -e "${GREEN}[INFO] $1${NC}"
 }
 
-print_warning() {
-    echo -e "${YELLOW}[WARN] $1${NC}"
-}
-
 # =====================================================================
 # REFRESH & REMOVAL UTILITIES
 # =====================================================================
@@ -164,7 +160,6 @@ manage_shortcut_prompt() {
         
         if [ "$saved_pref" == "false" ]; then
             force_remove_shortcut
-            print_info "Skipping shortcut creation (User opted out in configuration)."
             return 0
         elif [ "$saved_pref" == "true" ]; then
             create_start_menu_shortcut
@@ -172,7 +167,7 @@ manage_shortcut_prompt() {
         fi
     fi
 
-    # If no preference is saved, trigger the question
+    # If NO preference is saved in the config file, ask the user immediately
     echo -e "\n${YELLOW}Would you like to add a Bazzite Toolbox shortcut to your Start Menu?${NC}"
     read -p "(Y/n): " -r user_choice
     user_choice=${user_choice:-Y} 
@@ -219,50 +214,18 @@ case "$1" in
         echo -e "${YELLOW}Press [Enter] to continue to the Bazzite Toolbox...${NC}"
         read -r
         ;;
+    *)
+        # CRITICAL FIX: If the script is run normally without flags, 
+        # it will run through the configuration and prompt check here.
+        manage_shortcut_prompt
+        ;;
 esac
 
-# Rest of your script logic starts here...
+# =====================================================================
+# CORE TOOL LOGIC
+# =====================================================================
 echo -e "${GREEN}Starting Bazzite Toolbox Core UI...${NC}"
-
-refresh_desktop_database() {
-    # Force Desktop database reload
-    if command -v update-desktop-database &> /dev/null; then
-        update-desktop-database "$REAL_HOME/.local/share/applications" &> /dev/null
-    fi
-
-    # Force KDE to rebuild its system cache configuration
-    if command -v kbuildsycoca6 &> /dev/null; then
-        sudo -u "$REAL_USER" kbuildsycoca6 --noincremental &> /dev/null
-    elif command -v kbuildsycoca5 &> /dev/null; then
-        sudo -u "$REAL_USER" kbuildsycoca5 --noincremental &> /dev/null
-    fi
-}
-
-create_start_menu_shortcut() {
-    print_info "Creating start menu shortcut..."
-
-    LOCAL_APPS="$REAL_HOME/.local/share/applications"
-    mkdir -p "$LOCAL_APPS"
-
-    cat << EOF > "$LOCAL_APPS/bazzite-toolbox.desktop"
-[Desktop Entry]
-Version=1.0
-Type=Application
-Name=Bazzite Toolbox
-Comment=Launch Custom Bazzite Tweak Tool
-Exec=sudo bash "$SCRIPT_PATH"
-Icon=utilities-terminal
-Terminal=true
-Categories=Utility;System;
-X-KDE-Submenu=Bazzite Toolbox
-EOF
-
-    chmod +x "$LOCAL_APPS/bazzite-toolbox.desktop"
-    chown -R "$REAL_USER":"$REAL_USER" "$LOCAL_APPS/bazzite-toolbox.desktop"
-
-    refresh_desktop_database
-    print_info "Shortcut updated successfully!"
-}
+# Rest of your script menu logic goes here...
 
 
 # =====================================================================
