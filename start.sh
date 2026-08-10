@@ -459,7 +459,7 @@ show_menu() {
         echo -e "3) Apply ${B_VIOLET}BC-250 ACPI Fix${NC}"
         echo -e "4) ${B_GREEN}Launch BC250 Overclock Live Manager${NC}"
         echo -e "5) ${B_GREEN}Launch Wake-on-LAN Manager${NC}"
-        echo -e "6) ${B_GREEN}Update to cyan-skillfish-governor-smu-v0.4.12${NC}"
+        echo -e "6) ${B_BLUE}Update to cyan-skillfish-governor-smu-v0.4.12${NC}"
         echo ""
         echo -e "${CYAN}--- Governor Service Management ---${NC}"
         echo ""
@@ -473,7 +473,7 @@ show_menu() {
         echo -e "d) ${RED}Temporary Stop${NC} (cyan-skillfish-governor-smu)"
         echo -e "e) ${B_RED}Stop and Disable Service${NC} --now (cyan-skillfish-governor-smu)"
         echo -e "f) ${CYAN}Verify Service Status${NC} (cyan-skillfish-governor-smu) ${RED}Press: Ctrl-c to return to Menu"${NC}
-        echo -e "g) ${CYAN}Verify Cyan Skillfish Governor SMU Version${NC} (cyan-skillfish-governor-smu version)"
+        echo -e "g) ${B_BLUE}Verify Cyan Skillfish Governor SMU Version${NC} (cyan-skillfish-governor-smu version)"
         echo ""
         echo -e "0) ${RED}Exit"${NC}
         echo ""
