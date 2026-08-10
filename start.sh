@@ -108,9 +108,10 @@ Version=1.0
 Type=Application
 Name=Bazzite Toolbox
 Comment=Launch Custom Bazzite Tweak Tool
-Exec=sudo bash "$SCRIPT_PATH"
+# Pushes explicit character cell boundaries to Konsole 
+Exec=konsole --geometry 130x38 -e sudo bash "$SCRIPT_PATH"
 Icon=utilities-terminal
-Terminal=true
+Terminal=false
 Categories=Utility;System;
 X-KDE-Submenu=Bazzite Toolbox
 EOF
