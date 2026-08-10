@@ -49,7 +49,7 @@ if [ -z "$TERMINAL_RESIZE_FORCED" ] && [ -t 0 ]; then
     export TERMINAL_RESIZE_FORCED=1
 
     # Set desired columns (width) and rows (height)
-    COLS=200
+    COLS=-200
     ROWS=30
 
     # Send ANSI escape sequence to resize terminal
