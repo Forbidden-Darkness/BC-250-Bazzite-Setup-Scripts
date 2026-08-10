@@ -1,15 +1,11 @@
 #!/bin/bash
 
 clear
-# Color definitions
+# Colors
 RED='\033[0;31m'
-B_RED='\033[1;31m'   # Bold Red for high-visibility Red Pill elements
 GREEN='\033[0;32m'
-B_GREEN='\033[1;32m' # Bold Green for verified/active status
 YELLOW='\033[1;33m'
-B_BLUE='\033[1;34m'  # Bold Blue for high-visibility Blue Pill elements
-B_VIOLET='\033[1;35m' # Bold Violet for ACPI Fix elements
-CYAN='\033[0;36m'
+B_VIOLET='\033[1;35m'
 BIBlack='\033[1;90m'      # Black
 BIRed='\033[1;91m'        # Red
 BIGreen='\033[1;92m'      # Green
@@ -18,7 +14,7 @@ BIBlue='\033[1;94m'       # Blue
 BIPurple='\033[1;95m'     # Purple
 BICyan='\033[1;96m'       # Cyan
 BIWhite='\033[1;97m'      # White
-NC='\033[0m' # No Color (Reset)
+NC='\033[0m'
 
 # Verify root/sudo privileges
 if [ "$EUID" -ne 0 ]; then
@@ -26,9 +22,6 @@ if [ "$EUID" -ne 0 ]; then
     echo -e "Please run: sudo bash $0${NC}"
     exit 1
 fi
-
-# ==========================================
-
 # Configuration
 LOG_FILE="/var/log/bc250_oc_install.log"
 REPO_URL="https://github.com/bc250-collective/bc250_smu_oc.git"
@@ -40,66 +33,6 @@ log() {
     echo -e "$1" | tee -a "$LOG_FILE"
 }
 
-# NEW: Interactive Desktop Shortcut Handler
-ask_desktop_shortcut() {
-    local desktop_dir
-    desktop_dir="$(sudo -u "$REAL_USER" xdg-user-dir DESKTOP 2>/dev/null || echo "")"
-    [[ -n "$desktop_dir" ]] || desktop_dir="$REAL_HOME/Desktop"
-    [[ -d "$desktop_dir" ]] || mkdir -p "$desktop_dir" 2>/dev/null || return 0
-
-    local shortcut="$desktop_dir/Overclock Manager.desktop"
-
-    # If the shortcut already exists, don't keep bothering the user
-    if [[ -f "$shortcut" ]]; then
-        return 0
-    fi
-
-    echo -e "${BIYellow}==================================================${NC}"
-    echo -e "${BIYellow}         DESKTOP SHORTCUT CONFIGURATION           ${NC}"
-    echo -e "${BIYellow}==================================================${NC}"
-    echo -e "Would you like to add a shortcut to your desktop?"
-    echo ""
-    echo -e " 1) Yes, create desktop shortcut"
-    echo ""
-    echo -e " 2) No, skip shortcut creation"
-    echo ""
-    echo -e "${BIYellow}==================================================${NC}"
-    read -rp "Select an option [1-2]: " shortcut_choice
-
-    case $shortcut_choice in
-        1)
-            cat > "$shortcut" <<SHORTCUT_EOF
-[Desktop Entry]
-Type=Application
-Name=Overclock Manager
-Comment=Overclock Manager
-Exec=konsole -e sudo bash "$SCRIPT_PATH"
-Icon=utilities-terminal
-Terminal=false
-Categories=System;
-SHORTCUT_EOF
-
-            chmod +x "$shortcut"
-            chown "$REAL_USER":"$REAL_USER" "$shortcut" 2>/dev/null || true
-            sudo -u "$REAL_USER" gio set "$shortcut" metadata::trusted true >/dev/null 2>&1 || true
-            print_info "Overclock Manager shortcut created successfully!"
-            sleep 2
-            ;;
-        2)
-            print_info "Skipping desktop shortcut generation."
-            sleep 1.5
-            ;;
-        *)
-            print_info "Invalid choice. Skipping shortcut setup for now."
-            sleep 1.5
-            ;;
-    esac
-}
-
-# Run the optional shortcut menu before opening the primary toolkit
-ask_desktop_shortcut
-
-clear
 # Warning message reflecting official repository safety parameters
 show_warning() {
     echo -e "${RED}!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
@@ -125,23 +58,13 @@ finalize_settings() {
     echo -e "${YELLOW}--- Current SMU Service Status ${RED}Ctrl+c then press enter to return to menu ---${NC}"
     sudo systemctl status bc250-smu-oc.service
     read -p "Press [Enter] to return to the tuning menu..."
+
+    #echo -e "${YELLOW}--- Current SMU Service Status ---${NC}"
+    #sudo systemctl status bc250-smu-oc.service
+    #read -p "Press [Enter] to return to the tuning menu..."
 }
 
-# Post-Detection Stress Function
-stress_settings() {
-    log "${GREEN}[Step 9] Stressing CPU...${NC}"
-    stress --cpu 16 --timeout 150 >> "$LOG_FILE" 2>&1
-    sudo systemctl daemon-reload >> "$LOG_FILE" 2>&1
-    sudo systemctl restart bc250-smu-oc.service >> "$LOG_FILE" 2>&1
-    sudo systemctl enable bc250-smu-oc.service >> "$LOG_FILE" 2>&1
-    clear
-
-    echo -e "${YELLOW}--- Current SMU Service Status ${RED}Ctrl+c then press enter to return to menu ---${NC}"
-    sudo systemctl status bc250-smu-oc.service
-    read -p "Press [Enter] to return to the tuning menu..."
-}
-
-# Interactive Tuning Menu
+# Interactive Tuning Menu (Fixed and cleanly looping back to main menu loop)
 launch_tuning_menu() {
     while true; do
         clear
@@ -154,105 +77,46 @@ launch_tuning_menu() {
         echo "2) 36/38CU Model (3500 MHz @ 980 mV, Max 82°C)"
         echo "3) 36/38CU Model (3500 MHz @ 1015 mV, Max 85°C)"
         echo "4) 36/38CU Model (3500 MHz @ 1020 mV, Max 85°C)"
-        echo "5) 36/38CU Model (3500 MHz @ 1050 mV, Max 85°C)"
-        echo -e "${BIGreen}6) Manual Custom Profile (Manually fill MHz, mV, Max Temp)${NC}"
-        echo -e "${BIGreen}7) Manual Test Custom Profile (Manually fill MHz, mV, Max Temp)${NC}"
-        echo "8) Skip auto-tuning & Return to Main Menu"
+        echo "5) Skip auto-tuning (Return to Main Menu)"
         echo ""
-        read -p "Enter selection [1-8]: " tune_choice
+        read -p "Enter selection [1-4]: " tune_choice
 
         case "$tune_choice" in
             1)
                 log "${GREEN}Launching 40CU profile optimization...${NC}"
                 bc250-detect --frequency 3500 --vid 1000 -t 85 --keep
                 finalize_settings
+                break
                 ;;
             2)
                 log "${GREEN}Launching 36/38CU profile optimization...${NC}"
                 bc250-detect --frequency 3500 --vid 980 -t 82 --keep
                 finalize_settings
+                break
                 ;;
             3)
                 log "${GREEN}Launching 36/38CU profile optimization...${NC}"
                 bc250-detect --frequency 3500 --vid 1015 -t 85 --keep
                 finalize_settings
+                break
                 ;;
             4)
                 log "${GREEN}Launching 36/38CU profile optimization...${NC}"
                 bc250-detect --frequency 3500 --vid 1020 -t 85 --keep
                 finalize_settings
+                break
                 ;;
             5)
-                log "${GREEN}Launching 36/38CU profile optimization...${NC}"
-                bc250-detect --frequency 3500 --vid 1050 -t 85 --keep
-                finalize_settings
-                ;;
-            6|7)
-                clear
-                echo -e "${YELLOW}====================================================${NC}"
-                echo -e "${YELLOW}             CUSTOM PROFILE CONFIGURATION           ${NC}"
-                echo -e "${YELLOW}====================================================${NC}"
-                echo ""
-
-                # Input and Validate Frequency (MHz)
-                while true; do
-                    read -p "Enter Target Frequency (MHz) [e.g., 3500]: " custom_freq
-                    if [[ "$custom_freq" =~ ^[0-9]+$ ]] && [ "$custom_freq" -gt 0 ]; then
-                        break
-                    else
-                        echo -e "${RED}Invalid input. Please enter a valid number for MHz.${NC}"
-                    fi
-                done
-
-                # Input and Validate VID (mV) with strict safety rail
-                while true; do
-                    read -p "Enter Target Voltage (mV / VID) [e.g., 1000]: " custom_vid
-                    if [[ "$custom_vid" =~ ^[0-9]+$ ]] && [ "$custom_vid" -gt 0 ]; then
-                        if [ "$custom_vid" -gt 1325 ]; then
-                            echo -e "${RED}SAFETY ERROR: Voltage cannot exceed 1325 mV!${NC}"
-                        else
-                            break
-                        fi
-                    else
-                        echo -e "${RED}Invalid input. Please enter a valid number for mV.${NC}"
-                    fi
-                done
-
-                # Input and Validate Max Temperature Limit
-                while true; do
-                    read -p "Enter Max Temperature Target (°C) [e.g., 85]: " custom_temp
-                    if [[ "$custom_temp" =~ ^[0-9]+$ ]] && [ "$custom_temp" -gt 0 ] && [ "$custom_temp" -lt 105 ]; then
-                        break
-                    else
-                        echo -e "${RED}Invalid input. Please enter a safe temperature limit below 105°C.${NC}"
-                    fi
-                done
-
-                log "${GREEN}Running custom tuning profile optimization...${NC}"
-                bc250-detect --frequency "$custom_freq" --vid "$custom_vid" -t "$custom_temp" --keep
-
-                if [ "$tune_choice" = "7" ]; then
-                    stress_settings
-                else
-                    finalize_settings
-                fi
-                ;;
-            8)
-                read -p "Returning to Main Menu Press [Enter] to continue..."
-                echo "Pausing for 5 seconds..."
-                sleep 5
-                return 0
+                log "${YELLOW}Skipped auto-tuning. Returning to main menu.${NC}"
+                break
                 ;;
             *)
-                echo -e "${RED}Invalid option selected. Please enter [1-8].${NC}"
+                echo -e "${RED}Invalid option. Please enter 1, 2, or 4.${NC}"
                 sleep 2
                 ;;
         esac
     done
 }
-
-# --- Script Initiation Path ---
-show_warning
 
 # Phase 1: Initial Install
 run_phase1() {
@@ -281,7 +145,7 @@ EOF"
     sudo rpm-ostree kargs --append=mitigations=off >> "$LOG_FILE" 2>&1
 
     log "${GREEN}[Step 3] Installing dependencies via rpm-ostree...${NC}"
-    sudo -u "$REAL_USER" rpm-ostree install stress pipx >> "$LOG_FILE" 2>&1
+    sudo rpm-ostree install stress pipx >> "$LOG_FILE" 2>&1
 
     log "${RED}[Step 4] Rebooting system. Script will resume automatically...${NC}"
     sudo systemctl reboot
@@ -342,11 +206,10 @@ EOF"
     sudo systemctl enable bc250-resume.service >> "$LOG_FILE" 2>&1
 
     log "${GREEN}[Step 2] Staging core 'umr' package tracking layers via rpm-ostree...${NC}"
-    sudo rpm-ostree install umr stress
+    sudo rpm-ostree install umr >> "$LOG_FILE" 2>&1
 
     log "${RED}[Step 3] Rebooting system. Execution environment will resume on startup...${NC}"
-    read -rp "Select an option [1-2]: "
-    #sudo systemctl reboot
+    sudo systemctl reboot
 }
 
 # CU Live Manager Phase 2: Launch Routine
@@ -364,7 +227,7 @@ run_manager_phase2() {
     chmod +x bc250-cu-live-manager.sh
 
     log "${GREEN}[Step 6] Transferring shell execution context directly to live manager profile...${NC}"
-    sudo -u "$REAL_USER" ./bc250-cu-live-manager.sh
+    sudo ./bc250-cu-live-manager.sh
 }
 
 # Rollback / Uninstall Routine
@@ -419,30 +282,27 @@ while true; do
     echo ""
     echo "Select an action to perform:"
     echo ""
-    echo -e "${BIRed}1a) CPU Overclock Install toolchain & configure settings (Phase 1 - Requires Reboot)${NC}"
-    echo -e "${BIRed}1b) CPU Overclock Complete toolchain installation (Phase 2)${NC}"
+    echo -e "${BIRed}1) CPU Overclock Install toolchain & configure settings (Phase 1 - Requires Reboot)${NC}"
+    echo -e "${BIRed}2) CPU Overclock Complete toolchain installation (Phase 2)${NC}"
+    echo -e "${BIBlue}3) Install Compute Unite Live Manager Dependencies (Phase 1 - Requires Reboot)${NC}"
+    echo -e "${BIBlue}4) Launch Compute Unite Live Manager Configuration (Phase 2)${NC}"
     echo ""
-    echo -e "${BIBlue}2a) Install Compute Unite Live Manager Dependencies (Phase 1 - Requires Reboot)${NC}"
-    echo -e "${BIBlue}2b) Launch Compute Unite Live Manager Configuration (Phase 2)${NC}"
+    echo "5) Rollback: Running ./setup_oc.sh --uninstall"
+    echo "6) Exit"
     echo ""
-    echo "3) Rollback: Running ./setup_oc.sh --uninstall"
-    echo ""
-    echo "0) Exit Overclock-Live-Manager"
-    echo ""
-    read -p "Enter selection [ 1-3 or 0 to exit ]: " choice
+    read -p "Enter selection [1-6]: " choice
 
-    if [ "$choice" == "1a" ]; then
+    if [ "$choice" == "1" ]; then
         run_phase1
-    elif [ "$choice" == "1b" ]; then
+    elif [ "$choice" == "2" ]; then
         run_phase2
-    elif [ "$choice" == "2a" ]; then
-        run_manager_phase1
-    elif [ "$choice" == "2b" ]; then
-        run_manager_phase2
     elif [ "$choice" == "3" ]; then
+        run_manager_phase1
+    elif [ "$choice" == "4" ]; then
+        run_manager_phase2
+    elif [ "$choice" == "5" ]; then
         run_uninstall
-    elif [ "$choice" == "0" ] || [ -z "$choice" ]; then
-    # Note: Run the script once manually to rewrite the .desktop shortcut file on your desktop.
+    elif [ "$choice" == "6" ] || [ -z "$choice" ]; then
         echo "Exiting."
         exit 0
     else
