@@ -44,21 +44,18 @@ if [ -z "$TERMINAL_FULLSCREEN_FORCED" ] && [ -t 0 ]; then
 
     
 fi
-# --- SPECIFIC WINDOW SIZE WRAPPER (Pixels) ---
+# --- SPECIFIC WINDOW SIZE WRAPPER (Rows/Columns) ---
 if [ -z "$TERMINAL_RESIZE_FORCED" ] && [ -t 0 ]; then
     export TERMINAL_RESIZE_FORCED=1
 
-    # Set your desired width and height in pixels
-    WIDTH=800
-    HEIGHT=800
+    # Set desired columns (width) and rows (height)
+    COLS=100
+    ROWS=30
 
-    if command -v wmctrl &> /dev/null; then
-        # Remove maximized states first so the window can accept custom dimensions
-        wmctrl -r :ACTIVE: -b remove,maximized_vert,maximized_horz
-        # Resize window (0, X, Y, Width, Height)
-        wmctrl -r :ACTIVE: -e 0,-1,-1,$WIDTH,$HEIGHT
-    fi
+    # Send ANSI escape sequence to resize terminal
+    echo -ne "\033[8;${ROWS};${COLS}t"
 fi
+
 
 # Start
 # =====================================================================
