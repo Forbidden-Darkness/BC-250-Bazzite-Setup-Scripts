@@ -351,7 +351,7 @@ EOF"
     sudo systemctl enable bc250-resume.service >> "$LOG_FILE" 2>&1
 
     log "${GREEN}[Step 2] Staging core 'umr' package tracking layers via rpm-ostree...${NC}"
-    sudo rpm-ostree install umr >> "$LOG_FILE" 2>&1
+    rpm-ostree install umr stress >> "$LOG_FILE" 2>&1
 
     log "${RED}[Step 3] Rebooting system. Execution environment will resume on startup...${NC}"
     sudo systemctl reboot
