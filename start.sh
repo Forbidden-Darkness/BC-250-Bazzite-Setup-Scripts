@@ -473,7 +473,7 @@ show_menu() {
         echo -e "d) ${RED}Temporary Stop${NC} (cyan-skillfish-governor-smu)"
         echo -e "e) ${B_RED}Stop and Disable Service${NC} --now (cyan-skillfish-governor-smu)"
         echo -e "f) ${CYAN}Verify Service Status${NC} (cyan-skillfish-governor-smu) ${RED}Press: Ctrl-c to return to Menu"${NC}
-        echo -e "g) ${CYAN}Verify Cyan Skillfish Governor SMU Version${NC} (cyan-skillfish-governor-smu version) ${RED}Press: Ctrl-c to return to Menu"${NC}
+        echo -e "g) ${CYAN}Verify Cyan Skillfish Governor SMU Version${NC} (cyan-skillfish-governor-smu version)"
         echo ""
         echo -e "0) ${RED}Exit"${NC}
         echo ""
