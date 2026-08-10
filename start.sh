@@ -50,7 +50,7 @@ if [ -z "$TERMINAL_RESIZE_FORCED" ] && [ -t 0 ]; then
 
     # Set your desired width and height in pixels
     WIDTH=800
-    HEIGHT=600
+    HEIGHT=800
 
     if command -v wmctrl &> /dev/null; then
         # Remove maximized states first so the window can accept custom dimensions
