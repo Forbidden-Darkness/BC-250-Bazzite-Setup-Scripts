@@ -394,7 +394,7 @@ install_wake_on_lan() {
 update_cyan-skillfish() {
     echo -e "${B_RED}=== Updating cyan-skillfish ===${NC}"
 
-sudo rpm-ostree refresh-md --forces
+sudo rpm-ostree refresh-md --force
 sudo rpm-ostree install cyan-skillfish-governor-smu-v0.4.12
 sudo sed -i '/^\[gpu-usage\]/a fix-freq = true' /etc/cyan-skillfish-governor-smu/config.toml
 prompt_reboot
