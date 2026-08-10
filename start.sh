@@ -49,9 +49,9 @@ if [ -z "$TERMINAL_RESIZE_FORCED" ] && [ -t 0 ]; then
     export TERMINAL_RESIZE_FORCED=1
 
     # Set desired columns (width) and rows (height)
-    COLS=-200
-    ROWS=30
-
+    COLS=-100
+    ROWS=-100
+    
     # Send ANSI escape sequence to resize terminal
     echo -ne "\033[8;${ROWS};${COLS}t"
 fi
