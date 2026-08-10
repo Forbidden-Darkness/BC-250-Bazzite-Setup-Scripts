@@ -354,7 +354,8 @@ EOF"
     sudo rpm-ostree install umr stress >> "$LOG_FILE" 2>&1
 
     log "${RED}[Step 3] Rebooting system. Execution environment will resume on startup...${NC}"
-    sudo systemctl reboot
+    read -p
+    #sudo systemctl reboot
 }
 
 # CU Live Manager Phase 2: Launch Routine
