@@ -6,5 +6,5 @@ cd Bazzite_Toolbox/ && sudo ./start.sh --install-shortcut
 ```
 
 ```bash
-cd Bazzite_Toolbox/ && sudo ./start.sh --remove-shortcut
+cd Bazzite_Toolbox/ && sudo ./start.sh --remove-shortcut && systemctl reboot
 ```
