@@ -388,21 +388,16 @@ install_wake_on_lan() {
         sleep 4
         return 1
     fi
+}
 
-    # 4. Make it executable
-    chmod +x Wake-on-LAN-Manager.sh
+# Function to update_cyan-skillfish
+update_cyan-skillfish() {
+    echo -e "${B_RED}=== Updating cyan-skillfish ===${NC}"
 
-    # 5. EXECUTION FIX FOR SHORTCUTS:
-    # Instead of spinning a nested sudo layer, clear the current environment
-    # variable space and source the script directly into the open terminal console frame.
-    echo "Transitioning terminal to Wake on LAN Manager..."
-    sleep 1
-
-    ENVIRONMENT=bazzite Overrides=true bash ./Wake-on-LAN-Manager.sh
-
-    # 6. Fallback step to keep the window open if the inner script closes
-    echo -e "${YELLOW}Wake on LAN Manager closed. Returning to main menu...${NC}"
-    sleep 2
+sudo rpm-ostree refresh-md --forces
+sudo rpm-ostree install cyan-skillfish-governor-smu-v0.4.12
+sudo sed -i '/^\[gpu-usage\]/a fix-freq = true' /etc/cyan-skillfish-governor-smu/config.toml
+prompt_reboot
 }
 
 # Function to handle ACPI Override Fix
@@ -463,6 +458,7 @@ show_menu() {
         echo -e "3) Apply ${B_VIOLET}BC-250 ACPI Fix${NC}"
         echo -e "4) ${B_GREEN}Launch BC250 Overclock Live Manager${NC}"
         echo -e "5) ${B_GREEN}Launch Wake-on-LAN Manager${NC}"
+        echo -e "6) ${B_GREEN}Update to cyan-skillfish-governor-smu-v0.4.12${NC}"
         echo ""
         echo -e "${CYAN}--- Governor Service Management ---${NC}"
         echo ""
@@ -511,6 +507,9 @@ show_menu() {
                 ;;
             5)
                 install_wake_on_lan
+                ;;
+            6)
+                update_cyan-skillfish
                 ;;
             a)
                 echo -e "${GREEN}Executing Temporary Start...${NC}"
