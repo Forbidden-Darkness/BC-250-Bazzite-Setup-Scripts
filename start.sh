@@ -88,72 +88,141 @@ REAL_HOME=$(getent passwd "$REAL_USER" | cut -d: -f6)
 SCRIPT_PATH=$(realpath "$0")
 CONFIG_FILE="$REAL_HOME/.bazzite_toolbox_config"
 
+# Target paths for legacy and new shortcut files
+LOCAL_APPS="$REAL_HOME/.local/share/applications"
+LOCAL_DIRS="$REAL_HOME/.local/share/desktop-directories"
+LOCAL_MENUS="$REAL_HOME/.config/menus"
+
+OLD_DESKTOP="$LOCAL_APPS/bazzite-toolbox.desktop"
+OLD_DIRECTORY="$LOCAL_DIRS/bazzite-toolbox.directory"
+OLD_MENU="$LOCAL_MENUS/applications-merged-bazzite.menu"
+
 print_info() {
     echo -e "${GREEN}[INFO] $1${NC}"
 }
 
+print_warning() {
+    echo -e "${YELLOW}[WARN] $1${NC}"
+}
+
 # =====================================================================
-# SHORTCUT CREATION, CLEANUP & OPT-OUT LOGIC
+# REFRESH & REMOVAL UTILITIES
 # =====================================================================
+refresh_desktop_database() {
+    if command -v update-desktop-database &> /dev/null; then
+        update-desktop-database "$LOCAL_APPS" &> /dev/null
+    fi
+
+    if command -v kbuildsycoca6 &> /dev/null; then
+        sudo -u "$REAL_USER" kbuildsycoca6 --noincremental &> /dev/null
+    elif command -v kbuildsycoca5 &> /dev/null; then
+        sudo -u "$REAL_USER" kbuildsycoca5 --noincremental &> /dev/null
+    fi
+}
+
+force_remove_shortcut() {
+    print_info "Purging all existing legacy and current shortcut structures..."
+    rm -f "$OLD_DESKTOP" "$OLD_DIRECTORY" "$OLD_MENU"
+    refresh_desktop_database
+}
+
+# =====================================================================
+# SHORTCUT CREATION & PROMPT LOGIC
+# =====================================================================
+create_start_menu_shortcut() {
+    print_info "Creating start menu shortcut..."
+    mkdir -p "$LOCAL_APPS"
+
+    cat << EOF > "$OLD_DESKTOP"
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Bazzite Toolbox
+Comment=Launch Custom Bazzite Tweak Tool
+Exec=sudo bash "$SCRIPT_PATH"
+Icon=utilities-terminal
+Terminal=true
+Categories=Utility;System;
+X-KDE-Submenu=Bazzite Toolbox
+EOF
+
+    chmod +x "$OLD_DESKTOP"
+    chown -R "$REAL_USER":"$REAL_USER" "$OLD_DESKTOP"
+
+    # Always drop the broken legacy menu configuration overrides if they exist
+    rm -f "$OLD_DIRECTORY" "$OLD_MENU"
+
+    refresh_desktop_database
+    print_info "Shortcut installed successfully!"
+}
+
 manage_shortcut_prompt() {
-    LOCAL_APPS="$REAL_HOME/.local/share/applications"
-    LOCAL_DIRS="$REAL_HOME/.local/share/desktop-directories"
-    LOCAL_MENUS="$REAL_HOME/.config/menus"
-
-    # Define paths for ALL potential old shortcut files
-    local old_desktop="$LOCAL_APPS/bazzite-toolbox.desktop"
-    local old_directory="$LOCAL_DIRS/bazzite-toolbox.directory"
-    local old_menu="$LOCAL_MENUS/applications-merged-bazzite.menu"
-
     # Check if a preference already exists in the config file
     if [ -f "$CONFIG_FILE" ]; then
         local saved_pref
         saved_pref=$(grep "START_MENU_SHORTCUT=" "$CONFIG_FILE" | cut -d= -f2)
         
-        # If they previously opted out, strictly ensure all old files are gone
         if [ "$saved_pref" == "false" ]; then
-            if [ -f "$old_desktop" ] || [ -f "$old_directory" ] || [ -f "$old_menu" ]; then
-                print_info "Removing existing legacy shortcut infrastructure..."
-                rm -f "$old_desktop" "$old_directory" "$old_menu"
-                refresh_desktop_database
-            fi
-            print_info "Skipping shortcut creation (User previously opted out)."
+            force_remove_shortcut
+            print_info "Skipping shortcut creation (User opted out in configuration)."
             return 0
         elif [ "$saved_pref" == "true" ]; then
-            # Clean up the legacy directory and menu files even if they want the shortcut,
-            # keeping only the streamlined .desktop file we use now.
-            rm -f "$old_directory" "$old_menu"
             create_start_menu_shortcut
             return 0
         fi
     fi
 
-    # If no preference is saved, ask the user directly
+    # If no preference is saved, trigger the question
     echo -e "\n${YELLOW}Would you like to add a Bazzite Toolbox shortcut to your Start Menu?${NC}"
     read -p "(Y/n): " -r user_choice
-    user_choice=${user_choice:-Y} # Default to Yes if they press Enter
+    user_choice=${user_choice:-Y} 
 
-    # Prepare configuration directory
     mkdir -p "$(dirname "$CONFIG_FILE")"
 
     if [[ "$user_choice" =~ ^[Yy]$ ]]; then
-        # Save choice, wipe the bad legacy tracking files, and create a fresh clean shortcut
         echo "START_MENU_SHORTCUT=true" > "$CONFIG_FILE"
         chown "$REAL_USER":"$REAL_USER" "$CONFIG_FILE"
-        rm -f "$old_directory" "$old_menu"
         create_start_menu_shortcut
     else
-        # Save choice, strip out ALL remnants of the old shortcut, and trigger a menu sync
         echo "START_MENU_SHORTCUT=false" > "$CONFIG_FILE"
         chown "$REAL_USER":"$REAL_USER" "$CONFIG_FILE"
-        
-        print_info "Opting out. Removing all existing legacy shortcut infrastructure..."
-        rm -f "$old_desktop" "$old_directory" "$old_menu"
-        refresh_desktop_database
-        
-        print_info "Opted out. All old shortcuts removed. No new shortcut will be created."
+        force_remove_shortcut
+        print_info "Opted out. All old shortcut records removed."
     fi
 }
+
+# =====================================================================
+# MANUAL EXECUTION FLAGS (CLI OVERRIDES)
+# =====================================================================
+case "$1" in
+    --install-shortcut)
+        print_info "Manual override: Installing shortcut..."
+        mkdir -p "$(dirname "$CONFIG_FILE")"
+        echo "START_MENU_SHORTCUT=true" > "$CONFIG_FILE"
+        chown "$REAL_USER":"$REAL_USER" "$CONFIG_FILE"
+        create_start_menu_shortcut
+        exit 0
+        ;;
+    --remove-shortcut)
+        print_info "Manual override: Removing shortcut..."
+        mkdir -p "$(dirname "$CONFIG_FILE")"
+        echo "START_MENU_SHORTCUT=false" > "$CONFIG_FILE"
+        chown "$REAL_USER":"$REAL_USER" "$CONFIG_FILE"
+        force_remove_shortcut
+        print_info "Shortcut completely uninstalled."
+        exit 0
+        ;;
+    --updated)
+        shift 
+        print_info "Update successful! Running latest sequence."
+        manage_shortcut_prompt
+        echo -e "${YELLOW}Press [Enter] to continue to the Bazzite Toolbox...${NC}"
+        read -r
+        ;;
+esac
+
+# Rest of your script logic starts here...
+echo -e "${GREEN}Starting Bazzite Toolbox Core UI...${NC}"
 
 refresh_desktop_database() {
     # Force Desktop database reload
