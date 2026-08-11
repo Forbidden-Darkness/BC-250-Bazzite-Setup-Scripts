@@ -359,6 +359,39 @@ launch_tuning_menu() {
 # --- Script Initiation Path ---
 show_warning
 
+# ---------------------------------
+# Function to pause and offer a Cancel Reboot option
+prompt_reboot() {
+    echo ""
+    echo -e "${YELLOW}==================================================${NC}"
+    echo -e "${YELLOW} Task complete! The system needs to reboot now.   ${NC}"
+    echo -e "${YELLOW}--------------------------------------------------${NC}"
+    echo " 1) Reboot Now (Recommended)"
+    # Changed the Text and Flow: Modified choice 2 inside prompt_reboot to explicitly state it returns to the main menu.
+    echo " 2) Cancel Reboot & Return to Main Menu"
+    echo -e "${YELLOW}==================================================${NC}"
+    read -rp "Select an option [1-2]: " reboot_choice
+
+    case $reboot_choice in
+        1)
+            echo "Rebooting system now..."
+            sudo systemctl reboot
+            ;;
+        2)
+            echo -e "${YELLOW}Reboot cancelled. Returning to main menu. Remember to reboot manually later for changes to take effect.${NC}"
+            # Added sleep delays: Included short visual delays (sleep 2) so the user has time to read the status updates before the menu redraws and clears the screen.
+            sleep 2
+            # Used return instead of exit: Replaced potential script termination points inside the sub-function with return 0, sending the code execution back to the primary menu loop.
+            return 0
+            ;;
+        *)
+            echo -e "${RED}Invalid option. Defaulting to safe cancel. Returning to main menu.${NC}"
+            sleep 2
+            return 1
+            ;;
+    esac
+}
+
 # Phase 1: Initial Install
 run_phase1() {
     show_warning
@@ -388,8 +421,8 @@ EOF"
     log "${GREEN}[Step 3] Installing dependencies via rpm-ostree...${NC}"
     sudo rpm-ostree install stress pipx >> "$LOG_FILE" 2>&1
 
-    log "${RED}[Step 4] Rebooting system. Script will resume automatically...${NC}"
-    sudo systemctl reboot
+    log "${RED}[Step 4] Rebooting system. Move on to CPU Overclock Phase 2 after a reboot...${NC}"
+    prompt_reboot
 }
 
 # Phase 2: Post-Reboot Execution
@@ -449,8 +482,8 @@ EOF"
     log "${GREEN}[Step 2] Staging core 'umr' package tracking layers via rpm-ostree...${NC}"
     sudo rpm-ostree install umr >> "$LOG_FILE" 2>&1
 
-    log "${RED}[Step 3] Rebooting system. Execution environment will resume on startup...${NC}"
-    sudo systemctl reboot
+    log "${RED}[Step 3] Rebooting system. Move on to CU Live Manager Phase 2 after a reboot...${NC}"
+    prompt_reboot
 }
 
 # CU Live Manager Phase 2: Launch Routine
@@ -495,7 +528,7 @@ run_uninstall() {
     sudo rm -rf /tmp/bc250_smu_oc
 
     log "${GREEN}[6/6] Uninstall complete. Rebooting to clear packages and re-enable mitigations...${NC}"
-    sudo systemctl reboot
+    prompt_reboot
 }
 
 # Main script logic handles direct commands or initializes main loop
