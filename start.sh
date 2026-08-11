@@ -388,6 +388,20 @@ install_wake_on_lan() {
         sleep 4
         return 1
     fi
+    # 4. Make it executable
+    chmod +x Wake-on-LAN-Manager.sh
+
+    # 5. EXECUTION FIX FOR SHORTCUTS:
+    # Instead of spinning a nested sudo layer, clear the current environment
+    # variable space and source the script directly into the open terminal console frame.
+    echo "Transitioning terminal to Wake on LAN Manager..."
+    sleep 1
+
+    ENVIRONMENT=bazzite Overrides=true bash ./Wake-on-LAN-Manager.sh
+
+    # 6. Fallback step to keep the window open if the inner script closes
+    echo -e "${YELLOW}Wake on LAN Manager closed. Returning to main menu...${NC}"
+    sleep 2
 }
 
 # Function to update_cyan-skillfish
