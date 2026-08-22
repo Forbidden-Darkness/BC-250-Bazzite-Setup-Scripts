@@ -996,6 +996,19 @@ show_menu() {
         echo -e "    ${CYAN}[2]${RESET} Deploy 32GB Swapfile Mapping   ${DIM}(Recommended for high-capacity NVMe)${RESET}"
         echo ""
 
+        # --- AUTOMATED SETUP OVERVIEW PANEL ---
+        echo -e "  ${BOLD}${WHITE}  ℹ  Automated Deployment Sequence Summary (Options 1 & 2):${RESET}"
+        echo -e "     Executing either option triggers a complete professional optimization suite:"
+        echo -e "     • Repository Setup    : Hooks the filippor-bazzite COPR package tracking"
+        echo -e "     • Governor Upgrade    : Installs cyan-skillfish-governor-smu (Enhanced Overclock)"
+        echo -e "     • Conflict Management : Stops and disables obsolete standard/oberon governor daemons"
+        echo -e "     • Core Safety Fix     : Disables hardware CPU mitigations to maximize performance"
+        echo -e "     • Swap Infrastructure : Disables stock ZRAM and deploys a target 16G/32G disk swapfile"
+        echo -e "     • Memory Efficiency   : Enables optimized ZSWAP caching using fast lz4 compression"
+        echo -e "     • Kernel Tuning       : Adjusts vm.swappiness=180 for aggressive virtual handling"
+        echo -e "  ${DIM}─────────────────────────────────────────────────────────────────────${RESET}"
+        echo ""
+
         # --- SECTION 2: COMPONENT SWITCHES & TOOLS ---
         echo -e "  ${BOLD}${YELLOW}Hardware Unlocks & Core Optimizations${RESET}"
         echo -e "  ${DIM}─────────────────────────────────────────────────────────────────────${RESET}"
@@ -1028,13 +1041,9 @@ show_menu() {
         echo -e "     ${WHITE}\"/etc/cyan-skillfish-governor-smu/config.toml\"${RESET}"
         echo -e "  ${DIM}─────────────────────────────────────────────────────────────────────${RESET}"
 
-        # Safe Prompt Parser incorporating bounded verification inputs
+        # Safe Prompt Parser
         read -rp "  Enter choice [0-7, a-g, s]: " choice
-
-        # Pass the input choice down your case conditional logic statement tree
-
-
-
+        
         case $choice in
             1)
                 install_blue_pill
