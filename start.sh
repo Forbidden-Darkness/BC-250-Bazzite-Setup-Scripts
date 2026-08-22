@@ -1146,7 +1146,11 @@ show_menu() {
         echo ""
 
         # --- GLOBAL OPERATIONS ---
+        echo -e "    ${BOLD}${RED}[0] Secure Safe Exit${RESET}"    
+        echo -e "    ${BLUE}[r] Reload Menu Interface${RESET}"
         echo -e "    ${BOLD}${RED}[0] Secure Safe Exit${RESET}"
+        echo ""
+
         echo ""
 
         # --- INTEGRATED WARNING & CONFIG NOTICES ---
@@ -1229,6 +1233,16 @@ show_menu() {
                 echo -e "\n  ${YELLOW}Press any key to return to the menu...${RESET}"
                 read -n 1 -s -r || true # Instant return key matching the input engine
                 ;;
+
+            r)
+                print_info "Reinitializing toolkit memory tracking blocks..."
+                sleep 0.5
+                
+                # FIX: Utilizing exec replaces the running process with a fresh copy of itself on disk.
+                # We preserve $SCRIPT_PATH and pass standard arguments down the pipe seamlessly.
+                exec bash "$SCRIPT_PATH" "$@"
+                ;;
+                
             0)
                 echo -e "${GREEN}Exiting Bazzite Toolbox. Cleaning environment...${NC}"
                 sleep 1
