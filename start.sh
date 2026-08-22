@@ -1113,7 +1113,7 @@ show_menu() {
     echo -e "  ║    ${B_BLUE}[●] BLUE Pill${CYAN}                                            ${RED}RED Pill [●]${CYAN}      ║"
     echo "  ║                                                                               ║"
     echo "  ╚═══════════════════════════════════════════════════════════════════════════════╝"
-    echo -e "  ║    System Load: ${WHITE}${load_avg}${CYAN}          │       Silicon Temp: ${YELLOW}${cpu_temp}${CYAN}               ║"
+    echo -e "  ║    System Load: ${WHITE}${load_avg}${CYAN}          │       Silicon Temp: ${YELLOW}${cpu_temp}${CYAN}          ║"
     echo -e "${RESET}"
 
 
