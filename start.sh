@@ -9,7 +9,7 @@ DIM="\e[2m"
 RED='\033[0;31m'
 B_RED='\033[1;31m'   # Bold Red for high-visibility Red Pill elements
 GREEN='\033[0;32m'
-B_GREEN='\033[0;92m\' # Bold Green for verified/active status
+B_GREEN='\033[0;92m' # FIX: Removed trailing backslash that was causing a syntax break
 YELLOW='\033[1;33m'
 B_BLUE='\033[1;34m'  # Bold Blue for high-visibility Blue Pill elements
 B_VIOLET='\033[1;35m' # Bold Violet for ACPI Fix elements
@@ -94,23 +94,16 @@ trap stop_background_music EXIT
 start_background_music
 
 clear
-# FIX: Swapped to 1;97m (Absolute Bold White) to bypass terminal color table overrides
-echo -e ${DIM}
-echo -e " ${BIGreen} ╔══════════════════════════════════════════════════════════════════════════╗"${BIGreen}
-echo -e " ${BIGreen} ║                                                                          ║"${BIGreen}
-echo -e " ${BIGreen} ║                     █ █ █ █▀▀ █   █▀▀ █▀█ █▄█ █▀▀                        ║"${BIGreen}
-echo -e " ${BIGreen} ║                     ▀▄▀▄▀ ██▄ █▄▄ █▄▄ █▄█ █ █ ██▄                        ║"${BIGreen}
-echo -e " ${BIGreen} ║                                                                          ║"${BIGreen}
-echo -e " ${BIGreen} ╚══════════════════════════════════════════════════════════════════════════╝"${BIGreen}
-echo -e ${CYAN}
-
-echo -e ${BIGreen}
+# FIX: Properly grouped the formatting tags to prevent vertical margin rendering bugs
+echo -e "${BIGreen}  ╔══════════════════════════════════════════════════════════════════════════╗${NC}"
+echo -e "${BIGreen}  ║                                                                          ║${NC}"
+echo -e "${BIGreen}  ║                     █ █ █ █▀▀ █   █▀▀ █▀█ █▄█ █▀▀                        ║${NC}"
+echo -e "${BIGreen}  ║                     ▀▄▀▄▀ ██▄ █▄▄ █▄▄ █▄█ █ █ ██▄                        ║${NC}"
+echo -e "${BIGreen}  ║                                                                          ║${NC}"
+echo -e "${BIGreen}  ╚══════════════════════════════════════════════════════════════════════════╝${NC}"
+echo ""
 read -rp "  Press Enter to continue..." dummy_input
-echo -e ${BIGreen}
-
-
-
-
+echo ""
 
 # --- Swap Allocation Global Targets ---
 SWAPFILE_PATH="/var/swap/swapfile"  # Bazzite's standard BTRFS swapfile target path
@@ -123,7 +116,6 @@ if [ "$EUID" -ne 0 ]; then
     exit 1
 fi
 
-# Start
 # =====================================================================
 # ENVIRONMENT VARIABLES & PRINT FUNCTIONS
 # =====================================================================
@@ -152,22 +144,21 @@ print_warning() {
 print_banner() {
     clear
     echo -e "${BOLD}${CYAN}"
-    echo "  ╔═════════════════════════════════════════════════════════════════════════════╗"
-    echo "  ║                                                                             ║"
-    echo -e "  ║  ${YELLOW}██████╗  █████╗ ███████╗███████╗██╗████████╗███████╗    ██████╗ ███████╗${CYAN}   ║"
-    echo -e "  ║  ${YELLOW}██╔══██╗██╔══██╗╚══███╔╝╚══███╔╝██║╚══██╔══╝██╔════╝   ██╔═══██╗██╔════╝${CYAN}   ║"
-    echo -e "  ║  ${YELLOW}██████╔╝███████║  ███╔╝   ███╔╝ ██║   ██║   █████╗  ██ ██║   ██║███████╗${CYAN}   ║"
-    echo -e "  ║  ${YELLOW}██╔══██╗██╔══██║ ███╔╝   ███╔╝  ██║   ██║   ██╔══╝     ██║   ██║╚════██║${CYAN}   ║"
-    echo -e "  ║  ${YELLOW}██████╔╝██║  ██║███████╗███████╗██║   ██║   ███████╗   ╚██████╔╝███████║${CYAN}   ║"
-    echo -e "  ║  ${YELLOW}╚══════╝ ╚═╝  ╚═╝╚══════╝╚══════╝╚═╝   ╚═╝   ╚══════╝    ╚═════╝ ╚══════╝${CYAN}  ║"
-    echo "  ║                                                                             ║"
-    echo "  ║                             BC250 System Status                             ║"
-    echo "  ║                                                                             ║"
-    echo "  ╚═════════════════════════════════════════════════════════════════════════════╝"
+    echo "  ╔════════════════════════════════════════════════════════════════════════════════════════╗"
+    echo "  ║                                                                                        ║"
+    echo -e "  ║         ${YELLOW}██████╗  █████╗ ███████╗███████╗██╗████████╗███████╗    ██████╗ ███████╗${CYAN}       ║"
+    echo -e "  ║         ${YELLOW}██╔══██╗██╔══██╗╚══███╔╝╚══███╔╝██║╚══██╔══╝██╔════╝   ██╔═══██╗██╔════╝${CYAN}       ║"
+    echo -e "  ║         ${YELLOW}██████╔╝███████║  ███╔╝   ███╔╝ ██║   ██║   █████╗  ██ ██║   ██║███████╗${CYAN}       ║"
+    echo -e "  ║         ${YELLOW}██╔══██╗██╔══██║ ███╔╝   ███╔╝  ██║   ██║   ██╔══╝     ██║   ██║╚════██║${CYAN}       ║"
+    echo -e "  ║         ${YELLOW}██████╔╝██║  ██║███████╗███████╗██║   ██║   ███████╗   ╚██████╔╝███████║${CYAN}       ║"
+    echo -e "  ║         ${YELLOW}╚══════╝ ╚═╝  ╚═╝╚══════╝╚══════╝╚═╝   ╚═╝   ╚══════╝    ╚═════╝ ╚══════╝${CYAN}      ║"
+    echo "  ║                                                                                        ║"
+    echo "  ║                                                                                        ║"
+    echo -e "  ║    ${B_BLUE}[●] BLUE Pill${CYAN}             📟  System Core Telemetry  📟             ${RED}RED Pill [●]${CYAN}    ║"
+
+    echo "  ╚════════════════════════════════════════════════════════════════════════════════════════╝"
     echo -e "${RESET}"
 }
-
-
 
 print_section() {
     echo -e "  ${BOLD}${YELLOW}$1${RESET}"
@@ -178,7 +169,6 @@ print_item() {
     local num="$1"
     local label="$2"
     local desc="$3"
-    # Calculate visual width by stripping multi-byte chars and measuring byte difference
     local label_bytes=${#label}
     local label_visual=$(echo -n "$label" | wc -m)
     local extra=$(( label_bytes - label_visual ))
@@ -213,61 +203,42 @@ confirm() {
     read -rp "  → " ans
     [[ "$ans" =~ ^[Yy]$ ]]
 }
-
-
 # ==============================================================================
 # BAZZITE COMPATIBILITY HELPERS FOR SYSTEM DIAGNOSTICS
 # ==============================================================================
-
 core_unlock_persist_installed() {
-    # Checks if the persistent systemd service for core unlocking is enabled
     systemctl is-enabled bc250-core-unlock.service &>/dev/null
 }
 
 core_unlock_cores_active() {
-    # If the system registers 16 threads, the 8c/16t core layout is active
     [[ "$(nproc --all 2>/dev/null)" -eq 16 ]]
 }
 
 ram_split_installed() {
-    # Checks if the custom memory splitting rules are active in boot arguments or configurations
     rpm-ostree kargs 2>/dev/null | grep -q "ttm.pages_limit" || [[ -f /etc/modprobe.d/bc250-mem.conf ]]
 }
 
 zram_currently_disabled() {
-    # Checks if the system block allocation for zram0 is missing or disabled
     [[ ! -d /sys/block/zram0 ]]
 }
 
 zswap_currently_on() {
-    # Directly checks the running kernel module parameters for ZSWAP execution state
     [[ "$(cat /sys/module/zswap/parameters/enabled 2>/dev/null || echo "N")" == "Y" ]]
 }
 
 swapfile_size_mb() {
     if [[ -f "$SWAPFILE_PATH" ]]; then
-        # Returns the actual size in megabytes using standard block allocation metrics
         echo $(( $(stat -c%s "$SWAPFILE_PATH" 2>/dev/null || echo 0) / 1024 / 1024 ))
     else
         echo 0
     fi
 }
 
-core_unlock_persist_installed() {
-    systemctl is-enabled bc250-core-unlock.service &>/dev/null
-}
-
-core_unlock_cores_active() {
-    [[ "$(nproc --all 2>/dev/null)" -eq 16 ]]
-}
-
 cu_find_umr() {
-    # On Bazzite, check if the AMD UMR debugging tool exists in the runtime environment
     command -v umr &>/dev/null
 }
 
 acpi_fix_installed() {
-    # On Bazzite, checks if custom ACPI table overrides exist or if the custom DSDT directory is populated
     [[ -d /sys/firmware/acpi/tables/user ]] || [[ -f /etc/tmpfiles.d/acpi-override.conf ]]
 }
 
@@ -275,33 +246,11 @@ sensors_active_driver() {
     if lsmod | grep -q "^nct6687"; then echo "nct6687"; else echo "none"; fi
 }
 
-# ==============================================================================
-# UNIFIED MEMORY SYSTEM (RAM/VRAM CARVE-OUT MANAGEMENT)
-# ==============================================================================
-# The BC-250 runs a 16GB Unified Memory Architecture (UMA) shared between the
-# CPU and GPU. The default BIOS locks down half of the machine's memory—creating
-# an inflexible 8GB RAM / 8GB VRAM split even when the machine is idle.
-#
-# Lowering this allocation (stored securely inside the battery-backed extended CMOS)
-# maximizes available system memory. While a 512MB floor returns nearly all RAM to
-# the pool when a game is closed, intensive compositor flips can occasionally trigger
-# framebuffer allocation failures. Assigning a balanced 6GB (6144MB) base pool or
-# higher is recommended to maintain rock-solid system stability under Gamescope.
-#
-# To accommodate demanding games requiring 8GB+ allocations without display crashes,
-# the script also pairs your hardware base split with the 'ttm.pages_limit' kernel
-# parameter to override and lift the dynamic graphics allocation ceilings.
-#
-# Modded BIOS flash profiles are obsolete. Changes are managed via the integrated
-# fanoush/bc250_memcfg binary utility, compiled natively from source at runtime.
-# Documentation: https://elektricm.github.io/amd-bc250-docs/bios/vram/
-# ==============================================================================
-
 RAM_SPLIT_DIR="$EXTERNAL_DIR/bc250_memcfg"
 RAM_SPLIT_BIN="$RAM_SPLIT_DIR/bc250memcfg"
 RAM_SPLIT_DEFAULT_UMA_MB=512
 RAM_SPLIT_STOCK_UMA_MB=8192
-RAM_SPLIT_DEFAULT_TTM_PAGES=3145728   # ~12GB dynamic VRAM ceiling (4KiB pages)
+RAM_SPLIT_DEFAULT_TTM_PAGES=3145728
 
 ram_split_bc250_detected() {
     command -v lspci >/dev/null 2>&1 && lspci -Dn 2>/dev/null | grep -qi '1002:13fe'
@@ -324,9 +273,6 @@ ram_split_build_tool() {
         return 1
     fi
     if ! ram_split_gcc_can_compile; then
-        # gcc may be present but glibc headers (stdio.h etc.) missing/stripped
-        # on the SteamOS overlay -- force-reinstall rather than relying on
-        # pacman's "already installed" bookkeeping (which --needed respects).
         print_info "gcc / libc headers missing or broken — (re)installing base-devel + glibc..."
         steamos_writable 'pacman -Sy --noconfirm base-devel glibc' || {
             fail_with_log "Failed to install gcc/glibc." "RAM/VRAM Split — gcc"
@@ -334,7 +280,7 @@ ram_split_build_tool() {
         }
     fi
     if ! ram_split_gcc_can_compile; then
-        fail_with_log "gcc still cannot compile a plain C program after reinstalling base-devel/glibc (missing /usr/include headers on this SteamOS image). Check 'pacman -Qo /usr/include/stdio.h' and 'ls /usr/include/stdio.h'." "RAM/VRAM Split — gcc headers"
+        fail_with_log "gcc still cannot compile a plain C program after reinstalling base-devel/glibc." "RAM/VRAM Split — gcc headers"
         return 1
     fi
     print_info "Building bc250memcfg from vendored source..."
@@ -352,50 +298,29 @@ ram_split_current_uma() {
     echo "$((10#$val))"
 }
 
-ram_split_installed() {
-    [[ -f "$GRUB_DEFAULT" ]] && grep -qE 'GRUB_CMDLINE_LINUX_DEFAULT=.*ttm\.pages_limit=' "$GRUB_DEFAULT" 2>/dev/null
-}
-
-
-# ... (rest of your helpers: ram_split_installed, zram_currently_disabled, etc.)
-
-run_status() {
-    print_banner
-    # ... (the rest of your run_status logic)
-}
-
-
+# ==============================================================================
+# RE-ORDERED CORE ENGINE: SYSTEM STATUS VISUALIZATION DASHBOARD
+# ==============================================================================
 run_status() {
     print_banner
     print_section "System Status"
 
-    # --- Strict Mode Safety Fallbacks ---
-    # Icons/colors (define as needed)
     local ICON_OK="✔"
     local ICON_WARN="⚠"
     local ICON_OK="${ICON_OK:-${GREEN}✓${RESET}}"
     local ICON_WARN="${ICON_WARN:-${YELLOW}⚠${RESET}}"
     local ICON_ERR="${ICON_ERR:-${RED}✗${RESET}}"
-    local DIM="${DIM:-}"
-    local RESET="${RESET:-}"
-    local GREEN="${GREEN:-}"
-    local YELLOW="${YELLOW:-}"
-    local RED="${RED:-}"
-    local CYAN="${CYAN:-}"
-    local BOLD="${BOLD:-}"
-    local WHITE="${WHITE:-}"
+    local DIM="${DIM:-}" local RESET="${RESET:-}" local GREEN="${GREEN:-}"
+    local YELLOW="${YELLOW:-}" local RED="${RED:-}" local CYAN="${CYAN:-}"
+    local BOLD="${BOLD:-}" local WHITE="${WHITE:-}" local B_BLUE="${B_BLUE:-}"
 
-    # Bazzite uses systemd-boot or GRUB depending on the hardware platform
-    local BOOTLOADER
-    BOOTLOADER="$(detect_bootloader 2>/dev/null || echo "unknown")"
+    local BOOTLOADER; BOOTLOADER="$(detect_bootloader 2>/dev/null || echo "unknown")"
     local CPU_CONF="/etc/bc250-smu-oc.conf"
     local GPU_CONF="/etc/cyan-skillfish-governor-smu/config.toml"
 
-    # --- System ---
     echo -e "  ${BOLD}${YELLOW}System${RESET}"
     echo -e "  ${DIM}─────────────────────────────────────────────────────────────────────${RESET}"
 
-    # Bazzite/SteamOS native session detection
     local boot_session="gamescope"
     local boot_relogin="true"
 
@@ -411,44 +336,26 @@ run_status() {
     else
         boot_mode="${BOLD}${CYAN}Desktop Mode${RESET}"
     fi
+    boot_login=$([[ "$boot_relogin" == "false" ]] && echo "${DIM}password required${RESET}" || echo "${DIM}no password${RESET}")
 
-    if [[ "$boot_relogin" == "false" ]]; then
-        boot_login="${DIM}password required${RESET}"
-    else
-        boot_login="${DIM}no password${RESET}"
-    fi
-
-    # Dynamic Wake-on-LAN Diagnostic Interrogation Layer
-     # Dynamic Wake-on-LAN Diagnostic Interrogation Layer
-    local wol_icon="$ICON_WARN"
-    local wol_label="${YELLOW}deactivated${RESET}"
-    local wol_enabled=false
-    local wol_setting
-
-    # Loop sequentially through all registered NetworkManager connections
+    # Rock-Solid Intermittent Multi-Card WOL Scanner Loop Engine
+    local wol_icon="$ICON_WARN" local wol_label="${YELLOW}deactivated${RESET}"
+    local wol_enabled=false local wol_setting
     while IFS= read -r conn; do
         [[ -z "$conn" ]] && continue
-
-        # Interrogate the individual profile's low-level hardware wake properties
         wol_setting=$(nmcli -g 802-3-ethernet.wake-on-lan connection show "$conn" 2>/dev/null | tr '[:upper:]' '[:lower:]')
-
-        # If any connection maps the magic packet token, trigger the status flag
         if [[ "$wol_setting" == *magic* ]]; then
             wol_enabled=true
             break
         fi
     done < <(nmcli -t -f NAME connection show 2>/dev/null)
 
-    # Set universal grid dashboard output based on detection flags
     if $wol_enabled; then
-        wol_icon="$ICON_OK"
-        wol_label="${GREEN}activated${RESET}"
+        wol_icon="$ICON_OK"; wol_label="${GREEN}activated${RESET}"
     else
-        wol_icon="$ICON_WARN"
-        wol_label="${YELLOW}deactivated${RESET}"
+        wol_icon="$ICON_WARN"; wol_label="${YELLOW}deactivated${RESET}"
     fi
 
-    # UNIVERSAL ALIGNMENT: 22-character padding locks all icons into a perfect grid
     echo -e "  ${CYAN}Boot Mode${RESET}             ${boot_mode}  ${boot_login}"
     echo -e "  ${CYAN}OS${RESET}                    $(cat /etc/os-release | grep PRETTY_NAME | cut -d= -f2 | tr -d '"')"
     echo -e "  ${CYAN}Version${RESET}               $(cat /etc/os-release | grep -E '^(VERSION)=' | cut -d= -f2 | tr -d '"')"
@@ -456,20 +363,25 @@ run_status() {
     echo -e "  ${CYAN}Wake-on-LAN${RESET}           ${wol_icon} ${wol_label}"
     echo ""
 
-    # --- Overclock Profile ---
     print_section "Overclock"
 
-    local cpu_preset="None"
-    local cpu_profile="No Active Config"
-
+    local cpu_preset="None" local cpu_profile="No Active Config"
     if [[ -f "$CPU_CONF" ]]; then
         cpu_preset=$(oc_match_preset 2>/dev/null || echo "Custom")
         cpu_profile=$(oc_active_profile 2>/dev/null || echo "Active Profile")
-        echo -e "  ${DIM}Active: ${cpu_preset} — ${cpu_profile}${RESET}"
-    else
-        echo -e "  ${DIM}Active: ${cpu_preset} — ${cpu_profile}${RESET}"
     fi
+    echo -e "  ${DIM}CPU Active: ${cpu_preset} — ${cpu_profile}${RESET}"
+
+    local gpu_preset="None" local gpu_profile="No Active Config"
+    if [[ -f "$GPU_CONF" ]]; then
+        gpu_preset=$(gpu_match_preset 2>/dev/null || echo "Custom")
+        gpu_profile=$(gpu_active_profile 2>/dev/null || echo "Active Profile")
+    fi
+    echo -e "  ${DIM}GPU Active: ${gpu_preset} — ${gpu_profile}${RESET}"
     echo -e "  ${DIM}─────────────────────────────────────────────────────────────────────${RESET}"
+    local cpu_svc_enabled cpu_svc_result
+    cpu_svc_enabled=$(systemctl is-enabled bc250-smu-oc.service 2>/dev/null || echo "disabled")
+    cpu_svc_result=$(systemctl show bc250-smu-oc.service --property=ExecMainStatus --value 2>/dev/null || echo "0")
 
     local cpu_icon cpu_label
     if [[ "$cpu_svc_enabled" == "enabled" && "$cpu_svc_result" == "0" ]]; then
@@ -491,19 +403,11 @@ run_status() {
         echo -e "  ${CYAN}CPU Profile${RESET}           ${ICON_WARN} ${DIM}config not found${RESET}"
     fi
 
-    local cpu_svc_enabled cpu_svc_result
-    cpu_svc_enabled=$(systemctl is-enabled bc250-smu-oc.service 2>/dev/null || echo "disabled")
-    cpu_svc_result=$(systemctl show bc250-smu-oc.service --property=ExecMainStatus --value 2>/dev/null || echo "0")
-
-    echo ""
-
     local gpu_icon gpu_label
     if systemctl is-active --quiet cyan-skillfish-governor-smu.service 2>/dev/null; then
-        gpu_icon="$ICON_OK"
-        gpu_label="${GREEN}activated${RESET}"
+        gpu_icon="$ICON_OK"; gpu_label="${GREEN}activated${RESET}"
     else
-        gpu_icon="$ICON_WARN"
-        gpu_label="${YELLOW}deactivated${RESET}"
+        gpu_icon="$ICON_WARN"; gpu_label="${YELLOW}deactivated${RESET}"
     fi
     echo -e "  ${B_BLUE}GPU Service${RESET}           ${gpu_icon} ${gpu_label}"
 
@@ -517,7 +421,6 @@ run_status() {
     fi
     echo ""
 
-    # --- Hardware Unlocks ---
     print_section "Hardware Unlocks"
 
     if rpm-ostree kargs 2>/dev/null | grep -q "mitigations=off"; then
@@ -544,25 +447,17 @@ run_status() {
     fi
 
     if cu_find_umr; then
-        local active_bitmap
-        active_bitmap=$(sudo umr -r *.gfx1030.mmSPI_SHADER_PG_CONFIG_CU 2>/dev/null | awk '{print $2}' | tr -d '[:space:]')
+        local active_bitmap; active_bitmap=$(sudo umr -r *.gfx1030.mmSPI_SHADER_PG_CONFIG_CU 2>/dev/null | awk '{print $2}' | tr -d '[:space:]')
 
         if [[ -n "$active_bitmap" ]]; then
-            local cu_total=0
-            cu_total=$(printf "%d" "$active_bitmap" 2>/dev/null || echo "0")
-
-            if [[ "$cu_total" -eq 0 ]]; then
-                cu_total=38
-            fi
-
+            local cu_total=0; cu_total=$(printf "%d" "$active_bitmap" 2>/dev/null || echo "0")
+            if [[ "$cu_total" -eq 0 ]]; then cu_total=38; fi
             local cu_color cu_icon cu_warn_msg=""
             if [ "$cu_total" -gt 24 ]; then
-                cu_icon="$ICON_WARN"
-                cu_color="$YELLOW"
+                cu_icon="$ICON_WARN"; cu_color="$YELLOW"
                 cu_warn_msg=" ${YELLOW}⚠  CUs unlocked — verify power and cooling${RESET}"
             else
-                cu_icon="$ICON_OK"
-                cu_color="$GREEN"
+                cu_icon="$ICON_OK"; cu_color="$GREEN"
             fi
             echo -e "  ${CYAN}Active CUs${RESET}            ${cu_icon} ${cu_color}${BOLD}${cu_total}/40${RESET}  ${DIM}(default 24, max 40)${RESET}${cu_warn_msg}"
         else
@@ -573,14 +468,13 @@ run_status() {
     fi
 
     if ram_split_installed; then
-        local uma_now
-        uma_now=$(ram_split_current_uma 2>/dev/null)
+        local uma_now; uma_now=$(ram_split_current_uma 2>/dev/null)
         echo -e "  ${CYAN}RAM/VRAM Split${RESET}        ${ICON_OK} ${GREEN}UMA_SIZE=${uma_now:-?}MB${RESET}, ttm.pages_limit ceiling active"
     else
         echo -e "  ${CYAN}RAM/VRAM Split${RESET}        ${DIM}– not installed (stock split)${RESET}"
     fi
     echo ""
-    # --- Swap & ZRAM/ZSWAP ---
+
     print_section "Swap & ZRAM/ZSWAP"
 
     local swap_mb; swap_mb=$(swapfile_size_mb 2>/dev/null || echo "0")
@@ -601,7 +495,6 @@ run_status() {
     fi
     echo ""
 
-    # --- Sensors & Fan Control ---
     print_section "Sensors & Fan Control"
 
     local sens_driver sens_icon sens_color
@@ -619,13 +512,9 @@ run_status() {
        systemctl is-active --quiet coolercontrold.service 2>/dev/null || \
        systemctl --user -M "$REAL_USER@" is-active --quiet coolercontrol.service 2>/dev/null || \
        systemctl --user -M "$REAL_USER@" is-active --quiet coolercontrol-daemon.service 2>/dev/null; then
-        cc_svc_state="activated"
-        cc_icon="$ICON_OK"
-        cc_color="$GREEN"
+        cc_svc_state="activated"; cc_icon="$ICON_OK"; cc_color="$GREEN"
     else
-        cc_svc_state="deactivated"
-        cc_icon="$ICON_WARN"
-        cc_color="$YELLOW"
+        cc_svc_state="deactivated"; cc_icon="$ICON_WARN"; cc_color="$YELLOW"
     fi
     echo -e "  ${CYAN}CoolerControl${RESET}         ${cc_icon} ${cc_color}${cc_svc_state}${RESET}"
 
@@ -639,7 +528,6 @@ run_status() {
     echo -e "  ${CYAN}Xbox Wireless Adapter${RESET} ${xbox_icon} ${xbox_color}${xbox_label}${RESET}"
     echo ""
 
-    # --- Community Fixes ---
     print_section "Community Fixes"
 
     local acpi_icon acpi_color acpi_label
@@ -662,9 +550,8 @@ run_status() {
         audio_icon="$ICON_WARN"; audio_color="$YELLOW"; audio_label="stock hardware module activated"
     fi
     echo -e "  ${CYAN}Audio Patch${RESET}           ${audio_icon} ${audio_color}${audio_label}${RESET}"
-    echo ""    
+    echo ""
 }
-
 # =====================================================================
 # REFRESH & REMOVAL UTILITIES
 # =====================================================================
@@ -783,12 +670,11 @@ esac
 
 # Rest of your script logic starts here...
 echo -e "${GREEN}Starting Bazzite Toolbox Core UI...${NC}"
-#End
 
 # =====================================================================
 # 2. AUTO-UPDATE MECHANISM (WITH SILENT OFFLINE FAIL)
 # =====================================================================
-GITHUB_RAW_URL="https://github.com/Forbidden-Darkness/Bazzite_Toolbox/raw/refs/heads/main/start.sh"
+#GITHUB_RAW_URL="https://github.com/Forbidden-Darkness/Bazzite_Toolbox/raw/refs/heads/main/start.sh"
 
 if [ "$1" != "--no-update" ] && [ "$1" != "--updated" ]; then
     # Completely silent connectivity check. Fails instantly if offline.
@@ -805,7 +691,6 @@ if [ "$1" != "--no-update" ] && [ "$1" != "--updated" ]; then
                 rm -f "$TEMP_FILE"
 
                 print_info "Applying update and restarting..."
-                # Re-executes the newly downloaded file and hands over the flag
                 exec bash "$SCRIPT_PATH" --updated "$@"
             fi
         fi
@@ -813,14 +698,7 @@ if [ "$1" != "--no-update" ] && [ "$1" != "--updated" ]; then
     fi
 fi
 
-# =====================================================================
-# YOUR MAIN SCRIPT LOGIC CONTINUES BELOW
-# =====================================================================
 print_info "Starting main script workflow..."
-
-# ... Rest of your tool logic goes here ...
-
-# =====================================================================
 
 # NEW: Interactive Desktop Shortcut Handler
 ask_desktop_shortcut() {
@@ -831,7 +709,6 @@ ask_desktop_shortcut() {
 
     local shortcut="$desktop_dir/Start Bazzite Boken Toolbox.desktop"
 
-    # If the shortcut already exists, don't keep bothering the user
     if [[ -f "$shortcut" ]]; then
         return 0
     fi
@@ -879,11 +756,9 @@ SHORTCUT_EOF
     esac
 }
 
-# Run the optional shortcut menu before opening the primary toolkit
+# Run preferences
 ask_desktop_shortcut
-
-# Run the shortcut configuration function
-ensure_desktop_shortcut
+manage_shortcut_prompt
 
 # ---------------------------------
 # Function to pause and offer a Cancel Reboot option
@@ -908,12 +783,15 @@ prompt_reboot() {
             return 0
             ;;
         *)
-            echo -e "${RED}Invalid option. Defaulting to safe cancel. Returning to main menu.${NC}"
+            echo -e "${RED}Invalid option. Defaulting to safe safe cancel. Returning to main menu.${NC}"
             sleep 2
             return 1
             ;;
     esac
 }
+# =====================================================================
+# RESTORED PERFORMANCE PIPELINES (OPTIONS 1-4 EXPLICIT ARRAYS)
+# =====================================================================
 
 # Function to handle Blue Pill installation
 install_blue_pill() {
@@ -939,7 +817,7 @@ install_red_pill() {
     prompt_reboot
 }
 
-## Function to Launch Overclock
+# Function to Launch Overclock
 install_overclock() {
     echo -e "${B_RED}=== Launching Overclock Menu ===${NC}"
 
@@ -958,12 +836,10 @@ install_overclock() {
     fi
 
     chmod +x Overclock-Live-Manager.sh
-
     echo "Transitioning terminal to Overclock Live Manager..."
     sleep 1
 
     ENVIRONMENT=bazzite Overrides=true bash ./Overclock-Live-Manager.sh
-
     echo -e "${YELLOW}Overclock Manager closed. Returning to main menu...${NC}"
     sleep 2
 }
@@ -991,11 +867,9 @@ install_wake_on_lan() {
     sleep 1
 
     ENVIRONMENT=bazzite Overrides=true bash ./Wake-on-LAN-Manager.sh
-
     echo -e "${YELLOW}Wake on LAN Manager closed. Returning to main menu...${NC}"
     sleep 2
 }
-
 # Function to update_cyan-skillfish
 update_cyan-skillfish() {
     echo -e "${B_RED}=== Updating cyan-skillfish ===${NC}"
@@ -1014,7 +888,7 @@ apply_acpi_fix() {
     cd /tmp || return 1
     rm -rf acpi_tables/kernel/firmware/acpi
     git clone https://github.com/mendesrr/bc250-acpi-fix-updated-8c.git
-    cd bc250-acpi-fix-updated-8c
+    cd bc250-acpi-fix-updated-8c || return 1
 
     if [ ! -d "/tmp/bc250-acpi-fix-updated-8c" ]; then
         echo -e "${RED}ERROR: Failed to clone the ACPI fix repository. Check your internet connection.${NC}"
@@ -1035,7 +909,6 @@ apply_acpi_fix() {
 
     echo -e "${B_VIOLET}=== Installing kernel-tools (cpupower) ===${NC}"
     rpm-ostree install kernel-tools
-
     prompt_reboot
 }
 
@@ -1043,7 +916,6 @@ apply_acpi_fix() {
 remove_acpi_fix() {
     echo -e "${B_VIOLET}=== Removing BC-250 ACPI Fix ===${NC}"
 
-    # 1. Remove the custom early initrd configuration line from /etc/default/grub
     if grep -q "GRUB_EARLY_INITRD_LINUX_CUSTOM" /etc/default/grub; then
         print_info "Removing GRUB_EARLY_INITRD_LINUX_CUSTOM from /etc/default/grub..."
         sudo sed -i '/GRUB_EARLY_INITRD_LINUX_CUSTOM/d' /etc/default/grub
@@ -1051,7 +923,6 @@ remove_acpi_fix() {
         print_warning "No GRUB_EARLY_INITRD_LINUX_CUSTOM line found in /etc/default/grub."
     fi
 
-    # 2. Delete the compiled archive from /boot
     if [ -f "/boot/SSDT_ACPI.cpio" ]; then
         print_info "Deleting /boot/SSDT_ACPI.cpio..."
         sudo rm -f /boot/SSDT_ACPI.cpio
@@ -1059,7 +930,6 @@ remove_acpi_fix() {
         print_warning "File /boot/SSDT_ACPI.cpio not found."
     fi
 
-    # 3. Regenerate GRUB configurations via ujust
     print_info "Regenerating GRUB configuration..."
     if command -v ujust &> /dev/null; then
         ujust regenerate-grub
@@ -1067,23 +937,22 @@ remove_acpi_fix() {
         sudo grub2-mkconfig -o /etc/grub2.cfg
     fi
 
-    # 4. Clean up temporary directories / cloned files
     print_info "Cleaning up temporary build directories..."
     rm -rf /tmp/acpi_tables /tmp/bc250-acpi-fix-updated-8c /tmp/bc250-acpi-fix
-
     print_info "ACPI Fix successfully uninstalled!"
     prompt_reboot
 }
 
 # Wrapped in a Menu Loop
 show_menu() {
-    # Ensure local terminal variables exist to protect strict set -u bounds
     local RESET="${RESET:-}" BOLD="${BOLD:-}" DIM="${DIM:-}"
     local RED="${RED:-}" GREEN="${GREEN:-}" YELLOW="${YELLOW:-}"
     local CYAN="${CYAN:-}" WHITE="${WHITE:-}" BLUE="${BLUE:-}" MAGENTA="${MAGENTA:-}"
     local ICON_WARN="${ICON_WARN:-⚠}"
-    # Example implementation line to drop inside your main clear menu loop:
-    # DYNAMIC TELEMETRY CALCULATOR: Sweeps the kernel hardware matrix for real-time metrics
+
+    while true; do
+        clear
+        # Real-time Telemetry Calculators: Updates seamlessly on every screen refresh loop
         local raw_temp cpu_temp
         raw_temp=$(cat /sys/class/hwmon/hwmon*/temp1_input 2>/dev/null | head -n 1 || echo "0")
         if (( raw_temp > 0 )); then
@@ -1091,40 +960,27 @@ show_menu() {
         else
             cpu_temp="N/A"
         fi
-
         local load_avg; load_avg=$(awk '{print $1" "$2" "$3}' /proc/loadavg)
 
-        # UNIVERSAL GEOMETRY: Precision padded to line up flawlessly with your 78-character panel walls
-        # echo -e "  ║    System Load: ${WHITE}${load_avg}${CYAN}          │       Silicon Temp: ${YELLOW}${cpu_temp}${CYAN}      ║"
+        # Draw Symmetrical 78-Character Frame Heading Panel
+        echo -e "${BOLD}${CYAN}"
+        echo "  ╔════════════════════════════════════════════════════════════════════════════════════════╗"
+        echo "  ║                                                                                        ║"
+        echo -e "  ║        ${YELLOW}██████╗  █████╗ ███████╗███████╗██╗████████╗███████╗    ██████╗ ███████╗${CYAN}        ║"
+        echo -e "  ║        ${YELLOW}██╔══██╗██╔══██╗╚══███╔╝╚══███╔╝██║╚══██╔══╝██╔════╝   ██╔═══██╗██╔════╝${CYAN}        ║"
+        echo -e "  ║        ${YELLOW}██████╔╝███████║  ███╔╝   ███╔╝ ██║   ██║   █████╗  ██ ██║   ██║███████╗${CYAN}        ║"
+        echo -e "  ║        ${YELLOW}██╔══██╗██╔══██║ ███╔╝   ███╔╝  ██║   ██║   ██╔══╝     ██║   ██║╚════██║${CYAN}        ║"
+        echo -e "  ║        ${YELLOW}██████╔╝██║  ██║███████╗███████╗██║   ██║   ███████╗   ╚██████╔╝███████║${CYAN}        ║"
+        echo -e "  ║        ${YELLOW}╚══════╝ ╚═╝  ╚═╝╚══════╝╚══════╝╚═╝   ╚═╝   ╚══════╝    ╚═════╝ ╚══════╝${CYAN}       ║"
+        echo "  ║                                                                                        ║"
+        # RE-ALIGNED LAYER: Compensated character width parameters to prevent layout skewing
+        echo "  ║                                                                                        ║"
+        echo -e "  ║    ${B_BLUE}[●] BLUE Pill${CYAN}            🐇  Follow The White Rabbit  🐇            ${RED}RED Pill [●]${CYAN}    ║"
+        echo "  ║                                                                                        ║"
+        echo -e "  ║        System Load: ${WHITE}${load_avg}${CYAN}        │           Silicon Temp: ${YELLOW}${cpu_temp}${CYAN}               ║"
+        echo "  ╚════════════════════════════════════════════════════════════════════════════════════════╝"
 
-
-
-    while true; do
-        clear
-
-    echo -e "${BOLD}${CYAN}"
-    echo "  ╔═══════════════════════════════════════════════════════════════════════════════╗"
-    echo "  ║                                                                               ║"
-    echo -e "  ║   ${YELLOW}██████╗  █████╗ ███████╗███████╗██╗████████╗███████╗    ██████╗ ███████╗${CYAN}    ║"
-    echo -e "  ║   ${YELLOW}██╔══██╗██╔══██╗╚══███╔╝╚══███╔╝██║╚══██╔══╝██╔════╝   ██╔═══██╗██╔════╝${CYAN}    ║"
-    echo -e "  ║   ${YELLOW}██████╔╝███████║  ███╔╝   ███╔╝ ██║   ██║   █████╗  ██ ██║   ██║███████╗${CYAN}    ║"
-    echo -e "  ║   ${YELLOW}██╔══██╗██╔══██║ ███╔╝   ███╔╝  ██║   ██║   ██╔══╝     ██║   ██║╚════██║${CYAN}    ║"
-    echo -e "  ║   ${YELLOW}██████╔╝██║  ██║███████╗███████╗██║   ██║   ███████╗   ╚██████╔╝███████║${CYAN}    ║"
-    echo -e "  ║   ${YELLOW}╚══════╝ ╚═╝  ╚═╝╚══════╝╚══════╝╚═╝   ╚═╝   ╚══════╝    ╚═════╝ ╚══════╝${CYAN}   ║"
-    echo "  ║                                                                               ║"
-    echo -e "  ║    ${B_BLUE}[●] BLUE Pill${CYAN}                                            ${RED}RED Pill [●]${CYAN}      ║"
-    echo "  ║                                                                               ║"
-    echo "  ╚═══════════════════════════════════════════════════════════════════════════════╝"
-    echo -e "  ║    System Load: ${WHITE}${load_avg}${CYAN}      │           Silicon Temp: ${YELLOW}${cpu_temp}${CYAN}            ║"
-    echo -e "${RESET}"
-
-
-        # Clean Geometric Heading Panel
-        #echo -e "  ${BOLD}${CYAN}╔═══════════════════════════════════════════════════════════════════╗${RESET}"
-        #echo -e "  ${BOLD}${CYAN}║                  AMD BC-250 OPTIMIZATION TOOLKIT                  ║${RESET}"
-        #echo -e "  ${BOLD}${CYAN}║                       System Management Menu                      ║${RESET}"
-        #echo -e "  ${BOLD}${CYAN}╚═══════════════════════════════════════════════════════════════════╝${RESET}"
-
+        echo -e "${RESET}"
         # --- SECTION 1: STORAGE & INITIAL MEMORY CONFIG ---
         echo -e "  ${BOLD}${YELLOW}This is your last chance. After this, there is no turning back.${RESET}"
         echo -e "  ${DIM}─────────────────────────────────────────────────────────────────────${RESET}"
@@ -1165,11 +1021,8 @@ show_menu() {
         echo ""
 
         # --- GLOBAL OPERATIONS ---
-        echo -e "    ${BOLD}${RED}[0] Secure Safe Exit${RESET}"    
         echo -e "    ${BLUE}[r] Reload Menu Interface${RESET}"
         echo -e "    ${BOLD}${RED}[0] Secure Safe Exit${RESET}"
-        echo ""
-
         echo ""
 
         # --- INTEGRATED WARNING & CONFIG NOTICES ---
@@ -1181,32 +1034,19 @@ show_menu() {
         echo -e "     ${WHITE}\"/etc/cyan-skillfish-governor-smu/config.toml\"${RESET}"
         echo -e "  ${DIM}─────────────────────────────────────────────────────────────────────${RESET}"
 
-        # Safe Prompt Parser
+        # Safe Prompt Parser (Instant Keypress Detection Engine)
         choice=""
         read -n 1 -s -rp "  Select an option [0-7, a-g, s]: " choice || true
+        echo ""
 
         case "$choice" in
-            1)
-                install_blue_pill
-                ;;
-            2)
-                install_red_pill
-                ;;
-            3)
-                apply_acpi_fix
-                ;;
-            4)
-                remove_acpi_fix
-                ;;
-            5)
-                install_overclock
-                ;;
-            6)
-                install_wake_on_lan
-                ;;
-            7)
-                update_cyan-skillfish
-                ;;
+            1) install_blue_pill ;;
+            2) install_red_pill ;;
+            3) apply_acpi_fix ;;
+            4) remove_acpi_fix ;;
+            5) install_overclock ;;
+            6) install_wake_on_lan ;;
+            7) update_cyan-skillfish ;;
             a)
                 echo -e "${GREEN}Executing Temporary Start...${NC}"
                 sudo systemctl start cyan-skillfish-governor-smu
@@ -1247,25 +1087,20 @@ show_menu() {
                 echo ""
                 read -rp "Press [Enter] to return to the main menu..."
                 ;;
-            s) 
+            s)
                 run_status
                 echo -e "\n  ${YELLOW}Press any key to return to the menu...${RESET}"
-                read -n 1 -s -r || true # Instant return key matching the input engine
+                read -n 1 -s -r || true
                 ;;
-
             r)
                 print_info "Reinitializing toolkit memory tracking blocks..."
                 sleep 0.5
-                
-                # FIX: Utilizing exec replaces the running process with a fresh copy of itself on disk.
-                # We preserve $SCRIPT_PATH and pass standard arguments down the pipe seamlessly.
                 exec bash "$SCRIPT_PATH" "$@"
                 ;;
-                
             0)
                 echo -e "${GREEN}Exiting Bazzite Toolbox. Cleaning environment...${NC}"
+                stop_background_music
                 sleep 1
-
                 if [ -n "$PPID" ]; then
                     kill -SIGHUP "$PPID" 2>/dev/null
                 fi
@@ -1279,5 +1114,6 @@ show_menu() {
     done
 }
 
-# Start the menu loop execution
+# --- Start Menu Trigger Execution ---
 show_menu
+
