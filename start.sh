@@ -1167,6 +1167,7 @@ show_menu() {
         echo -e "  ${DIM}─────────────────────────────────────────────────────────────────────${RESET}"
 
         # Safe Prompt Parser
+        choice=""
         read -rp "  Enter choice [0-7, a-g, s]: " choice
 
         case $choice in
