@@ -105,7 +105,7 @@ echo -e " ${BIGreen} ╚══════════════════�
 echo -e ${CYAN}
 
 echo -e ${BIGreen}
-read -rp "  Press Enter to exit..." dummy_input
+read -rp "  Press Enter to continue..." dummy_input
 echo -e ${BIGreen}
 
 
