@@ -1080,6 +1080,10 @@ show_menu() {
     local RED="${RED:-}" GREEN="${GREEN:-}" YELLOW="${YELLOW:-}"
     local CYAN="${CYAN:-}" WHITE="${WHITE:-}" BLUE="${BLUE:-}" MAGENTA="${MAGENTA:-}"
     local ICON_WARN="${ICON_WARN:-⚠}"
+    # Example implementation line to drop inside your main clear menu loop:
+    local cpu_temp; cpu_temp=$(sensors 2>/dev/null | awk '/Tctl/ {print $2; exit}' | tr -d '+')
+    echo -e "  ║    System Load: $(awk '{print $1" "$2" "$3}' /proc/loadavg)   |   Silicon Temp: ${YELLOW}${cpu_temp:-N/A}${CYAN}    ║"
+
 
     while true; do
         clear
