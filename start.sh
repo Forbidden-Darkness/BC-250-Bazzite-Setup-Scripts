@@ -94,14 +94,17 @@ trap stop_background_music EXIT
 start_background_music
 
 clear
-# FIX: Properly grouped the formatting tags to prevent vertical margin rendering bugs
-echo -e "${BIGreen}  ╔══════════════════════════════════════════════════════════════════════════╗${NC}"
-echo -e "${BIGreen}  ║                                                                          ║${NC}"
-echo -e "${BIGreen}  ║                     █ █ █ █▀▀ █   █▀▀ █▀█ █▄█ █▀▀                        ║${NC}"
-echo -e "${BIGreen}  ║                     ▀▄▀▄▀ ██▄ █▄▄ █▄▄ █▄█ █ █ ██▄                        ║${NC}"
-echo -e "${BIGreen}  ║                                                                          ║${NC}"
-echo -e "${BIGreen}  ╚══════════════════════════════════════════════════════════════════════════╝${NC}"
+# FIX: Utilizing 24-bit True Color RGB (38;2;0;255;0) to completely bypass system theme overrides
+echo -e "\033[38;2;0;255;0m  ╔═════════════════════════════════════════════════════════════════════════════════════════════╗\033[0m"
+echo -e "\033[38;2;0;255;0m  ║                                                                                             ║\033[0m"
+echo -e "\033[38;2;0;255;0m  ║                                █ █ █ █▀▀ █   █▀▀ █▀█ █▄█ █▀▀                                ║\033[0m"
+echo -e "\033[38;2;0;255;0m  ║                                ▀▄▀▄▀ ██▄ █▄▄ █▄▄ █▄█ █ █ ██▄                                ║\033[0m"
+echo -e "\033[38;2;0;255;0m  ║                                                                                             ║\033[0m"
+echo -e "\033[38;2;0;255;0m  ║    ${B_BLUE}[●] BLUE Pill\033[38;2;0;255;0m            🔑  System Architecture Unlocks  🔑            ${RED}RED Pill [●]\033[38;2;0;255;0m     ║\033[0m"
+echo -e "\033[38;2;0;255;0m  ║                                                                                             ║\033[0m"
+echo -e "\033[38;2;0;255;0m  ╚═════════════════════════════════════════════════════════════════════════════════════════════╝\033[0m"
 echo ""
+
 read -rp "  Press Enter to continue..." dummy_input
 echo ""
 
@@ -674,7 +677,7 @@ echo -e "${GREEN}Starting Bazzite Toolbox Core UI...${NC}"
 # =====================================================================
 # 2. AUTO-UPDATE MECHANISM (WITH SILENT OFFLINE FAIL)
 # =====================================================================
-#GITHUB_RAW_URL="https://github.com/Forbidden-Darkness/Bazzite_Toolbox/raw/refs/heads/main/start.sh"
+GITHUB_RAW_URL="https://github.com/Forbidden-Darkness/Bazzite_Toolbox/raw/refs/heads/main/start.sh"
 
 if [ "$1" != "--no-update" ] && [ "$1" != "--updated" ]; then
     # Completely silent connectivity check. Fails instantly if offline.
