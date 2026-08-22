@@ -1170,7 +1170,7 @@ show_menu() {
         choice=""
         read -rp "  Enter choice [0-7, a-g, s]: " choice
 
-        case $choice in
+        case "$choice" in
             1)
                 install_blue_pill
                 ;;
