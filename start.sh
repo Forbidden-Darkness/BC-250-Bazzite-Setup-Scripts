@@ -471,29 +471,6 @@ run_status() {
     fi
     echo -e "  ${DIM}─────────────────────────────────────────────────────────────────────${RESET}"
 
-    if [[ -f "$CPU_CONF" ]]; then
-        local cpu_freq cpu_scale cpu_temp
-        cpu_freq=$(awk -F'= ' '/^frequency/{sub(/#.*/, "", $2); print $2}' "$CPU_CONF" | tr -d ' ')
-        cpu_scale=$(awk -F'= ' '/^scale/{sub(/#.*/, "", $2); print $2}' "$CPU_CONF" | tr -d ' ')
-        cpu_temp=$(awk -F'= ' '/^max_temperature/{sub(/#.*/, "", $2); print $2}' "$CPU_CONF" | tr -d ' ')
-        echo -e "  ${CYAN}CPU Profile${RESET}           ${ICON_OK} ${cpu_freq}MHz  scale ${cpu_scale}  max ${cpu_temp}°C"
-    else
-        echo -e "  ${CYAN}CPU Profile${RESET}           ${ICON_WARN} ${DIM}config not found${RESET}"
-    fi
-
-    if [[ -f "$GPU_CONF" ]]; then
-        local gpu_freq gpu_throttle
-        gpu_freq=$(awk -F'= ' '/^frequency/{sub(/#.*/, "", $2); print $2}' "$GPU_CONF" | tr -d ' ' | tail -1)
-        gpu_throttle=$(awk -F'= ' '/^throttling /{sub(/#.*/, "", $2); print $2}' "$GPU_CONF" | tr -d ' ')
-        echo -e "  ${CYAN}GPU Profile${RESET}           ${ICON_OK} ${gpu_freq}MHz  throttle ${gpu_throttle}°C"
-    else
-        echo -e "  ${CYAN}GPU Profile${RESET}           ${ICON_WARN} ${DIM}config not found${RESET}"
-    fi
-
-    local cpu_svc_enabled cpu_svc_result
-    cpu_svc_enabled=$(systemctl is-enabled bc250-smu-oc.service 2>/dev/null || echo "disabled")
-    cpu_svc_result=$(systemctl show bc250-smu-oc.service --property=ExecMainStatus --value 2>/dev/null || echo "0")
-
     local cpu_icon cpu_label
     if [[ "$cpu_svc_enabled" == "enabled" && "$cpu_svc_result" == "0" ]]; then
         cpu_icon="$ICON_OK"; cpu_label="${GREEN}activated (applied successfully)${RESET}"
@@ -504,6 +481,22 @@ run_status() {
     fi
     echo -e "  ${CYAN}CPU Service${RESET}           ${cpu_icon} ${cpu_label}"
 
+    if [[ -f "$CPU_CONF" ]]; then
+        local cpu_freq cpu_scale cpu_temp
+        cpu_freq=$(awk -F'= ' '/^frequency/{sub(/#.*/, "", $2); print $2}' "$CPU_CONF" | tr -d ' ')
+        cpu_scale=$(awk -F'= ' '/^scale/{sub(/#.*/, "", $2); print $2}' "$CPU_CONF" | tr -d ' ')
+        cpu_temp=$(awk -F'= ' '/^max_temperature/{sub(/#.*/, "", $2); print $2}' "$CPU_CONF" | tr -d ' ')
+        echo -e "  ${CYAN}CPU Profile${RESET}           ${ICON_OK} ${cpu_freq}MHz  scale ${cpu_scale}  max ${cpu_temp}°C"
+    else
+        echo -e "  ${CYAN}CPU Profile${RESET}           ${ICON_WARN} ${DIM}config not found${RESET}"
+    fi
+
+    local cpu_svc_enabled cpu_svc_result
+    cpu_svc_enabled=$(systemctl is-enabled bc250-smu-oc.service 2>/dev/null || echo "disabled")
+    cpu_svc_result=$(systemctl show bc250-smu-oc.service --property=ExecMainStatus --value 2>/dev/null || echo "0")
+
+    echo ""
+
     local gpu_icon gpu_label
     if systemctl is-active --quiet cyan-skillfish-governor-smu.service 2>/dev/null; then
         gpu_icon="$ICON_OK"
@@ -512,7 +505,16 @@ run_status() {
         gpu_icon="$ICON_WARN"
         gpu_label="${YELLOW}deactivated${RESET}"
     fi
-    echo -e "  ${CYAN}GPU Service${RESET}           ${gpu_icon} ${gpu_label}"
+    echo -e "  ${B_BLUE}GPU Service${RESET}           ${gpu_icon} ${gpu_label}"
+
+    if [[ -f "$GPU_CONF" ]]; then
+        local gpu_freq gpu_throttle
+        gpu_freq=$(awk -F'= ' '/^frequency/{sub(/#.*/, "", $2); print $2}' "$GPU_CONF" | tr -d ' ' | tail -1)
+        gpu_throttle=$(awk -F'= ' '/^throttling /{sub(/#.*/, "", $2); print $2}' "$GPU_CONF" | tr -d ' ')
+        echo -e "  ${B_BLUE}GPU Profile${RESET}           ${ICON_OK} ${gpu_freq}MHz  throttle ${gpu_throttle}°C"
+    else
+        echo -e "  ${B_BLUE}GPU Profile${RESET}           ${ICON_WARN} ${DIM}config not found${RESET}"
+    fi
     echo ""
 
     # --- Hardware Unlocks ---
@@ -650,7 +652,7 @@ run_status() {
     else
         acpi_icon="$DIM"; acpi_color="$DIM"; acpi_label="not installed"
     fi
-    echo -e "  ${CYAN}ACPI Fix${RESET}              ${acpi_icon} ${acpi_color}${acpi_label}${RESET}"
+    echo -e "  ${B_RED}ACPI Fix${RESET}              ${acpi_icon} ${acpi_color}${acpi_label}${RESET}"
 
     local audio_icon audio_color audio_label resolved_amdgpu
     resolved_amdgpu=$(modinfo -F filename amdgpu 2>/dev/null || echo "")
