@@ -1,31 +1,55 @@
 #!/usr/bin/env bash
 
 clear
-# Define the path to your audio file (MP3, WAV, OGG, or FLAC)
-AUDIO_FILE="$REAL_HOME/Bazzite_Toolbox/Wake_on_LAN/Red-Pill-Blue-Pill.mp3"
+# Ensure paths capture the local user context accurately
+REAL_USER="${SUDO_USER:-$(logname 2>/dev/null || whoami)}"
+REAL_HOME="$(getent passwd "$REAL_USER" | cut -d: -f6)"
+[[ -z "$REAL_HOME" || ! -d "$REAL_HOME" ]] && REAL_HOME="/root"
+
+# Universal WAV target path
+AUDIO_FILE="$REAL_HOME/Bazzite_Toolbox/Wake_on_LAN/Red-Pill-Blue-Pill.wav"
+MUSIC_LOCK_FILE="$REAL_HOME/.bc250-toolkit-music.pid"
 
 start_background_music() {
-    if [[ -f "$AUDIO_FILE" ]]; then
-        # --no-video: Mutes visual window rendering
-        # --loop: Loops the track indefinitely
-        # &>/dev/null &: Silences log text and drops it to a background thread
-        mpv --no-video --loop "$AUDIO_FILE" &>/dev/null &
-
-        # Capture the background player's Process ID (PID)
-        MUSIC_PID=$!
+    if [[ -f "$AUDIO_FILE" ]] && [[ ! -f "$MUSIC_LOCK_FILE" ]]; then
+        # FIX: Resolves user ID and maps the critical XDG runtime socket path directly into the loop
+        local user_id; user_id=$(id -u "$REAL_USER")
+        
+        ( 
+            while true; do 
+                # Forcing absolute desktop user environment variable injection to bypass the sudo audio wall
+                sudo -u "$REAL_USER" XDG_RUNTIME_DIR="/run/user/$user_id" pw-play "$AUDIO_FILE"
+            done 
+        ) &>/dev/null & echo $! > "$MUSIC_LOCK_FILE" || true
     fi
 }
 
 stop_background_music() {
-    # If the process ID exists, terminate the media player cleanly
-    if [[ -n "${MUSIC_PID:-}" ]]; then
-        kill "$MUSIC_PID" 2>/dev/null || true
+    if [[ -f "$MUSIC_LOCK_FILE" ]]; then
+        local target_pid
+        target_pid=$(cat "$MUSIC_LOCK_FILE" 2>/dev/null || echo "")
+        if [[ -n "$target_pid" ]]; then
+            # Terminate the parent background loop shell process
+            kill -9 "$target_pid" 2>/dev/null || true
+        fi
+        # Instantly flush any remaining audio fragments out of the system device
+        killall pw-play 2>/dev/null || true
+        rm -f "$MUSIC_LOCK_FILE" 2>/dev/null || true
     fi
 }
 
-# CRITICAL SAFETY: If the script crashes, hits 'exit', or is closed by the user,
-# the EXIT trap ensures the music stops playing immediately instead of looping forever.
+# Ensure clean exit handling
 trap stop_background_music EXIT
+
+# --- Main Execution ---
+start_background_music
+
+clear
+echo "==========================================="
+echo "   Toolkit Menu with Ambient Background Music"
+echo "==========================================="
+read -rp "Press Enter to stop the music and exit..." dummy_input
+
 
 # --- Swap Allocation Global Targets ---
 SWAPFILE_PATH="/var/swap/swapfile"  # Bazzite's standard BTRFS swapfile target path
