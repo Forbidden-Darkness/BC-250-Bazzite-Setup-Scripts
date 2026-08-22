@@ -448,8 +448,6 @@ run_status() {
         wol_label="${YELLOW}deactivated${RESET}"
     fi
 
-
-
     # UNIVERSAL ALIGNMENT: 22-character padding locks all icons into a perfect grid
     echo -e "  ${CYAN}Boot Mode${RESET}             ${boot_mode}  ${boot_login}"
     echo -e "  ${CYAN}OS${RESET}                    $(cat /etc/os-release | grep PRETTY_NAME | cut -d= -f2 | tr -d '"')"
@@ -662,14 +660,8 @@ run_status() {
         audio_icon="$ICON_WARN"; audio_color="$YELLOW"; audio_label="stock hardware module activated"
     fi
     echo -e "  ${CYAN}Audio Patch${RESET}           ${audio_icon} ${audio_color}${audio_label}${RESET}"
-    echo ""
-    read -rp "Press [Enter] to return to the main menu..."
+    echo ""    
 }
-
-
-
-
-
 
 # =====================================================================
 # REFRESH & REMOVAL UTILITIES
