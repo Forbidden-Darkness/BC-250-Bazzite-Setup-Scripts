@@ -1160,7 +1160,7 @@ show_menu() {
 
         # Safe Prompt Parser
         choice=""
-        read -rp "  Enter choice [0-7, a-g, s]: " choice
+        read -n 1 -s -rp "  Select an option [0-7, a-g, s]: " choice || true
 
         case "$choice" in
             1)
@@ -1227,7 +1227,7 @@ show_menu() {
             s) 
                 run_status
                 echo -e "\n  ${YELLOW}Press any key to return to the menu...${RESET}"
-                read -n 1 -r  # Instant return fallback to match your input style
+                read -n 1 -s -r || true # Instant return key matching the input engine
                 ;;
             0)
                 echo -e "${GREEN}Exiting Bazzite Toolbox. Cleaning environment...${NC}"
