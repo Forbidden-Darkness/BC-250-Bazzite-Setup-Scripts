@@ -1081,8 +1081,20 @@ show_menu() {
     local CYAN="${CYAN:-}" WHITE="${WHITE:-}" BLUE="${BLUE:-}" MAGENTA="${MAGENTA:-}"
     local ICON_WARN="${ICON_WARN:-⚠}"
     # Example implementation line to drop inside your main clear menu loop:
-    local cpu_temp; cpu_temp=$(sensors 2>/dev/null | awk '/Tctl/ {print $2; exit}' | tr -d '+')
-    echo -e "  ║    System Load: $(awk '{print $1" "$2" "$3}' /proc/loadavg)   |   Silicon Temp: ${YELLOW}${cpu_temp:-N/A}${CYAN}    ║"
+            # DYNAMIC TELEMETRY CALCULATOR: Sweeps the kernel hardware matrix for real-time metrics
+        local raw_temp cpu_temp
+        raw_temp=$(cat /sys/class/hwmon/hwmon*/temp1_input 2>/dev/null | head -n 1 || echo "0")
+        if (( raw_temp > 0 )); then
+            cpu_temp="$(( raw_temp / 1000 ))°C"
+        else
+            cpu_temp="N/A"
+        fi
+
+        local load_avg; load_avg=$(awk '{print $1" "$2" "$3}' /proc/loadavg)
+
+        # UNIVERSAL GEOMETRY: Precision padded to line up flawlessly with your 78-character panel walls
+        echo -e "  ║    System Load: ${WHITE}${load_avg}${CYAN}          │       Silicon Temp: ${YELLOW}${cpu_temp}${CYAN}      ║"
+
 
 
     while true; do
