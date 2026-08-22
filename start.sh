@@ -205,14 +205,13 @@ sensors_active_driver() {
 # higher is recommended to maintain rock-solid system stability under Gamescope.
 #
 # To accommodate demanding games requiring 8GB+ allocations without display crashes,
-# the script also pairs your hardware base split with the 'ttm.pages_limit' kernel 
+# the script also pairs your hardware base split with the 'ttm.pages_limit' kernel
 # parameter to override and lift the dynamic graphics allocation ceilings.
-# 
+#
 # Modded BIOS flash profiles are obsolete. Changes are managed via the integrated
 # fanoush/bc250_memcfg binary utility, compiled natively from source at runtime.
 # Documentation: https://elektricm.github.io/amd-bc250-docs/bios/vram/
 # ==============================================================================
-
 
 RAM_SPLIT_DIR="$EXTERNAL_DIR/bc250_memcfg"
 RAM_SPLIT_BIN="$RAM_SPLIT_DIR/bc250memcfg"
@@ -332,11 +331,11 @@ run_status() {
         boot_login="${DIM}no password${RESET}"
     fi
 
-    # FIX: Precision space-padded to ensure absolute vertical alignment
-    echo -e "  ${CYAN}Boot Mode${RESET}         ${boot_mode}  ${boot_login}"
-    echo -e "  ${CYAN}OS${RESET}                $(cat /etc/os-release | grep PRETTY_NAME | cut -d= -f2 | tr -d '"')"
-    echo -e "  ${CYAN}Version${RESET}           $(cat /etc/os-release | grep -E '^(VERSION)=' | cut -d= -f2 | tr -d '"')"
-    echo -e "  ${CYAN}Kernel${RESET}            $(uname -r)"
+    # UNIVERSAL ALIGNMENT: 22-character padding locks all icons into a perfect grid
+    echo -e "  ${CYAN}Boot Mode${RESET}             ${boot_mode}  ${boot_login}"
+    echo -e "  ${CYAN}OS${RESET}                    $(cat /etc/os-release | grep PRETTY_NAME | cut -d= -f2 | tr -d '"')"
+    echo -e "  ${CYAN}Version${RESET}               $(cat /etc/os-release | grep -E '^(VERSION)=' | cut -d= -f2 | tr -d '"')"
+    echo -e "  ${CYAN}Kernel${RESET}                $(uname -r)"
     echo ""
 
     # --- Overclock Profile ---
@@ -359,19 +358,18 @@ run_status() {
         cpu_freq=$(awk -F'= ' '/^frequency/{sub(/#.*/, "", $2); print $2}' "$CPU_CONF" | tr -d ' ')
         cpu_scale=$(awk -F'= ' '/^scale/{sub(/#.*/, "", $2); print $2}' "$CPU_CONF" | tr -d ' ')
         cpu_temp=$(awk -F'= ' '/^max_temperature/{sub(/#.*/, "", $2); print $2}' "$CPU_CONF" | tr -d ' ')
-        echo -e "  ${CYAN}CPU Profile${RESET}         ${ICON_OK} ${cpu_freq}MHz  scale ${cpu_scale}  max ${cpu_temp}°C"
+        echo -e "  ${CYAN}CPU Profile${RESET}           ${ICON_OK} ${cpu_freq}MHz  scale ${cpu_scale}  max ${cpu_temp}°C"
     else
-        echo -e "  ${CYAN}CPU Profile${RESET}         ${ICON_WARN} ${DIM}config not found${RESET}"
+        echo -e "  ${CYAN}CPU Profile${RESET}           ${ICON_WARN} ${DIM}config not found${RESET}"
     fi
 
     if [[ -f "$GPU_CONF" ]]; then
         local gpu_freq gpu_throttle
         gpu_freq=$(awk -F'= ' '/^frequency/{sub(/#.*/, "", $2); print $2}' "$GPU_CONF" | tr -d ' ' | tail -1)
         gpu_throttle=$(awk -F'= ' '/^throttling /{sub(/#.*/, "", $2); print $2}' "$GPU_CONF" | tr -d ' ')
-        # FIX: Uniform tab spacing matched exactly to the universal padding column
-        echo -e "  ${CYAN}GPU Profile${RESET}         ${ICON_OK} ${gpu_freq}MHz  throttle ${gpu_throttle}°C"
+        echo -e "  ${CYAN}GPU Profile${RESET}           ${ICON_OK} ${gpu_freq}MHz  throttle ${gpu_throttle}°C"
     else
-        echo -e "  ${CYAN}GPU Profile${RESET}         ${ICON_WARN} ${DIM}config not found${RESET}"
+        echo -e "  ${CYAN}GPU Profile${RESET}           ${ICON_WARN} ${DIM}config not found${RESET}"
     fi
 
     local cpu_svc_enabled cpu_svc_result
@@ -386,10 +384,9 @@ run_status() {
     else
         cpu_icon="$ICON_WARN"; cpu_label="${YELLOW}deactivated${RESET}"
     fi
-    echo -e "  ${CYAN}CPU Service${RESET}         ${cpu_icon} ${cpu_label}"
+    echo -e "  ${CYAN}CPU Service${RESET}           ${cpu_icon} ${cpu_label}"
 
     local gpu_icon gpu_label
-    # FIX: Uses boolean silent queries (--quiet) to suppress systemctl output text drops onto the canvas
     if systemctl is-active --quiet cyan-skillfish-governor-smu.service 2>/dev/null; then
         gpu_icon="$ICON_OK"
         gpu_label="${GREEN}activated${RESET}"
@@ -397,14 +394,11 @@ run_status() {
         gpu_icon="$ICON_WARN"
         gpu_label="${YELLOW}deactivated${RESET}"
     fi
-    echo -e "  ${CYAN}GPU Service${RESET}         ${gpu_icon} ${gpu_label}"
+    echo -e "  ${CYAN}GPU Service${RESET}           ${gpu_icon} ${gpu_label}"
     echo ""
 
-
-    # --- Hardware Unlocks (CPU Cores / Compute Units) ---
+    # --- Hardware Unlocks ---
     print_section "Hardware Unlocks"
-    # NOTE: If double lines appear, delete the echo line below
-    echo -e "  ${DIM}─────────────────────────────────────────────────────────────────────${RESET}"
 
     if rpm-ostree kargs 2>/dev/null | grep -q "mitigations=off"; then
         echo -e "  ${CYAN}CPU Mitigations${RESET}       ${ICON_OK} ${GREEN}disabled${RESET} (mitigations=off active via rpm-ostree kargs)"
@@ -429,7 +423,6 @@ run_status() {
         fi
     fi
 
-    # FIX: Repaired, closed, and finalized the loop truncation from your prompt
     if cu_find_umr; then
         local active_bitmap
         active_bitmap=$(sudo umr -r *.gfx1030.mmSPI_SHADER_PG_CONFIG_CU 2>/dev/null | awk '{print $2}' | tr -d '[:space:]')
@@ -464,13 +457,11 @@ run_status() {
         uma_now=$(ram_split_current_uma 2>/dev/null)
         echo -e "  ${CYAN}RAM/VRAM Split${RESET}        ${ICON_OK} ${GREEN}UMA_SIZE=${uma_now:-?}MB${RESET}, ttm.pages_limit ceiling active"
     else
-        echo -e "  ${CYAN}RAM/VRAM Split${RESET}        ${DIM}– not installed (stock ${RAM_SPLIT_STOCK_UMA_MB}MB split, SteamOS default)${RESET}"
+        echo -e "  ${CYAN}RAM/VRAM Split${RESET}        ${DIM}– not installed (stock ${RAM_SPLIT_STOCK_UMA_MB}MB split, BazziteOS default)${RESET}"
     fi
     echo ""
-
     # --- Swap & ZRAM/ZSWAP ---
     print_section "Swap & ZRAM/ZSWAP"
-    echo -e "  ${DIM}─────────────────────────────────────────────────────────────────────${RESET}"
 
     local swap_mb; swap_mb=$(swapfile_size_mb 2>/dev/null || echo "0")
     if (( swap_mb > 0 )); then
@@ -480,23 +471,21 @@ run_status() {
     fi
 
     if systemctl is-active --quiet zram-generator@zram0.service 2>/dev/null || grep -qE "zram" /proc/swaps; then
-        echo -e "  ${CYAN}ZRAM/ZSWAP${RESET}            ${ICON_OK} ${GREEN}ZRAM active${RESET} / ZSWAP managed"
+        echo -e "  ${CYAN}ZRAM/ZSWAP${RESET}            ${ICON_OK} ${GREEN}ZRAM activated${RESET} / ZSWAP managed"
     elif zram_currently_disabled && zswap_currently_on; then
-        echo -e "  ${CYAN}ZRAM/ZSWAP${RESET}            ${ICON_OK} ${GREEN}ZRAM off / ZSWAP on${RESET} (lz4)"
+        echo -e "  ${CYAN}ZRAM/ZSWAP${RESET}            ${ICON_OK} ${GREEN}ZRAM deactivated / ZSWAP activated${RESET} (lz4)"
     elif zram_currently_disabled; then
-        echo -e "  ${CYAN}ZRAM/ZSWAP${RESET}            ${ICON_WARN} ${YELLOW}ZRAM off / ZSWAP configured but inactive${RESET}"
+        echo -e "  ${CYAN}ZRAM/ZSWAP${RESET}            ${ICON_WARN} ${YELLOW}ZRAM deactivated / ZSWAP configured but idle${RESET}"
     else
-        echo -e "  ${CYAN}ZRAM/ZSWAP${RESET}            ${DIM}ZRAM on / ZSWAP off${RESET}"
+        echo -e "  ${CYAN}ZRAM/ZSWAP${RESET}            ${DIM}ZRAM activated / ZSWAP deactivated${RESET}"
     fi
     echo ""
 
     # --- Sensors & Fan Control ---
     print_section "Sensors & Fan Control"
-    echo -e "  ${DIM}─────────────────────────────────────────────────────────────────────${RESET}"
 
     local sens_driver sens_icon sens_color
     sens_driver="$(sensors_active_driver 2>/dev/null || echo "none")"
-
     case "$sens_driver" in
         nct6687) sens_icon="$ICON_OK";   sens_color="$GREEN";  sens_driver="nct6687 (loaded — full PWM control)" ;;
         nct6683) sens_icon="$ICON_WARN"; sens_color="$YELLOW"; sens_driver="nct6683 (loaded — read-only)" ;;
@@ -504,11 +493,12 @@ run_status() {
     esac
     echo -e "  ${CYAN}Sensor Driver${RESET}         ${sens_icon} ${sens_color}${sens_driver}${RESET}"
 
-        local cc_svc_state cc_icon cc_color
-    # FIX: Checks both standard Bazzite containerized service layouts
+    local cc_svc_state cc_icon cc_color
     if systemctl is-active --quiet coolercontrol-daemon.service 2>/dev/null || \
        systemctl is-active --quiet coolercontrol.service 2>/dev/null || \
-       systemctl is-active --quiet coolercontrold.service 2>/dev/null; then
+       systemctl is-active --quiet coolercontrold.service 2>/dev/null || \
+       systemctl --user -M "$REAL_USER@" is-active --quiet coolercontrol.service 2>/dev/null || \
+       systemctl --user -M "$REAL_USER@" is-active --quiet coolercontrol-daemon.service 2>/dev/null; then
         cc_svc_state="activated"
         cc_icon="$ICON_OK"
         cc_color="$GREEN"
@@ -519,12 +509,11 @@ run_status() {
     fi
     echo -e "  ${CYAN}CoolerControl${RESET}         ${cc_icon} ${cc_color}${cc_svc_state}${RESET}"
 
-
     local xbox_icon xbox_color xbox_label
     xbox_label="$(xbox_adapter_status_label 2>/dev/null)"
     case "$xbox_label" in
-        "loaded")                 xbox_icon="$ICON_OK";   xbox_color="$GREEN" ;;
-        "installed (not loaded)") xbox_icon="$ICON_WARN"; xbox_color="$YELLOW" ;;
+        "loaded")                 xbox_icon="$ICON_OK";   xbox_color="$GREEN";  xbox_label="activated" ;;
+        "installed (not loaded)") xbox_icon="$ICON_WARN"; xbox_color="$YELLOW"; xbox_label="installed (deactivated)" ;;
         "not installed"|*)        xbox_icon="$ICON_WARN"; xbox_color="$YELLOW"; xbox_label="not installed" ;;
     esac
     echo -e "  ${CYAN}Xbox Wireless Adapter${RESET} ${xbox_icon} ${xbox_color}${xbox_label}${RESET}"
@@ -532,34 +521,32 @@ run_status() {
 
     # --- Community Fixes ---
     print_section "Community Fixes"
-    echo -e "  ${DIM}─────────────────────────────────────────────────────────────────────${RESET}"
 
     local acpi_icon acpi_color acpi_label
     if acpi_fix_installed; then
         if compgen -G /sys/devices/system/cpu/cpu0/cpufreq >/dev/null; then
-            acpi_icon="$ICON_OK"; acpi_color="$GREEN"; acpi_label="active (C/P-states present)"
+            acpi_icon="$ICON_OK"; acpi_color="$GREEN"; acpi_label="activated (C/P-states present)"
         else
             acpi_icon="$ICON_WARN"; acpi_color="$YELLOW"; acpi_label="installed — reboot pending"
         fi
     else
         acpi_icon="$DIM"; acpi_color="$DIM"; acpi_label="not installed"
     fi
-    echo -e "  ${CYAN}ACPI Fix${RESET}          ${acpi_icon} ${acpi_color}${acpi_label}${RESET}"
+    echo -e "  ${CYAN}ACPI Fix${RESET}              ${acpi_icon} ${acpi_color}${acpi_label}${RESET}"
 
     local audio_icon audio_color audio_label resolved_amdgpu
     resolved_amdgpu=$(modinfo -F filename amdgpu 2>/dev/null || echo "")
-
-    # FIX: Changed to wildcard pattern match to properly detect out-of-tree Bazzite updates
     if [[ "$resolved_amdgpu" == *"/updates/"* ]]; then
-        audio_icon="$ICON_OK"; audio_color="$GREEN"; audio_label="patched module active"
+        audio_icon="$ICON_OK"; audio_color="$GREEN"; audio_label="patched module activated"
     else
-        audio_icon="$ICON_WARN"; audio_color="$YELLOW"; audio_label="stock hardware module active"
+        audio_icon="$ICON_WARN"; audio_color="$YELLOW"; audio_label="stock hardware module activated"
     fi
-    echo -e "  ${CYAN}Audio Patch${RESET}       ${audio_icon} ${audio_color}${audio_label}${RESET}"
+    echo -e "  ${CYAN}Audio Patch${RESET}           ${audio_icon} ${audio_color}${audio_label}${RESET}"
     echo ""
     read -rp "Press [Enter] to return to the main menu..."
-
 }
+
+
 
 
 
@@ -686,7 +673,7 @@ echo -e "${GREEN}Starting Bazzite Toolbox Core UI...${NC}"
 # =====================================================================
 # 2. AUTO-UPDATE MECHANISM (WITH SILENT OFFLINE FAIL)
 # =====================================================================
-#GITHUB_RAW_URL="https://github.com/Forbidden-Darkness/Bazzite_Toolbox/raw/refs/heads/main/start.sh"
+GITHUB_RAW_URL="https://github.com/Forbidden-Darkness/Bazzite_Toolbox/raw/refs/heads/main/start.sh"
 
 if [ "$1" != "--no-update" ] && [ "$1" != "--updated" ]; then
     # Completely silent connectivity check. Fails instantly if offline.
@@ -1043,7 +1030,7 @@ show_menu() {
 
         # Safe Prompt Parser
         read -rp "  Enter choice [0-7, a-g, s]: " choice
-        
+
         case $choice in
             1)
                 install_blue_pill
