@@ -2,7 +2,7 @@
 
 clear
 # Define the path to your audio file (MP3, WAV, OGG, or FLAC)
-AUDIO_FILE="$REAL_HOME/Bazzite_Toolbox/Wake_on_LAN/Red Pill-Blue Pill.mp3"
+AUDIO_FILE="$REAL_HOME/Bazzite_Toolbox/Wake_on_LAN/Red-Pill-Blue-Pill.mp3"
 
 start_background_music() {
     if [[ -f "$AUDIO_FILE" ]]; then
