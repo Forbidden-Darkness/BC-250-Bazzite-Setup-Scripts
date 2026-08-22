@@ -1,60 +1,6 @@
 #!/usr/bin/env bash
 
 clear
-# Ensure paths capture the local user context accurately
-REAL_USER="${SUDO_USER:-$(logname 2>/dev/null || whoami)}"
-REAL_HOME="$(getent passwd "$REAL_USER" | cut -d: -f6)"
-[[ -z "$REAL_HOME" || ! -d "$REAL_HOME" ]] && REAL_HOME="/root"
-
-# Universal WAV target path
-AUDIO_FILE="$REAL_HOME/Bazzite_Toolbox/Wake_on_LAN/Red-Pill-Blue-Pill.wav"
-MUSIC_LOCK_FILE="$REAL_HOME/.bc250-toolkit-music.pid"
-
-start_background_music() {
-    if [[ -f "$AUDIO_FILE" ]] && [[ ! -f "$MUSIC_LOCK_FILE" ]]; then
-        # FIX: Resolves user ID and maps the critical XDG runtime socket path directly into the loop
-        local user_id; user_id=$(id -u "$REAL_USER")
-        
-        ( 
-            while true; do 
-                # Forcing absolute desktop user environment variable injection to bypass the sudo audio wall
-                sudo -u "$REAL_USER" XDG_RUNTIME_DIR="/run/user/$user_id" pw-play "$AUDIO_FILE"
-            done 
-        ) &>/dev/null & echo $! > "$MUSIC_LOCK_FILE" || true
-    fi
-}
-
-stop_background_music() {
-    if [[ -f "$MUSIC_LOCK_FILE" ]]; then
-        local target_pid
-        target_pid=$(cat "$MUSIC_LOCK_FILE" 2>/dev/null || echo "")
-        if [[ -n "$target_pid" ]]; then
-            # Terminate the parent background loop shell process
-            kill -9 "$target_pid" 2>/dev/null || true
-        fi
-        # Instantly flush any remaining audio fragments out of the system device
-        killall pw-play 2>/dev/null || true
-        rm -f "$MUSIC_LOCK_FILE" 2>/dev/null || true
-    fi
-}
-
-# Ensure clean exit handling
-trap stop_background_music EXIT
-
-# --- Main Execution ---
-start_background_music
-
-clear
-echo "==========================================="
-echo "   Welcome "
-echo "==========================================="
-read -rp "Press Enter to stop the music and exit..." dummy_input
-
-
-# --- Swap Allocation Global Targets ---
-SWAPFILE_PATH="/var/swap/swapfile"  # Bazzite's standard BTRFS swapfile target path
-SWAPFILE_STOCK_SIZE_MB=4096         # Stock 4GB layout baseline
-
 # Color definitions
 RESET="\e[0m"
 BOLD="\e[1m"
@@ -63,7 +9,7 @@ DIM="\e[2m"
 RED='\033[0;31m'
 B_RED='\033[1;31m'   # Bold Red for high-visibility Red Pill elements
 GREEN='\033[0;32m'
-B_GREEN='\033[1;32m' # Bold Green for verified/active status
+B_GREEN='\033[0;92m\' # Bold Green for verified/active status
 YELLOW='\033[1;33m'
 B_BLUE='\033[1;34m'  # Bold Blue for high-visibility Blue Pill elements
 B_VIOLET='\033[1;35m' # Bold Violet for ACPI Fix elements
@@ -79,6 +25,96 @@ BIWhite='\033[1;97m'       # White
 NC='\033[0m' # No Color (Reset)
 
 BG_HEADER="\e[48;5;235m"
+# Ensure paths capture the local user context accurately
+REAL_USER="${SUDO_USER:-$(logname 2>/dev/null || whoami)}"
+REAL_HOME="$(getent passwd "$REAL_USER" | cut -d: -f6)"
+[[ -z "$REAL_HOME" || ! -d "$REAL_HOME" ]] && REAL_HOME="/root"
+
+# Universal WAV target path
+AUDIO_FILE="$REAL_HOME/Bazzite_Toolbox/Wake_on_LAN/Red-Pill-Blue-Pill.wav"
+MUSIC_LOCK_FILE="$REAL_HOME/.bc250-toolkit-music.pid"
+
+start_background_music() {
+    if [[ -f "$AUDIO_FILE" ]] && [[ ! -f "$MUSIC_LOCK_FILE" ]]; then
+        local user_id; user_id=$(id -u "$REAL_USER")
+
+        # 1. Start the infinite audio playback loop
+        (
+            while true; do
+                sudo -u "$REAL_USER" XDG_RUNTIME_DIR="/run/user/$user_id" pw-play "$AUDIO_FILE"
+            done
+        ) &>/dev/null &
+        echo $! > "$MUSIC_LOCK_FILE" || true
+
+        # 2. Spawn a detached 30-second automated fade-out timer thread
+        (
+            # Wait for 30 seconds while the music plays at full volume
+            sleep 71
+
+            # Start the fade-out sequence: Lower volume gradually over 5 seconds
+            # Query the PipeWire system to find our specific pw-play playback nodes
+            local nodes; nodes=$(sudo -u "$REAL_USER" XDG_RUNTIME_DIR="/run/user/$user_id" pw-cli list-objects Node 2>/dev/null | grep -B 2 "pw-play" | awk -F'= ' '/id/ {print $2}' | tr -d ',')
+
+            if [[ -n "$nodes" ]]; then
+                # Step down the volume multiplier cleanly from 100% to 0%
+                for vol in 0.8 0.6 0.4 0.2 0.1 0.0; do
+                    for node in $nodes; do
+                        sudo -u "$REAL_USER" XDG_RUNTIME_DIR="/run/user/$user_id" pw-cli s "$node" Props "{ volume: $vol }" &>/dev/null || true
+                    done
+                    sleep 0.8  # Smooth transition spacing interval between volume steps
+                done
+            fi
+
+            # Cleanly terminate the audio loop process once volume hits zero
+            if [[ -f "$MUSIC_LOCK_FILE" ]]; then
+                local target_pid; target_pid=$(cat "$MUSIC_LOCK_FILE" 2>/dev/null || echo "")
+                [[ -n "$target_pid" ]] && kill -9 "$target_pid" 2>/dev/null || true
+                killall pw-play &>/dev/null || true
+                rm -f "$MUSIC_LOCK_FILE" 2>/dev/null || true
+            fi
+        ) &>/dev/null &
+    fi
+}
+
+stop_background_music() {
+    if [[ -f "$MUSIC_LOCK_FILE" ]]; then
+        local target_pid; target_pid=$(cat "$MUSIC_LOCK_FILE" 2>/dev/null || echo "")
+        if [[ -n "$target_pid" ]]; then
+            kill -9 "$target_pid" 2>/dev/null || true
+        fi
+        killall pw-play 2>/dev/null || true
+        rm -f "$MUSIC_LOCK_FILE" 2>/dev/null || true
+    fi
+}
+
+# Ensure clean exit handling
+trap stop_background_music EXIT
+
+# --- Main Execution ---
+start_background_music
+
+clear
+# FIX: Swapped to 1;97m (Absolute Bold White) to bypass terminal color table overrides
+echo -e ${DIM}
+echo -e " ${BIGreen} ╔══════════════════════════════════════════════════════════════════════════╗"${BIGreen}
+echo -e " ${BIGreen} ║                                                                          ║"${BIGreen}
+echo -e " ${BIGreen} ║                     █ █ █ █▀▀ █   █▀▀ █▀█ █▄█ █▀▀                        ║"${BIGreen}
+echo -e " ${BIGreen} ║                     ▀▄▀▄▀ ██▄ █▄▄ █▄▄ █▄█ █ █ ██▄                        ║"${BIGreen}
+echo -e " ${BIGreen} ║                                                                          ║"${BIGreen}
+echo -e " ${BIGreen} ╚══════════════════════════════════════════════════════════════════════════╝"${BIGreen}
+echo -e ${CYAN}
+
+echo -e ${BIGreen}
+read -rp "  Press Enter to exit..." dummy_input
+echo -e ${BIGreen}
+
+
+
+
+
+# --- Swap Allocation Global Targets ---
+SWAPFILE_PATH="/var/swap/swapfile"  # Bazzite's standard BTRFS swapfile target path
+SWAPFILE_STOCK_SIZE_MB=4096         # Stock 4GB layout baseline
 
 # Verify root/sudo privileges
 if [ "$EUID" -ne 0 ]; then
@@ -125,7 +161,7 @@ print_banner() {
     echo -e "  ║  ${YELLOW}██████╔╝██║  ██║███████╗███████╗██║   ██║   ███████╗   ╚██████╔╝███████║${CYAN}   ║"
     echo -e "  ║  ${YELLOW}╚══════╝ ╚═╝  ╚═╝╚══════╝╚══════╝╚═╝   ╚═╝   ╚══════╝    ╚═════╝ ╚══════╝${CYAN}  ║"
     echo "  ║                                                                             ║"
-    echo "  ║                        BC250 System Toolkit                                 ║"
+    echo "  ║                             BC250 System Status                             ║"
     echo "  ║                                                                             ║"
     echo "  ╚═════════════════════════════════════════════════════════════════════════════╝"
     echo -e "${RESET}"
@@ -1066,7 +1102,7 @@ show_menu() {
     echo -e "  ║   ${YELLOW}██████╔╝██║  ██║███████╗███████╗██║   ██║   ███████╗   ╚██████╔╝███████║${CYAN}    ║"
     echo -e "  ║   ${YELLOW}╚══════╝ ╚═╝  ╚═╝╚══════╝╚══════╝╚═╝   ╚═╝   ╚══════╝    ╚═════╝ ╚══════╝${CYAN}   ║"
     echo "  ║                                                                               ║"
-    echo -e "  ║    ${B_BLUE}[●] BLUE Pill${CYAN}            System Management Menu          ${RED}RED Pill [●]${CYAN}      ║"
+    echo -e "  ║    ${B_BLUE}[●] BLUE Pill${CYAN}                                            ${RED}RED Pill [●]${CYAN}      ║"
     echo "  ║                                                                               ║"
     echo "  ╚═══════════════════════════════════════════════════════════════════════════════╝"
     echo -e "${RESET}"
