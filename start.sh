@@ -1142,7 +1142,7 @@ show_menu() {
         echo -e "    ${GREEN}[a] Runtime Start${RESET}  ${DIM}(Temporary Session)${RESET}  ${YELLOW}[d] Runtime Stop${RESET}  ${DIM}(Kill Process)${RESET}"
         echo -e "    ${GREEN}[b] Persistent Boot Enable${RESET} ${DIM}(--now)${RESET}      ${RED}[e] Persistent Disable${RESET} ${DIM}(--now)${RESET}"
         echo -e "    ${CYAN}[c] Soft Restart Service Layer${RESET}          ${CYAN}[f] Stream Live Status${RESET} ${DIM}(Ctrl+C to Exit)${RESET}"
-        echo -e "    ${BLUE}[g] Interrogate Active Driver Version${RESET}   ${WHITE}[s] Print Core System Status${RESET}"
+        echo -e "    ${BLUE}[g] Interrogate Active Driver Version${RESET}   ${B_BLUE}[s] Print Core System Status${RESET}"
         echo ""
 
         # --- GLOBAL OPERATIONS ---
