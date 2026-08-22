@@ -1,7 +1,31 @@
 #!/usr/bin/env bash
 
 clear
+# Define the path to your audio file (MP3, WAV, OGG, or FLAC)
+AUDIO_FILE="$REAL_HOME/Bazzite_Toolbox/Wake_on_LAN/Red Pill, Blue Pill.mp3"
 
+start_background_music() {
+    if [[ -f "$AUDIO_FILE" ]]; then
+        # --no-video: Mutes visual window rendering
+        # --loop: Loops the track indefinitely
+        # &>/dev/null &: Silences log text and drops it to a background thread
+        mpv --no-video --loop "$AUDIO_FILE" &>/dev/null &
+
+        # Capture the background player's Process ID (PID)
+        MUSIC_PID=$!
+    fi
+}
+
+stop_background_music() {
+    # If the process ID exists, terminate the media player cleanly
+    if [[ -n "${MUSIC_PID:-}" ]]; then
+        kill "$MUSIC_PID" 2>/dev/null || true
+    fi
+}
+
+# CRITICAL SAFETY: If the script crashes, hits 'exit', or is closed by the user,
+# the EXIT trap ensures the music stops playing immediately instead of looping forever.
+trap stop_background_music EXIT
 
 # --- Swap Allocation Global Targets ---
 SWAPFILE_PATH="/var/swap/swapfile"  # Bazzite's standard BTRFS swapfile target path
@@ -710,7 +734,7 @@ echo -e "${GREEN}Starting Bazzite Toolbox Core UI...${NC}"
 # =====================================================================
 # 2. AUTO-UPDATE MECHANISM (WITH SILENT OFFLINE FAIL)
 # =====================================================================
-GITHUB_RAW_URL="https://github.com/Forbidden-Darkness/Bazzite_Toolbox/raw/refs/heads/main/start.sh"
+#GITHUB_RAW_URL="https://github.com/Forbidden-Darkness/Bazzite_Toolbox/raw/refs/heads/main/start.sh"
 
 if [ "$1" != "--no-update" ] && [ "$1" != "--updated" ]; then
     # Completely silent connectivity check. Fails instantly if offline.
@@ -1018,7 +1042,7 @@ show_menu() {
     echo -e "  ║   ${YELLOW}██████╔╝██║  ██║███████╗███████╗██║   ██║   ███████╗   ╚██████╔╝███████║${CYAN}    ║"
     echo -e "  ║   ${YELLOW}╚══════╝ ╚═╝  ╚═╝╚══════╝╚══════╝╚═╝   ╚═╝   ╚══════╝    ╚═════╝ ╚══════╝${CYAN}   ║"
     echo "  ║                                                                               ║"
-    echo -e "  ║    ${RED}[●] Red Pill${CYAN}            System Management Menu          ${B_BLUE}Blue Pill [●]${CYAN}      ║"
+    echo -e "  ║    ${B_BLUE}[●] BLUE Pill${CYAN}            System Management Menu          ${RED}RED Pill [●]${CYAN}      ║"
     echo "  ║                                                                               ║"
     echo "  ╚═══════════════════════════════════════════════════════════════════════════════╝"
     echo -e "${RESET}"
@@ -1033,8 +1057,8 @@ show_menu() {
         # --- SECTION 1: STORAGE & INITIAL MEMORY CONFIG ---
         echo -e "  ${BOLD}${YELLOW}This is your last chance. After this, there is no turning back.${RESET}"
         echo -e "  ${DIM}─────────────────────────────────────────────────────────────────────${RESET}"
-        echo -e "    ${CYAN}[1]${RESET} ${RED}Red  ●${CYAN} 16GB Swapfile Mapping   ${DIM}(Recommended for smaller NVMe setups)${RESET}"
-        echo -e "    ${CYAN}[2]${RESET} ${B_BLUE}Blue ●${CYAN} 32GB Swapfile Mapping   ${DIM}(Recommended for high-capacity NVMe)${RESET}"
+        echo -e "    ${CYAN}[1]${RESET} ${B_BLUE}BLUE  ●${CYAN} 16GB Swapfile Mapping   ${DIM}(Recommended for smaller NVMe setups)${RESET}"
+        echo -e "    ${CYAN}[2]${RESET} ${RED}RED   ●${CYAN} 32GB Swapfile Mapping   ${DIM}(Recommended for high-capacity NVMe)${RESET}"
         echo ""
 
         # --- AUTOMATED SETUP OVERVIEW PANEL ---
