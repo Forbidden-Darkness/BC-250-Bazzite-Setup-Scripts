@@ -1231,8 +1231,10 @@ show_menu() {
                 echo ""
                 read -rp "Press [Enter] to return to the main menu..."
                 ;;
-            s)
+            s) 
                 run_status
+                echo -e "\n  ${YELLOW}Press any key to return to the menu...${RESET}"
+                read -n 1 -r  # Instant return fallback to match your input style
                 ;;
             0)
                 echo -e "${GREEN}Exiting Bazzite Toolbox. Cleaning environment...${NC}"
