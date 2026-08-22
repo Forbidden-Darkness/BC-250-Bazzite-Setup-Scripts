@@ -46,7 +46,7 @@ start_background_music
 
 clear
 echo "==========================================="
-echo "   Toolkit Menu with Ambient Background Music"
+echo "   Welcome "
 echo "==========================================="
 read -rp "Press Enter to stop the music and exit..." dummy_input
 
