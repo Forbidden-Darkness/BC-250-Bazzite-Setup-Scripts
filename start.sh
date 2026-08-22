@@ -68,18 +68,18 @@ print_warning() {
 print_banner() {
     clear
     echo -e "${BOLD}${CYAN}"
-    echo "  ╔══════════════════════════════════════════════════════════════════════════╗"
-    echo "  ║                                                                          ║"
-    echo -e "  ║  ${YELLOW}██████╗  █████╗ ███████╗██████╗ ██╗████████╗███████╗ ██████╗ ███████╗${CYAN}   ║"
-    echo -e "  ║  ${YELLOW}██╔══██╗██╔══██╗╚══███╔╝╚════██╗██║╚══██╔══╝██╔════╝██╔═══██╗██╔════╝${CYAN}   ║"
-    echo -e "  ║  ${YELLOW}██████╔╝███████║  ███╔╝  █████╔╝██║   ██║   █████╗  ██║   ██║███████╗${CYAN}   ║"
-    echo -e "  ║  ${YELLOW}██╔══██╗██╔══██║ ███╔╝  ██╔═══╝ ██║   ██║   ██╔══╝  ██║   ██║╚════██║${CYAN}   ║"
-    echo -e "  ║  ${YELLOW}██████╔╝██║  ██║███████╗███████╗██║   ██║   ███████╗╚██████╔╝███████║${CYAN}   ║"
-    echo -e "  ║  ${YELLOW}╚══════╝ ╚═╝  ╚═╝╚══════╝╚══════╝╚═╝   ╚═╝   ╚══════╝ ╚═════╝ ╚══════╝${CYAN}  ║"
-    echo "  ║                                                                          ║"
-    echo "  ║                        BC250 System Toolkit                              ║"
-    echo "  ║                                                                          ║"
-    echo "  ╚══════════════════════════════════════════════════════════════════════════╝"
+    echo "  ╔═════════════════════════════════════════════════════════════════════════════╗"
+    echo "  ║                                                                             ║"
+    echo -e "  ║  ${YELLOW}██████╗  █████╗ ███████╗███████╗██╗████████╗███████╗    ██████╗ ███████╗${CYAN}   ║"
+    echo -e "  ║  ${YELLOW}██╔══██╗██╔══██╗╚══███╔╝╚══███╔╝██║╚══██╔══╝██╔════╝   ██╔═══██╗██╔════╝${CYAN}   ║"
+    echo -e "  ║  ${YELLOW}██████╔╝███████║  ███╔╝   ███╔╝ ██║   ██║   █████╗  ██ ██║   ██║███████╗${CYAN}   ║"
+    echo -e "  ║  ${YELLOW}██╔══██╗██╔══██║ ███╔╝   ███╔╝  ██║   ██║   ██╔══╝     ██║   ██║╚════██║${CYAN}   ║"
+    echo -e "  ║  ${YELLOW}██████╔╝██║  ██║███████╗███████╗██║   ██║   ███████╗   ╚██████╔╝███████║${CYAN}   ║"
+    echo -e "  ║  ${YELLOW}╚══════╝ ╚═╝  ╚═╝╚══════╝╚══════╝╚═╝   ╚═╝   ╚══════╝    ╚═════╝ ╚══════╝${CYAN}  ║"
+    echo "  ║                                                                             ║"
+    echo "  ║                        BC250 System Toolkit                                 ║"
+    echo "  ║                                                                             ║"
+    echo "  ╚═════════════════════════════════════════════════════════════════════════════╝"
     echo -e "${RESET}"
 }
 
@@ -286,6 +286,9 @@ run_status() {
     print_section "System Status"
 
     # --- Strict Mode Safety Fallbacks ---
+    # Icons/colors (define as needed)
+    local ICON_OK="✔"
+    local ICON_WARN="⚠"
     local ICON_OK="${ICON_OK:-${GREEN}✓${RESET}}"
     local ICON_WARN="${ICON_WARN:-${YELLOW}⚠${RESET}}"
     local ICON_ERR="${ICON_ERR:-${RED}✗${RESET}}"
@@ -331,11 +334,44 @@ run_status() {
         boot_login="${DIM}no password${RESET}"
     fi
 
+    # Dynamic Wake-on-LAN Diagnostic Interrogation Layer
+     # Dynamic Wake-on-LAN Diagnostic Interrogation Layer
+    local wol_icon="$ICON_WARN"
+    local wol_label="${YELLOW}deactivated${RESET}"
+    local wol_enabled=false
+    local wol_setting
+
+    # Loop sequentially through all registered NetworkManager connections
+    while IFS= read -r conn; do
+        [[ -z "$conn" ]] && continue
+
+        # Interrogate the individual profile's low-level hardware wake properties
+        wol_setting=$(nmcli -g 802-3-ethernet.wake-on-lan connection show "$conn" 2>/dev/null | tr '[:upper:]' '[:lower:]')
+
+        # If any connection maps the magic packet token, trigger the status flag
+        if [[ "$wol_setting" == *magic* ]]; then
+            wol_enabled=true
+            break
+        fi
+    done < <(nmcli -t -f NAME connection show 2>/dev/null)
+
+    # Set universal grid dashboard output based on detection flags
+    if $wol_enabled; then
+        wol_icon="$ICON_OK"
+        wol_label="${GREEN}activated${RESET}"
+    else
+        wol_icon="$ICON_WARN"
+        wol_label="${YELLOW}deactivated${RESET}"
+    fi
+
+
+
     # UNIVERSAL ALIGNMENT: 22-character padding locks all icons into a perfect grid
     echo -e "  ${CYAN}Boot Mode${RESET}             ${boot_mode}  ${boot_login}"
     echo -e "  ${CYAN}OS${RESET}                    $(cat /etc/os-release | grep PRETTY_NAME | cut -d= -f2 | tr -d '"')"
     echo -e "  ${CYAN}Version${RESET}               $(cat /etc/os-release | grep -E '^(VERSION)=' | cut -d= -f2 | tr -d '"')"
     echo -e "  ${CYAN}Kernel${RESET}                $(uname -r)"
+    echo -e "  ${CYAN}Wake-on-LAN${RESET}           ${wol_icon} ${wol_label}"
     echo ""
 
     # --- Overclock Profile ---
@@ -457,7 +493,7 @@ run_status() {
         uma_now=$(ram_split_current_uma 2>/dev/null)
         echo -e "  ${CYAN}RAM/VRAM Split${RESET}        ${ICON_OK} ${GREEN}UMA_SIZE=${uma_now:-?}MB${RESET}, ttm.pages_limit ceiling active"
     else
-        echo -e "  ${CYAN}RAM/VRAM Split${RESET}        ${DIM}– not installed (stock ${RAM_SPLIT_STOCK_UMA_MB}MB split, BazziteOS default)${RESET}"
+        echo -e "  ${CYAN}RAM/VRAM Split${RESET}        ${DIM}– not installed (stock split)${RESET}"
     fi
     echo ""
     # --- Swap & ZRAM/ZSWAP ---
@@ -477,7 +513,7 @@ run_status() {
     elif zram_currently_disabled; then
         echo -e "  ${CYAN}ZRAM/ZSWAP${RESET}            ${ICON_WARN} ${YELLOW}ZRAM deactivated / ZSWAP configured but idle${RESET}"
     else
-        echo -e "  ${CYAN}ZRAM/ZSWAP${RESET}            ${DIM}ZRAM activated / ZSWAP deactivated${RESET}"
+        echo -e "  ${CYAN}RAM/ZSWAP${RESET}            ${DIM}ZRAM activated / ZSWAP deactivated${RESET}"
     fi
     echo ""
 
@@ -545,6 +581,7 @@ run_status() {
     echo ""
     read -rp "Press [Enter] to return to the main menu..."
 }
+
 
 
 
@@ -970,17 +1007,34 @@ show_menu() {
 
     while true; do
         clear
+
+    echo -e "${BOLD}${CYAN}"
+    echo "  ╔═══════════════════════════════════════════════════════════════════════════════╗"
+    echo "  ║                                                                               ║"
+    echo -e "  ║   ${YELLOW}██████╗  █████╗ ███████╗███████╗██╗████████╗███████╗    ██████╗ ███████╗${CYAN}    ║"
+    echo -e "  ║   ${YELLOW}██╔══██╗██╔══██╗╚══███╔╝╚══███╔╝██║╚══██╔══╝██╔════╝   ██╔═══██╗██╔════╝${CYAN}    ║"
+    echo -e "  ║   ${YELLOW}██████╔╝███████║  ███╔╝   ███╔╝ ██║   ██║   █████╗  ██ ██║   ██║███████╗${CYAN}    ║"
+    echo -e "  ║   ${YELLOW}██╔══██╗██╔══██║ ███╔╝   ███╔╝  ██║   ██║   ██╔══╝     ██║   ██║╚════██║${CYAN}    ║"
+    echo -e "  ║   ${YELLOW}██████╔╝██║  ██║███████╗███████╗██║   ██║   ███████╗   ╚██████╔╝███████║${CYAN}    ║"
+    echo -e "  ║   ${YELLOW}╚══════╝ ╚═╝  ╚═╝╚══════╝╚══════╝╚═╝   ╚═╝   ╚══════╝    ╚═════╝ ╚══════╝${CYAN}   ║"
+    echo "  ║                                                                               ║"
+    echo -e "  ║    ${RED}[●] Red Pill${CYAN}            System Management Menu          ${B_BLUE}Blue Pill [●]${CYAN}      ║"
+    echo "  ║                                                                               ║"
+    echo "  ╚═══════════════════════════════════════════════════════════════════════════════╝"
+    echo -e "${RESET}"
+
+
         # Clean Geometric Heading Panel
-        echo -e "  ${BOLD}${CYAN}╔═══════════════════════════════════════════════════════════════════╗${RESET}"
-        echo -e "  ${BOLD}${CYAN}║                  AMD BC-250 OPTIMIZATION TOOLKIT                  ║${RESET}"
-        echo -e "  ${BOLD}${CYAN}║                       System Management Menu                      ║${RESET}"
-        echo -e "  ${BOLD}${CYAN}╚═══════════════════════════════════════════════════════════════════╝${RESET}"
+        #echo -e "  ${BOLD}${CYAN}╔═══════════════════════════════════════════════════════════════════╗${RESET}"
+        #echo -e "  ${BOLD}${CYAN}║                  AMD BC-250 OPTIMIZATION TOOLKIT                  ║${RESET}"
+        #echo -e "  ${BOLD}${CYAN}║                       System Management Menu                      ║${RESET}"
+        #echo -e "  ${BOLD}${CYAN}╚═══════════════════════════════════════════════════════════════════╝${RESET}"
 
         # --- SECTION 1: STORAGE & INITIAL MEMORY CONFIG ---
-        echo -e "  ${BOLD}${YELLOW}Swapfile Allocation & VRAM Tuning${RESET}"
+        echo -e "  ${BOLD}${YELLOW}This is your last chance. After this, there is no turning back.${RESET}"
         echo -e "  ${DIM}─────────────────────────────────────────────────────────────────────${RESET}"
-        echo -e "    ${CYAN}[1]${RESET} Deploy 16GB Swapfile Mapping   ${DIM}(Recommended for smaller NVMe setups)${RESET}"
-        echo -e "    ${CYAN}[2]${RESET} Deploy 32GB Swapfile Mapping   ${DIM}(Recommended for high-capacity NVMe)${RESET}"
+        echo -e "    ${CYAN}[1]${RESET} ${RED}Red  ●${CYAN} 16GB Swapfile Mapping   ${DIM}(Recommended for smaller NVMe setups)${RESET}"
+        echo -e "    ${CYAN}[2]${RESET} ${B_BLUE}Blue ●${CYAN} 32GB Swapfile Mapping   ${DIM}(Recommended for high-capacity NVMe)${RESET}"
         echo ""
 
         # --- AUTOMATED SETUP OVERVIEW PANEL ---
