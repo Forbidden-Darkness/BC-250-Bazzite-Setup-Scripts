@@ -1,3 +1,5 @@
+> [!CAUTION]
+>### Do Not Use This Script with Bazzite 44 Deck
 # Bazzite Toolbox Installation Guide
 
 A command-line utility designed to install, configure, and manage Bazzite Toolbox shortcuts within your system environment.
