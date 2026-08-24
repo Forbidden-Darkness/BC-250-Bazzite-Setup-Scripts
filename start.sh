@@ -22,8 +22,39 @@ BIPurple='\033[1;95m'
 BICyan='\033[1;96m'
 BIWhite='\033[1;97m'
 NC='\033[0m'
-
 BG_HEADER="\e[48;5;235m"
+# ==============================================================================
+# UPGRADED: INTEGRATED THE THEMATIC VISUAL TRANSITION ENGINES
+# ==============================================================================
+type_prompt() {
+    local text="$1"
+    local delay="${2:-0.03}"
+    for (( i=0; i<${#text}; i++ )); do
+        echo -ne "${text:$i:1}"
+        sleep "$delay"
+    done
+}
+
+blink_cursor() {
+    local prompt_text="$1"
+    echo -ne "$prompt_text"
+    for i in {1..3}; do
+        echo -ne "\033[5m█\033[0m"
+        sleep 0.5
+        echo -ne "\b "
+        sleep 0.5
+    done
+    echo ""
+}
+
+matrix_melt_clear() {
+    local lines; lines=$(tput lines)
+    for ((i=0; i<lines; i++)); do
+        echo "" # Pushes the terminal buffer down
+        sleep 0.01
+    done
+    clear
+}
 
 # ==============================================================================
 # STEP 1: DEFINE USER CONTEXT FIRST SO RUNTIME VARIABLE PATHS ARE VALID
@@ -157,6 +188,17 @@ echo -e "\033[38;2;0;255;0m  ║    ${B_BLUE}[●] BLUE Pill\033[38;2;0;255;0m  
 echo -e "\033[38;2;0;255;0m  ║                                                                                             ║\033[0m"
 echo -e "\033[38;2;0;255;0m  ╚═════════════════════════════════════════════════════════════════════════════════════════════╝\033[0m"
 echo ""
+
+# FIX: Hardcoded to 24-bit True Color RGB inside the echo command so every typed letter is strictly absolute matrix green
+type_prompt() {
+    local text="$1"
+    local delay="${2:-0.03}"
+    for (( i=0; i<${#text}; i++ )); do
+        # Injects the matrix green true color right behind every character block seamlessly
+        echo -ne "\033[38;2;0;255;0m${text:$i:1}\033[0m"
+        sleep "$delay"
+    done
+}
 
 # The text now types out in crisp, beautiful matrix green automatically without code bleed!
 type_prompt "  Establishing System Root Authorization.... " 0.03
