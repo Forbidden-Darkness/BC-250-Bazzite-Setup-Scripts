@@ -210,7 +210,7 @@ blink_cursor ""
 type_prompt "  injecting exploit.... " 0.05
 blink_cursor ""
 
-type_prompt "  root access has granted.... " 0.03
+type_prompt "  system has been pwned, root access has been granted.... " 0.03
 blink_cursor ""
 echo ""
 type_prompt "  mapping system block registers " 0.03
