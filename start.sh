@@ -1142,7 +1142,7 @@ show_menu() {
         echo -e "  ║         ${YELLOW}██╔══██╗██╔══██║ ███╔╝   ███╔╝  ██║   ██║   ██╔══╝     ██║   ██║╚════██║\033[38;2;0;255;0m       ║"
         echo -e "  ║         ${YELLOW}██████╔╝██║  ██║███████╗███████╗██║   ██║   ███████╗   ╚██████╔╝███████║\033[38;2;0;255;0m       ║"
         echo -e "  ║         ${YELLOW}╚══════╝ ╚═╝  ╚═╝╚══════╝╚══════╝╚═╝   ╚═╝   ╚══════╝    ╚═════╝ ╚══════╝\033[38;2;0;255;0m      ║"
-        echo -e "  ║${RED}⚠ Warning... Do Not Use This Script With the Latest Release Of Bazzite 44 Deck\033[38;2;0;255;0m     ║"
+        echo -e "  ║ ⚠ Warning... Do Not Use This Script With the Latest Release Of Bazzite 44 Deck      ║"
         echo "  ║                                                                                        ║"
         echo -e "  ║    ${B_BLUE}[●] BLUE Pill\033[38;2;0;255;0m             📟  System Core Telemetry  📟             ${RED}RED Pill [●]\033[38;2;0;255;0m    ║"
         echo "  ║                                                                                        ║"
