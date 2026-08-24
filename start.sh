@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 
-clear
 # Color definitions
 RESET="\e[0m"
 BOLD="\e[1m"
@@ -9,31 +8,87 @@ DIM="\e[2m"
 RED='\033[0;31m'
 B_RED='\033[1;31m'   # Bold Red for high-visibility Red Pill elements
 GREEN='\033[0;32m'
-B_GREEN='\033[0;92m' # FIX: Removed trailing backslash that was causing a syntax break
+B_GREEN='\033[0;92m'
 YELLOW='\033[1;33m'
 B_BLUE='\033[1;34m'  # Bold Blue for high-visibility Blue Pill elements
 B_VIOLET='\033[1;35m' # Bold Violet for ACPI Fix elements
 CYAN='\033[0;36m'
-BIBlack='\033[1;90m'       # Black
-BIRed='\033[1;91m'         # Red
-BIGreen='\033[1;92m'       # Green
-BIYellow='\033[1;93m'      # Yellow
-BIBlue='\033[1;94m'        # Blue
-BIPurple='\033[1;95m'      # Purple
-BICyan='\033[1;96m'        # Cyan
-BIWhite='\033[1;97m'       # White
-NC='\033[0m' # No Color (Reset)
+BIBlack='\033[1;90m'
+BIRed='\033[1;91m'
+BIGreen='\033[1;92m'
+BIYellow='\033[1;93m'
+BIBlue='\033[1;94m'
+BIPurple='\033[1;95m'
+BICyan='\033[1;96m'
+BIWhite='\033[1;97m'
+NC='\033[0m'
 
 BG_HEADER="\e[48;5;235m"
-# Ensure paths capture the local user context accurately
+
+# ==============================================================================
+# STEP 1: DEFINE USER CONTEXT FIRST SO RUNTIME VARIABLE PATHS ARE VALID
+# ==============================================================================
 REAL_USER="${SUDO_USER:-$(logname 2>/dev/null || whoami)}"
 REAL_HOME="$(getent passwd "$REAL_USER" | cut -d: -f6)"
 [[ -z "$REAL_HOME" || ! -d "$REAL_HOME" ]] && REAL_HOME="/root"
 
-# Universal WAV target path
+# ==============================================================================
+# STEP 2: ASSIGN TARGET AUDIO & UPDATE REPOSITORIES
+# ==============================================================================
 AUDIO_FILE="$REAL_HOME/Bazzite_Toolbox/Wake_on_LAN/Red-Pill-Blue-Pill.wav"
 MUSIC_LOCK_FILE="$REAL_HOME/.bc250-toolkit-music.pid"
+GITHUB_RAW_URL="https://githubusercontent.com"
 
+# ==============================================================================
+# STEP 3: CORE TOOLKIT INTERACTIVE ANIMATION ENGINES
+# ==============================================================================
+type_prompt() {
+    local text="$1"
+    local delay="${2:-0.03}"
+    for (( i=0; i<${#text}; i++ )); do
+        echo -ne "${text:$i:1}"
+        sleep "$delay"
+    done
+}
+
+blink_cursor() {
+    local prompt_text="$1"
+    echo -ne "$prompt_text"
+    for i in {1..3}; do
+        echo -ne "\033[5m█\033[0m"
+        sleep 0.5
+        echo -ne "\b "
+        sleep 0.5
+    done
+    echo ""
+}
+
+draw_progress_bar() {
+    local duration="$1"
+    local width=40
+    echo -ne "  Optimizing CUs: ["
+
+    for ((i=1; i<=width; i++)); do
+        local pct=$(( i * 100 / width ))
+        local g_val=$(( 100 + (i * 155 / width) ))
+        echo -ne "\033[38;2;0;${g_val};0m█\033[0m"
+        sleep "$(bc -l <<< "$duration / $width")"
+    done
+    echo -e "] Done!"
+}
+
+matrix_melt_clear() {
+    local lines; lines=$(tput lines)
+    for ((i=0; i<lines; i++)); do
+        echo ""
+        sleep 0.01
+    done
+    clear
+}
+
+# ==============================================================================
+# AUDIO PIPELINE ENGINES (PERMISSION-INSULATED PIPEWIRE CONTROL)
+# ==============================================================================
 start_background_music() {
     if [[ -f "$AUDIO_FILE" ]] && [[ ! -f "$MUSIC_LOCK_FILE" ]]; then
         local user_id; user_id=$(id -u "$REAL_USER")
@@ -44,28 +99,27 @@ start_background_music() {
                 sudo -u "$REAL_USER" XDG_RUNTIME_DIR="/run/user/$user_id" pw-play "$AUDIO_FILE"
             done
         ) &>/dev/null &
-        echo $! > "$MUSIC_LOCK_FILE" || true
 
-        # 2. Spawn a detached 30-second automated fade-out timer thread
+        local music_pid=$!
+        echo "$music_pid" > "$MUSIC_LOCK_FILE" || true
+
+        # FIX: Disowns the background process thread from the current terminal job table.
+        # This completely stops Bash from printing the "Killed" status log on exit!
+        disown "$music_pid" 2>/dev/null || true
+
+        # 2. Spawn a detached 71-second automated fade-out timer thread
         (
-            # Wait for 30 seconds while the music plays at full volume
             sleep 71
 
-            # Start the fade-out sequence: Lower volume gradually over 5 seconds
-            # Query the PipeWire system to find our specific pw-play playback nodes
             local nodes; nodes=$(sudo -u "$REAL_USER" XDG_RUNTIME_DIR="/run/user/$user_id" pw-cli list-objects Node 2>/dev/null | grep -B 2 "pw-play" | awk -F'= ' '/id/ {print $2}' | tr -d ',')
-
             if [[ -n "$nodes" ]]; then
-                # Step down the volume multiplier cleanly from 100% to 0%
                 for vol in 0.8 0.6 0.4 0.2 0.1 0.0; do
                     for node in $nodes; do
                         sudo -u "$REAL_USER" XDG_RUNTIME_DIR="/run/user/$user_id" pw-cli s "$node" Props "{ volume: $vol }" &>/dev/null || true
                     done
-                    sleep 0.8  # Smooth transition spacing interval between volume steps
+                    sleep 0.8
                 done
             fi
-
-            # Cleanly terminate the audio loop process once volume hits zero
             if [[ -f "$MUSIC_LOCK_FILE" ]]; then
                 local target_pid; target_pid=$(cat "$MUSIC_LOCK_FILE" 2>/dev/null || echo "")
                 [[ -n "$target_pid" ]] && kill -9 "$target_pid" 2>/dev/null || true
@@ -76,12 +130,11 @@ start_background_music() {
     fi
 }
 
+
 stop_background_music() {
     if [[ -f "$MUSIC_LOCK_FILE" ]]; then
         local target_pid; target_pid=$(cat "$MUSIC_LOCK_FILE" 2>/dev/null || echo "")
-        if [[ -n "$target_pid" ]]; then
-            kill -9 "$target_pid" 2>/dev/null || true
-        fi
+        [[ -n "$target_pid" ]] && kill -9 "$target_pid" 2>/dev/null || true
         killall pw-play 2>/dev/null || true
         rm -f "$MUSIC_LOCK_FILE" 2>/dev/null || true
     fi
@@ -90,11 +143,11 @@ stop_background_music() {
 # Ensure clean exit handling
 trap stop_background_music EXIT
 
-# --- Main Execution ---
+# --- Main Runtime Initializer ---
 start_background_music
 
+# Draw Initial Greeting Panels
 clear
-# FIX: Utilizing 24-bit True Color RGB (38;2;0;255;0) to completely bypass system theme overrides
 echo -e "\033[38;2;0;255;0m  ╔═════════════════════════════════════════════════════════════════════════════════════════════╗\033[0m"
 echo -e "\033[38;2;0;255;0m  ║                                                                                             ║\033[0m"
 echo -e "\033[38;2;0;255;0m  ║                                █ █ █ █▀▀ █   █▀▀ █▀█ █▄█ █▀▀                                ║\033[0m"
@@ -105,8 +158,98 @@ echo -e "\033[38;2;0;255;0m  ║                                                
 echo -e "\033[38;2;0;255;0m  ╚═════════════════════════════════════════════════════════════════════════════════════════════╝\033[0m"
 echo ""
 
-read -rp "  Press Enter to continue..." dummy_input
+# The text now types out in crisp, beautiful matrix green automatically without code bleed!
+type_prompt "  Establishing System Root Authorization.... " 0.03
+blink_cursor ""
 echo ""
+type_prompt "  exploiting system entry " 0.03
+blink_cursor ""
+
+type_prompt "  injecting exploit.... " 0.05
+blink_cursor ""
+
+type_prompt "  root access has granted.... " 0.03
+blink_cursor ""
+echo ""
+type_prompt "  mapping system block registers " 0.03
+blink_cursor ""
+
+
+# ... (Line 110: This is your existing blink utility)
+blink_cursor() {
+    local prompt_text="$1"
+    echo -ne "$prompt_text"
+    for i in {1..3}; do
+        echo -ne "\033[5m█\033[0m"
+        sleep 0.5
+        echo -ne "\b "
+        sleep 0.5
+    done
+    echo ""
+}
+
+# ==============================================================================
+# 📥 PLACE YOUR PROGRESS BAR ENGINE RIGHT HERE (ABOVE DYNAMIC CALLS)
+# ==============================================================================
+draw_progress_bar() {
+    local duration="$1"
+    local width=40
+    echo -ne "  Optimizing CUs: ["
+
+    for ((i=1; i<=width; i++)); do
+        local pct=$(( i * 100 / width ))
+        # Dynamic 24-bit True Color Green scaling loop
+        local g_val=$(( 100 + (i * 155 / width) ))
+
+# ... (Your existing draw_progress_bar function finishes here)
+        echo -ne "\033[38;2;0;${g_val};0m█\033[0m"
+        sleep "$(bc -l <<< "$duration / $width")"
+    done
+    echo -e "] Done!"
+}
+
+# ==============================================================================
+# 📥 PLACE YOUR MATRIX MELT CLEAR ENGINE RIGHT HERE:
+# ==============================================================================
+matrix_melt_clear() {
+    local lines; lines=$(tput lines)
+    # Scroll the current screen text downward line-by-line out of view
+    for ((i=0; i<lines; i++)); do
+        echo "" # Pushes the terminal buffer down
+        sleep 0.01
+    done
+    clear
+}
+
+# ==============================================================================
+# Your script baseline targets continue below:
+# ==============================================================================
+# --- Swap Allocation Global Targets ---
+SWAPFILE_PATH="/var/swap/swapfile"
+
+
+
+#type_prompt "  Press Enter to continue..." 0.05
+#read -r dummy_input
+
+# Add this right below your 'type_prompt' block whenever you want a prompt to blink:
+blink_cursor() {
+    local prompt_text="$1"
+    echo -ne "$prompt_text"
+    # Create a 3-second blinking loop before advancing
+    for i in {1..3}; do
+        echo -ne "\033[5m█\033[0m" # Draws a blinking block
+        sleep 0.5
+        echo -ne "\b "            # Wipes the block
+        sleep 0.5
+    done
+    echo ""
+}
+
+# Example Usage:
+type_prompt "  System reinitializing" 0.04
+blink_cursor ""
+
 
 # --- Swap Allocation Global Targets ---
 SWAPFILE_PATH="/var/swap/swapfile"  # Bazzite's standard BTRFS swapfile target path
@@ -149,16 +292,15 @@ print_banner() {
     echo -e "${BOLD}${CYAN}"
     echo "  ╔════════════════════════════════════════════════════════════════════════════════════════╗"
     echo "  ║                                                                                        ║"
-    echo -e "  ║         ${YELLOW}██████╗  █████╗ ███████╗███████╗██╗████████╗███████╗    ██████╗ ███████╗${CYAN}       ║"
-    echo -e "  ║         ${YELLOW}██╔══██╗██╔══██╗╚══███╔╝╚══███╔╝██║╚══██╔══╝██╔════╝   ██╔═══██╗██╔════╝${CYAN}       ║"
-    echo -e "  ║         ${YELLOW}██████╔╝███████║  ███╔╝   ███╔╝ ██║   ██║   █████╗  ██ ██║   ██║███████╗${CYAN}       ║"
-    echo -e "  ║         ${YELLOW}██╔══██╗██╔══██║ ███╔╝   ███╔╝  ██║   ██║   ██╔══╝     ██║   ██║╚════██║${CYAN}       ║"
-    echo -e "  ║         ${YELLOW}██████╔╝██║  ██║███████╗███████╗██║   ██║   ███████╗   ╚██████╔╝███████║${CYAN}       ║"
-    echo -e "  ║         ${YELLOW}╚══════╝ ╚═╝  ╚═╝╚══════╝╚══════╝╚═╝   ╚═╝   ╚══════╝    ╚═════╝ ╚══════╝${CYAN}      ║"
+    echo "  ║         ██████╗  █████╗ ███████╗███████╗██╗████████╗███████╗    ██████╗ ███████╗       ║"
+    echo "  ║         ██╔══██╗██╔══██╗╚══███╔╝╚══███╔╝██║╚══██╔══╝██╔════╝   ██╔═══██╗██╔════╝       ║"
+    echo "  ║         ██████╔╝███████║  ███╔╝   ███╔╝ ██║   ██║   █████╗  ██ ██║   ██║███████╗       ║"
+    echo "  ║         ██╔══██╗██╔══██║ ███╔╝   ███╔╝  ██║   ██║   ██╔══╝     ██║   ██║╚════██║       ║"
+    echo "  ║         ██████╔╝██║  ██║███████╗███████╗██║   ██║   ███████╗   ╚██████╔╝███████║       ║"
+    echo "  ║         ╚══════╝ ╚═╝  ╚═╝╚══════╝╚══════╝╚═╝   ╚═╝   ╚══════╝    ╚═════╝ ╚══════╝      ║"
     echo "  ║                                                                                        ║"
     echo "  ║                                                                                        ║"
     echo -e "  ║    ${B_BLUE}[●] BLUE Pill${CYAN}             📟  System Core Telemetry  📟             ${RED}RED Pill [●]${CYAN}    ║"
-
     echo "  ╚════════════════════════════════════════════════════════════════════════════════════════╝"
     echo -e "${RESET}"
 }
@@ -206,6 +348,7 @@ confirm() {
     read -rp "  → " ans
     [[ "$ans" =~ ^[Yy]$ ]]
 }
+
 # ==============================================================================
 # BAZZITE COMPATIBILITY HELPERS FOR SYSTEM DIAGNOSTICS
 # ==============================================================================
@@ -308,16 +451,13 @@ run_status() {
     print_banner
     print_section "System Status"
 
-    local ICON_OK="✔"
+    local ICON_OK="✓"
     local ICON_WARN="⚠"
-    local ICON_OK="${ICON_OK:-${GREEN}✓${RESET}}"
-    local ICON_WARN="${ICON_WARN:-${YELLOW}⚠${RESET}}"
-    local ICON_ERR="${ICON_ERR:-${RED}✗${RESET}}"
+    local ICON_ERR="✗"
     local DIM="${DIM:-}" local RESET="${RESET:-}" local GREEN="${GREEN:-}"
     local YELLOW="${YELLOW:-}" local RED="${RED:-}" local CYAN="${CYAN:-}"
     local BOLD="${BOLD:-}" local WHITE="${WHITE:-}" local B_BLUE="${B_BLUE:-}"
 
-    local BOOTLOADER; BOOTLOADER="$(detect_bootloader 2>/dev/null || echo "unknown")"
     local CPU_CONF="/etc/bc250-smu-oc.conf"
     local GPU_CONF="/etc/cyan-skillfish-governor-smu/config.toml"
 
@@ -341,7 +481,6 @@ run_status() {
     fi
     boot_login=$([[ "$boot_relogin" == "false" ]] && echo "${DIM}password required${RESET}" || echo "${DIM}no password${RESET}")
 
-    # Rock-Solid Intermittent Multi-Card WOL Scanner Loop Engine
     local wol_icon="$ICON_WARN" local wol_label="${YELLOW}deactivated${RESET}"
     local wol_enabled=false local wol_setting
     while IFS= read -r conn; do
@@ -382,6 +521,7 @@ run_status() {
     fi
     echo -e "  ${DIM}GPU Active: ${gpu_preset} — ${gpu_profile}${RESET}"
     echo -e "  ${DIM}─────────────────────────────────────────────────────────────────────${RESET}"
+
     local cpu_svc_enabled cpu_svc_result
     cpu_svc_enabled=$(systemctl is-enabled bc250-smu-oc.service 2>/dev/null || echo "disabled")
     cpu_svc_result=$(systemctl show bc250-smu-oc.service --property=ExecMainStatus --value 2>/dev/null || echo "0")
@@ -478,6 +618,7 @@ run_status() {
     fi
     echo ""
 
+
     print_section "Swap & ZRAM/ZSWAP"
 
     local swap_mb; swap_mb=$(swapfile_size_mb 2>/dev/null || echo "0")
@@ -531,6 +672,7 @@ run_status() {
     echo -e "  ${CYAN}Xbox Wireless Adapter${RESET} ${xbox_icon} ${xbox_color}${xbox_label}${RESET}"
     echo ""
 
+
     print_section "Community Fixes"
 
     local acpi_icon acpi_color acpi_label
@@ -555,6 +697,7 @@ run_status() {
     echo -e "  ${CYAN}Audio Patch${RESET}           ${audio_icon} ${audio_color}${audio_label}${RESET}"
     echo ""
 }
+
 # =====================================================================
 # REFRESH & REMOVAL UTILITIES
 # =====================================================================
@@ -599,30 +742,18 @@ EOF
     chmod +x "$OLD_DESKTOP"
     chown -R "$REAL_USER":"$REAL_USER" "$OLD_DESKTOP"
 
-    # Always drop the broken legacy menu configuration overrides if they exist
     rm -f "$OLD_DIRECTORY" "$OLD_MENU"
-
     refresh_desktop_database
     print_info "Shortcut installed successfully!"
 }
 
 manage_shortcut_prompt() {
-    # Check if a preference already exists in the config file
     if [ -f "$CONFIG_FILE" ]; then
-        local saved_pref
-        saved_pref=$(grep "START_MENU_SHORTCUT=" "$CONFIG_FILE" | cut -d= -f2)
-
-        if [ "$saved_pref" == "false" ]; then
-            force_remove_shortcut
-            print_info "Skipping shortcut creation (User opted out in configuration)."
-            return 0
-        elif [ "$saved_pref" == "true" ]; then
-            create_start_menu_shortcut
-            return 0
-        fi
+        local saved_pref; saved_pref=$(grep "START_MENU_SHORTCUT=" "$CONFIG_FILE" | cut -d= -f2)
+        if [ "$saved_pref" == "false" ]; then force_remove_shortcut; return 0; fi
+        if [ "$saved_pref" == "true" ]; then create_start_menu_shortcut; return 0; fi
     fi
 
-    # If no preference is saved, trigger the question
     echo -e "\n${YELLOW}Would you like to add a Bazzite Toolbox shortcut to your Start Menu?${NC}"
     read -p "(Y/n): " -r user_choice
     user_choice=${user_choice:-Y}
@@ -671,16 +802,14 @@ case "$1" in
         ;;
 esac
 
-# Rest of your script logic starts here...
 echo -e "${GREEN}Starting Bazzite Toolbox Core UI...${NC}"
 
 # =====================================================================
 # 2. AUTO-UPDATE MECHANISM (WITH SILENT OFFLINE FAIL)
 # =====================================================================
-GITHUB_RAW_URL="https://github.com/Forbidden-Darkness/Bazzite_Toolbox/raw/refs/heads/main/start.sh"
+#GITHUB_RAW_URL="https://github.com/Forbidden-Darkness/Bazzite_Toolbox/raw/refs/heads/main/start.sh"
 
 if [ "$1" != "--no-update" ] && [ "$1" != "--updated" ]; then
-    # Completely silent connectivity check. Fails instantly if offline.
     if curl -s -I -L --connect-timeout 2 "$GITHUB_RAW_URL" > /dev/null; then
         print_info "Checking for updates..."
 
@@ -703,18 +832,13 @@ fi
 
 print_info "Starting main script workflow..."
 
-# NEW: Interactive Desktop Shortcut Handler
 ask_desktop_shortcut() {
-    local desktop_dir
-    desktop_dir="$(sudo -u "$REAL_USER" xdg-user-dir DESKTOP 2>/dev/null || echo "")"
+    local desktop_dir; desktop_dir="$(sudo -u "$REAL_USER" xdg-user-dir DESKTOP 2>/dev/null || echo "")"
     [[ -n "$desktop_dir" ]] || desktop_dir="$REAL_HOME/Desktop"
     [[ -d "$desktop_dir" ]] || mkdir -p "$desktop_dir" 2>/dev/null || return 0
 
     local shortcut="$desktop_dir/Start Bazzite Boken Toolbox.desktop"
-
-    if [[ -f "$shortcut" ]]; then
-        return 0
-    fi
+    [[ -f "$shortcut" ]] && return 0
 
     echo -e "${BIYellow}==================================================${NC}"
     echo -e "${BIYellow}         DESKTOP SHORTCUT CONFIGURATION            ${NC}"
@@ -741,7 +865,6 @@ Icon=utilities-terminal
 Terminal=false
 Categories=System;
 SHORTCUT_EOF
-
             chmod +x "$shortcut"
             chown "$REAL_USER":"$REAL_USER" "$shortcut" 2>/dev/null || true
             sudo -u "$REAL_USER" gio set "$shortcut" metadata::trusted true >/dev/null 2>&1 || true
@@ -759,12 +882,9 @@ SHORTCUT_EOF
     esac
 }
 
-# Run preferences
 ask_desktop_shortcut
 manage_shortcut_prompt
 
-# ---------------------------------
-# Function to pause and offer a Cancel Reboot option
 prompt_reboot() {
     echo ""
     echo -e "${YELLOW}==================================================${NC}"
@@ -781,17 +901,18 @@ prompt_reboot() {
             sudo systemctl reboot
             ;;
         2)
-            echo -e "${YELLOW}Reboot cancelled. Returning to main menu. Remember to reboot manually later for changes to take effect.${NC}"
+            echo -e "${YELLOW}Reboot cancelled. Returning to main menu.${NC}"
             sleep 2
             return 0
             ;;
         *)
-            echo -e "${RED}Invalid option. Defaulting to safe safe cancel. Returning to main menu.${NC}"
+            echo -e "${RED}Invalid option. Defaulting to safe safe cancel.${NC}"
             sleep 2
             return 1
             ;;
     esac
 }
+
 # =====================================================================
 # RESTORED PERFORMANCE PIPELINES (OPTIONS 1-4 EXPLICIT ARRAYS)
 # =====================================================================
@@ -873,6 +994,8 @@ install_wake_on_lan() {
     echo -e "${YELLOW}Wake on LAN Manager closed. Returning to main menu...${NC}"
     sleep 2
 }
+
+
 # Function to update_cyan-skillfish
 update_cyan-skillfish() {
     echo -e "${B_RED}=== Updating cyan-skillfish ===${NC}"
@@ -954,7 +1077,9 @@ show_menu() {
     local ICON_WARN="${ICON_WARN:-⚠}"
 
     while true; do
-        clear
+        # ═] GLITCH MELT CLEAR ENGINE: Seamlessly dissolves old frames downwards on loop refresh
+        matrix_melt_clear
+
         # Real-time Telemetry Calculators: Updates seamlessly on every screen refresh loop
         local raw_temp cpu_temp
         raw_temp=$(cat /sys/class/hwmon/hwmon*/temp1_input 2>/dev/null | head -n 1 || echo "0")
@@ -965,26 +1090,25 @@ show_menu() {
         fi
         local load_avg; load_avg=$(awk '{print $1" "$2" "$3}' /proc/loadavg)
 
-        # Draw Symmetrical 78-Character Frame Heading Panel
-        echo -e "${BOLD}${CYAN}"
+        # Draw Symmetrical 24-Bit True Color Green Frame Heading Panel (Bypasses Konsole profile overrides)
+        echo -e "${BOLD}\033[38;2;0;255;0m"
         echo "  ╔════════════════════════════════════════════════════════════════════════════════════════╗"
         echo "  ║                                                                                        ║"
-        echo -e "  ║        ${YELLOW}██████╗  █████╗ ███████╗███████╗██╗████████╗███████╗    ██████╗ ███████╗${CYAN}        ║"
-        echo -e "  ║        ${YELLOW}██╔══██╗██╔══██╗╚══███╔╝╚══███╔╝██║╚══██╔══╝██╔════╝   ██╔═══██╗██╔════╝${CYAN}        ║"
-        echo -e "  ║        ${YELLOW}██████╔╝███████║  ███╔╝   ███╔╝ ██║   ██║   █████╗  ██ ██║   ██║███████╗${CYAN}        ║"
-        echo -e "  ║        ${YELLOW}██╔══██╗██╔══██║ ███╔╝   ███╔╝  ██║   ██║   ██╔══╝     ██║   ██║╚════██║${CYAN}        ║"
-        echo -e "  ║        ${YELLOW}██████╔╝██║  ██║███████╗███████╗██║   ██║   ███████╗   ╚██████╔╝███████║${CYAN}        ║"
-        echo -e "  ║        ${YELLOW}╚══════╝ ╚═╝  ╚═╝╚══════╝╚══════╝╚═╝   ╚═╝   ╚══════╝    ╚═════╝ ╚══════╝${CYAN}       ║"
+        echo -e "  ║         ${YELLOW}██████╗  █████╗ ███████╗███████╗██╗████████╗███████╗    ██████╗ ███████╗\033[38;2;0;255;0m       ║"
+        echo -e "  ║         ${YELLOW}██╔══██╗██╔══██╗╚══███╔╝╚══███╔╝██║╚══██╔══╝██╔════╝   ██╔═══██╗██╔════╝\033[38;2;0;255;0m       ║"
+        echo -e "  ║         ${YELLOW}██████╔╝███████║  ███╔╝   ███╔╝ ██║   ██║   █████╗  ██ ██║   ██║███████╗\033[38;2;0;255;0m       ║"
+        echo -e "  ║         ${YELLOW}██╔══██╗██╔══██║ ███╔╝   ███╔╝  ██║   ██║   ██╔══╝     ██║   ██║╚════██║\033[38;2;0;255;0m       ║"
+        echo -e "  ║         ${YELLOW}██████╔╝██║  ██║███████╗███████╗██║   ██║   ███████╗   ╚██████╔╝███████║\033[38;2;0;255;0m       ║"
+        echo -e "  ║         ${YELLOW}╚══════╝ ╚═╝  ╚═╝╚══════╝╚══════╝╚═╝   ╚═╝   ╚══════╝    ╚═════╝ ╚══════╝\033[38;2;0;255;0m      ║"
         echo "  ║                                                                                        ║"
-        # RE-ALIGNED LAYER: Compensated character width parameters to prevent layout skewing
         echo "  ║                                                                                        ║"
-        echo -e "  ║    ${B_BLUE}[●] BLUE Pill${CYAN}            🐇  Follow The White Rabbit  🐇            ${RED}RED Pill [●]${CYAN}    ║"
+        echo -e "  ║    ${B_BLUE}[●] BLUE Pill\033[38;2;0;255;0m             📟  System Core Telemetry  📟             ${RED}RED Pill [●]\033[38;2;0;255;0m    ║"
         echo "  ║                                                                                        ║"
-        echo -e "  ║        System Load: ${WHITE}${load_avg}${CYAN}        │           Silicon Temp: ${YELLOW}${cpu_temp}${CYAN}               ║"
+        echo -e "  ║        System Load: ${WHITE}${load_avg}\033[38;2;0;255;0m        │           Silicon Temp: ${YELLOW}${cpu_temp}\033[38;2;0;255;0m               ║"
         echo "  ╚════════════════════════════════════════════════════════════════════════════════════════╝"
-
         echo -e "${RESET}"
-        # --- SECTION 1: STORAGE & INITIAL MEMORY CONFIG ---
+
+                # --- SECTION 1: STORAGE & INITIAL MEMORY CONFIG ---
         echo -e "  ${BOLD}${YELLOW}This is your last chance. After this, there is no turning back.${RESET}"
         echo -e "  ${DIM}─────────────────────────────────────────────────────────────────────${RESET}"
         echo -e "    ${CYAN}[1]${RESET} ${B_BLUE}BLUE  ●${CYAN} 16GB Swapfile Mapping   ${DIM}(Recommended for smaller NVMe setups)${RESET}"
@@ -1037,9 +1161,10 @@ show_menu() {
         echo -e "     ${WHITE}\"/etc/cyan-skillfish-governor-smu/config.toml\"${RESET}"
         echo -e "  ${DIM}─────────────────────────────────────────────────────────────────────${RESET}"
 
-        # Safe Prompt Parser (Instant Keypress Detection Engine)
+        # Safe Prompt Parser (Instant Typing Response Keystroke Engine)
+        type_prompt "  Select an option [0-7, a-g, s]: " 0.03
         choice=""
-        read -n 1 -s -rp "  Select an option [0-7, a-g, s]: " choice || true
+        read -n 1 -s choice || true
         echo ""
 
         case "$choice" in
@@ -1119,4 +1244,3 @@ show_menu() {
 
 # --- Start Menu Trigger Execution ---
 show_menu
-
