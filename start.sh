@@ -1138,10 +1138,13 @@ def render_simulated_map(num_se, num_sh, live_bitmaps, variants_list):
     for se in range(num_se):
         for sh in range(num_sh):
             bm = live_bitmaps.get((se, sh), 0)
-            for v_se, v_sh, v_wgp in variants_list:
+
+            # Mask the custom targeted screen-indexed WGPs programmatically
+            for v_se, v_sh, screen_wgp in variants_list:
                 if se == v_se and sh == v_sh:
-                    bm &= ~(1 << (v_wgp * 2))
-                    bm &= ~(1 << (v_wgp * 2 + 1))
+                    bm &= ~(1 << (screen_wgp * 2))
+                    bm &= ~(1 << (screen_wgp * 2 + 1))
+
             bar = ''.join('■' if bm & (1 << i) else '□' for i in range(10))
             simulated_rows.append(f"SE{se} SH{sh}:{bar}")
     return " │ ".join(simulated_rows)
@@ -1170,10 +1173,8 @@ try:
     libdrm.amdgpu_query_info(dev, 0x16, 1024, ctypes.byref(buf))
     raw = bytes(buf)
 
-    # 🔧 LOCKED: Added [0] to every structural extraction point
     num_se = struct.unpack_from('<I', raw, 20)[0]
     num_sh = struct.unpack_from('<I', raw, 24)[0]
-    cu_active = struct.unpack_from('<I', raw, 48)[0]
 
     total = 0
     live_bitmaps = {}
@@ -1182,25 +1183,27 @@ try:
 
     for se in range(num_se):
         for sh in range(num_sh):
-            # 🔧 FIXED: Added [0] indexer here to prevent any mathematical tuple crash loop!
             bm = struct.unpack_from('<I', raw, 56 + (se * 4 + sh) * 4)[0]
             live_bitmaps[(se, sh)] = bm
-            n = bin(bm).count('1')
-            total += n
 
-            # Scans row architecture to isolate the single disrupted lane
-            has_dead_before_active = False
-            row_gaps = []
+            # Map out WGP states from Left-to-Right layout space explicitly
+            wgp_states = []
             for wgp in range(5):
                 mask = (1 << (wgp * 2)) | (1 << (wgp * 2 + 1))
-                if (bm & mask) == 0:
-                    row_gaps.append((se, sh, wgp))
-                elif len(row_gaps) > 0:
-                    has_dead_before_active = True
+                wgp_states.append((bm & mask) != 0)
 
-            if has_dead_before_active:
-                disrupted_gaps.extend(row_gaps)
+            n = wgp_states.count(True) * 2
+            total += n
 
+            # Locate TRUE disruptions: empty spots that break an active chain of WGPs
+            if 0 < n < 10:
+                for wgp_idx in range(5):
+                    if not wgp_states[wgp_idx]:
+                        # Disruption validation: Is there an active WGP to its left or right?
+                        if any(wgp_states[idx] for idx in range(wgp_idx + 1, 5)) or any(wgp_states[idx] for idx in range(0, wgp_idx)):
+                            disrupted_gaps.append((se, sh, wgp_idx))
+
+            # 🔧 RESTORED: Prints active blocks natively left-to-right without mirroring artifacts!
             bar = ''.join('■' if bm & (1 << i) else '□' for i in range(10))
             rows.append(f"   SE{se} SH{sh}: {bar}")
 
@@ -1220,12 +1223,17 @@ except Exception as e:
 print(f"\n  \033[1;36m─────────────────────────────────────────────────────────────────────\033[0m")
 print(f"  \033[1;32mAvailable Override Optimization Reference (Targeted Disrupted Row Profiles):\033[0m\n")
 
+unique_gaps = []
+for item in disrupted_gaps:
+    if item not in unique_gaps:
+        unique_gaps.append(item)
+
 variant_counter = 1
 active_karg_found = False
 
-# Programmatically outputs exactly 3 variants bound strictly to the non-unified row parameters
-for se, sh, wgp in disrupted_gaps[:2]:
-    karg_str = f"amdgpu.disable_cu={se}.{sh}.{wgp}"
+# Loop outputs exactly what is needed for the active machine's signature
+for se, sh, screen_wgp in unique_gaps[:2]:
+    karg_str = f"amdgpu.disable_cu={se}.{sh}.{screen_wgp}"
 
     if karg_str in cmdline:
         status_badge = "\033[1;92m[ RUNNING / STABLE ]\033[0m"
@@ -1233,19 +1241,20 @@ for se, sh, wgp in disrupted_gaps[:2]:
     else:
         status_badge = "\033[1;90m[ IDLE ]\033[0m"
 
-    map_proj = render_simulated_map(num_se, num_sh, live_bitmaps, [(se, sh, wgp)])
+    map_proj = render_simulated_map(num_se, num_sh, live_bitmaps, [(se, sh, screen_wgp)])
 
-    print(f"   \033[1;36m[DYNAMIC VARIANT 0{variant_counter}]\033[0m Mask Disrupted Target: SE{se} SH{sh} WGP{wgp} (38/40 CUs)  {status_badge}")
+    print(f"   \033[1;36m[DYNAMIC VARIANT 0{variant_counter}]\033[0m Mask Disrupted Target: SE{se} SH{sh} WGP{screen_wgp} (38/40 CUs)  {status_badge}")
     print(f"   \033[1;35mProjections │ {map_proj}\033[0m")
     print(f"   \033[2mCommand: sudo rpm-ostree kargs --append='amdgpu.bc250_cc_write_mode=3 {karg_str}'\033[0m\n")
     variant_counter += 1
 
-if len(disrupted_gaps) >= 2:
-    target1, target2 = disrupted_gaps[0], disrupted_gaps[1]
-    combo_str = f"amdgpu.disable_cu={target1[0]}.{target1[1]}.{target1[2]},{target2[0]}.{target2[1]}.{target2[2]}"
+if len(unique_gaps) >= 2:
+    se1, sh1, w1 = unique_gaps[0]
+    se2, sh2, w2 = unique_gaps[1]
+    combo_str = f"amdgpu.disable_cu={se1}.{sh1}.{w1},{se2}.{sh2}.{w2}"
 
     status_combo = "\033[1;92m[ RUNNING / STABLE ]\033[0m" if combo_str in cmdline else "\033[1;90m[ IDLE ]\033[0m"
-    map_combo = render_simulated_map(num_se, num_sh, live_bitmaps, [target1, target2])
+    map_combo = render_simulated_map(num_se, num_sh, live_bitmaps, [(se1, sh1, w1), (se2, sh2, w2)])
 
     print(f"   \033[1;36m[DYNAMIC DOUBLE VARIANT]\033[0m Mask Combined Row Disruptions Fallback (36/40 CUs)       {status_combo}")
     print(f"   \033[1;35mProjections │ {map_combo}\033[0m")
