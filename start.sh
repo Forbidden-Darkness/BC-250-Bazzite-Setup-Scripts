@@ -64,11 +64,17 @@ REAL_HOME="$(getent passwd "$REAL_USER" | cut -d: -f6)"
 [[ -z "$REAL_HOME" || ! -d "$REAL_HOME" ]] && REAL_HOME="/root"
 
 # ==============================================================================
+# ==============================================================================
 # STEP 2: ASSIGN TARGET AUDIO & UPDATE REPOSITORIES
 # ==============================================================================
 AUDIO_FILE="$REAL_HOME/Bazzite_Toolbox/Wake_on_LAN/Red-Pill-Blue-Pill.wav"
 MUSIC_LOCK_FILE="$REAL_HOME/.bc250-toolkit-music.pid"
 GITHUB_RAW_URL="https://githubusercontent.com"
+
+# --- GLOBAL CORE CONFIGURATION TARGET PATHS ---
+EXTERNAL_DIR="$REAL_HOME/Bazzite_Toolbox"
+CORE_UNLOCK_CONF="/etc/bc250-core-unlock.conf"
+
 
 # ==============================================================================
 # STEP 3: CORE TOOLKIT INTERACTIVE ANIMATION ENGINES
@@ -849,7 +855,7 @@ echo -e "${GREEN}Starting Bazzite Toolbox Core UI...${NC}"
 # =====================================================================
 # 2. AUTO-UPDATE MECHANISM (WITH SILENT OFFLINE FAIL)
 # =====================================================================
-GITHUB_RAW_URL="https://github.com/Forbidden-Darkness/Bazzite_Toolbox/raw/refs/heads/main/start.sh"
+#GITHUB_RAW_URL="https://github.com/Forbidden-Darkness/Bazzite_Toolbox/raw/refs/heads/main/start.sh"
 
 if [ "$1" != "--no-update" ] && [ "$1" != "--updated" ]; then
     if curl -s -I -L --connect-timeout 2 "$GITHUB_RAW_URL" > /dev/null; then
@@ -1111,6 +1117,88 @@ remove_acpi_fix() {
     prompt_reboot
 }
 
+# ==============================================================================
+# INTEGRATED: LIVE DYNAMIC BC-250 SILICON HARVEST VERIFICATION MAP
+# ==============================================================================
+view_cu_map() {
+    clear
+    echo -e "${BOLD}${CYAN}  ╔════════════════════════════════════════════════════════════════════════════════════════╗${RESET}"
+    echo -e "${BOLD}${CYAN}  ║                 📟  AMD BC-250 Live Compute Unit Silicon Map Matrix     📟             ║${RESET}"
+    echo -e "${BOLD}${CYAN}  ╚════════════════════════════════════════════════════════════════════════════════════════╝${RESET}"
+    echo ""
+    echo -e "  ${BOLD}${YELLOW}Active Hardware Real-Time Telemetry Profile:${RESET}"
+    echo -e "  ${DIM}─────────────────────────────────────────────────────────────────────${RESET}"
+
+    sudo python3 << 'PYEOF'
+import ctypes, struct, os, sys
+
+try:
+    try:
+        libdrm = ctypes.CDLL("libdrm_amdgpu.so.1")
+    except OSError:
+        print("   \033[0;31mERROR: libdrm_amdgpu driver library not found on this host system.\033[0m")
+        sys.exit(1)
+
+    fd = os.open("/dev/dri/renderD128", os.O_RDWR)
+    dev = ctypes.c_void_p()
+    maj, min_ = ctypes.c_uint32(), ctypes.c_uint32()
+    libdrm.amdgpu_device_initialize(fd, ctypes.byref(maj), ctypes.byref(min_), ctypes.byref(dev))
+
+    buf = (ctypes.c_uint8 * 1024)()
+    libdrm.amdgpu_query_info(dev, 0x16, 1024, ctypes.byref(buf))
+    raw = bytes(buf)
+
+    # 🔧 FIXED: Added [0] to extract the raw integer out of the tuple container safely
+    num_se = struct.unpack_from('<I', raw, 20)[0]
+    num_sh = struct.unpack_from('<I', raw, 24)[0]
+    cu_active = struct.unpack_from('<I', raw, 48)[0]
+
+    total = 0
+    rows = []
+    for se in range(num_se):
+        for sh in range(num_sh):
+            bm = struct.unpack_from('<I', raw, 56 + (se * 4 + sh) * 4)[0]  # 🔧 FIXED HERE TOO
+            n = bin(bm).count('1')
+            total += n
+            bar = ''.join('■' if bm & (1 << i) else '□' for i in range(10))
+            rows.append(f"   SE{se} SH{sh}: {bar}")
+
+    possible = num_se * num_sh * 10
+    harvested = possible - total
+
+    for r in rows:
+        print(f"\033[1;92m{r}\033[0m")
+    print(f"\n   \033[1;37mStatus: {total}/{possible} CUs active, {harvested} harvested Silicon blocks.\033[0m")
+
+    libdrm.amdgpu_device_deinitialize(dev)
+    os.close(fd)
+except Exception as e:
+    print(f"   \033[0;31mERROR: Failed to read DRM pipeline ioctl bindings ({e})\033[0m")
+PYEOF
+
+    echo -e "  ${DIM}─────────────────────────────────────────────────────────────────────${RESET}"
+    echo ""
+    echo -e "  ${BOLD}${GREEN}Available Override Optimization Reference (Target: 36CU / 38CU Arrays)${RESET}"
+    echo ""
+    echo -e "   ${BOLD}${CYAN}[SINGLE VARIANT 03]${RESET} Disable SE0 SH0 WGP2 / CU4-5 (Forces 38/40 Active CUs)"
+    echo -e "   ${DIM}Command: sudo rpm-ostree kargs --append='amdgpu.bc250_cc_write_mode=3 amdgpu.disable_cu=0.0.2'${RESET}"
+    echo ""
+    echo -e "   ${BOLD}${CYAN}[SINGLE VARIANT 05]${RESET} Disable SE0 SH0 WGP4 / CU8-9 (Forces 38/40 Active CUs)"
+    echo -e "   ${DIM}Command: sudo rpm-ostree kargs --append='amdgpu.bc250_cc_write_mode=3 amdgpu.disable_cu=0.0.4'${RESET}"
+    echo ""
+    echo -e "   ${BOLD}${CYAN}[DOUBLE VARIANT 039]${RESET} Disable SE0 SH0 WGP2 / CU4-5 + SE0 SH0 WGP4 / CU8-9 (Forces 36/40 Active CUs)"
+    echo -e "   ${DIM}Command: sudo rpm-ostree kargs --append='amdgpu.bc250_cc_write_mode=3 amdgpu.disable_cu=0.0.2,0.0.4'${RESET}"
+    echo -e "  ${DIM}─────────────────────────────────────────────────────────────────────${RESET}"
+    echo ""
+    echo -e "  ${BOLD}${WHITE}ℹ Pinning Safety Strategy Rule:${RESET}"
+    echo -e "    If the system passes memory validation testing under your custom target block alignment,"
+    echo -e "    pin your current known deployment parameter states using standard ostree admin management:"
+    echo -e "    ${MAGENTA}rpm-ostree status && sudo ostree admin pin 0${RESET}"
+    echo -e "  ${DIM}─────────────────────────────────────────────────────────────────────${RESET}"
+    echo ""
+    read -rp "  Press [Enter] to return to the toolkit main menu..."
+}
+
 # Wrapped in a Menu Loop
 show_menu() {
     local RESET="${RESET:-}" BOLD="${BOLD:-}" DIM="${DIM:-}"
@@ -1170,7 +1258,7 @@ show_menu() {
         echo -e "  ${DIM}─────────────────────────────────────────────────────────────────────${RESET}"
         echo ""
 
-        # --- SECTION 2: COMPONENT SWITCHES & TOOLS ---
+                # --- SECTION 2: COMPONENT SWITCHES & TOOLS ---
         echo -e "  ${BOLD}${YELLOW}Hardware Unlocks & Core Optimizations${RESET}"
         echo -e "  ${DIM}─────────────────────────────────────────────────────────────────────${RESET}"
         echo -e "    ${CYAN}[3]${RESET} Inject BC-250 ACPI Table Fix   ${DIM}(Restores C/P-state voltage loops)${RESET}"
@@ -1178,6 +1266,7 @@ show_menu() {
         echo -e "    ${CYAN}[5]${RESET} Launch BC-250 Overclock Manager ${DIM}(Live SMU adjustment utility)${RESET}"
         echo -e "    ${CYAN}[6]${RESET} Launch Wake-on-LAN Configuration ${DIM}(Interface port selector tool)${RESET}"
         echo -e "    ${CYAN}[7]${RESET} Upgrade Governor Binary Track  ${DIM}(Target: v0.4.12 via COPR repo)${RESET}"
+        echo -e "    ${BOLD}${GREEN}[h] Interrogate Silicon CU Map Matrix ${DIM}(Analyze Harvest Override Variants)${RESET}"
         echo ""
 
         # --- SECTION 3: SMU GOVERNOR LAYER CONTROLS ---
@@ -1203,13 +1292,13 @@ show_menu() {
         echo -e "     ${WHITE}\"/etc/cyan-skillfish-governor-smu/config.toml\"${RESET}"
         echo -e "  ${DIM}─────────────────────────────────────────────────────────────────────${RESET}"
 
-        # Safe Prompt Parser (Instant Typing Response Keystroke Engine)
-        type_prompt "  Select an option [0-7, a-g, s]: " 0.03
+                # Safe Prompt Parser (Instant Typing Response Keystroke Engine)
+        type_prompt "  Select an option [0-7, a-g, h, s]: " 0.03
         choice=""
         read -n 1 -s choice || true
         echo ""
 
-        case "$choice" in
+                case "$choice" in
             1) install_blue_pill ;;
             2) install_red_pill ;;
             3) apply_acpi_fix ;;
@@ -1217,6 +1306,8 @@ show_menu() {
             5) install_overclock ;;
             6) install_wake_on_lan ;;
             7) update_cyan-skillfish ;;
+            h) view_cu_map ;;  # Hooks your new look securely into the runtime loop
+
             a)
                 echo -e "${GREEN}Executing Temporary Start...${NC}"
                 sudo systemctl start cyan-skillfish-governor-smu
