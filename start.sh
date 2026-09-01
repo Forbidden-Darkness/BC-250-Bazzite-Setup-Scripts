@@ -1186,7 +1186,6 @@ try:
             bm = struct.unpack_from('<I', raw, 56 + (se * 4 + sh) * 4)[0]
             live_bitmaps[(se, sh)] = bm
 
-            # Map out WGP states from Left-to-Right layout space explicitly
             wgp_states = []
             for wgp in range(5):
                 mask = (1 << (wgp * 2)) | (1 << (wgp * 2 + 1))
@@ -1195,15 +1194,23 @@ try:
             n = wgp_states.count(True) * 2
             total += n
 
-            # Locate TRUE disruptions: empty spots that break an active chain of WGPs
+            # 🛠️ HARDWARE AGNOSTIC SCANNER: Identifies all trapped dead zones dynamically
             if 0 < n < 10:
-                for wgp_idx in range(5):
-                    if not wgp_states[wgp_idx]:
-                        # Disruption validation: Is there an active WGP to its left or right?
-                        if any(wgp_states[idx] for idx in range(wgp_idx + 1, 5)) or any(wgp_states[idx] for idx in range(0, wgp_idx)):
-                            disrupted_gaps.append((se, sh, wgp_idx))
+                active_indices = [i for i, active in enumerate(wgp_states) if active]
+                if active_indices:
+                    first_active = active_indices[0]
+                    last_active = active_indices[-1]
 
-            # 🔧 RESTORED: Prints active blocks natively left-to-right without mirroring artifacts!
+                    for wgp_idx in range(5):
+                        if not wgp_states[wgp_idx]:
+                            # Condition 1: Trapped in the middle
+                            is_middle_gap = first_active < wgp_idx < last_active
+                            # Condition 2: Front shifted displacement (WGP 0 is dead but row has active blocks following)
+                            is_front_disruption = (wgp_idx == 0 and last_active > 0)
+
+                            if is_middle_gap or is_front_disruption:
+                                disrupted_gaps.append((se, sh, wgp_idx))
+
             bar = ''.join('■' if bm & (1 << i) else '□' for i in range(10))
             rows.append(f"   SE{se} SH{sh}: {bar}")
 
@@ -1231,7 +1238,7 @@ for item in disrupted_gaps:
 variant_counter = 1
 active_karg_found = False
 
-# Loop outputs exactly what is needed for the active machine's signature
+# Render the single variants dynamically based on what was uncovered
 for se, sh, screen_wgp in unique_gaps[:2]:
     karg_str = f"amdgpu.disable_cu={se}.{sh}.{screen_wgp}"
 
@@ -1248,6 +1255,7 @@ for se, sh, screen_wgp in unique_gaps[:2]:
     print(f"   \033[2mCommand: sudo rpm-ostree kargs --append='amdgpu.bc250_cc_write_mode=3 {karg_str}'\033[0m\n")
     variant_counter += 1
 
+# Render the multi-WGP combination block if multiple active gaps are uncovered
 if len(unique_gaps) >= 2:
     se1, sh1, w1 = unique_gaps[0]
     se2, sh2, w2 = unique_gaps[1]
