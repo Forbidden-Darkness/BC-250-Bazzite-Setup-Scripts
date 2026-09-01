@@ -1148,7 +1148,6 @@ try:
     libdrm.amdgpu_query_info(dev, 0x16, 1024, ctypes.byref(buf))
     raw = bytes(buf)
 
-    # 🔧 FIXED: Added [0] to extract the raw integer out of the tuple container safely
     num_se = struct.unpack_from('<I', raw, 20)[0]
     num_sh = struct.unpack_from('<I', raw, 24)[0]
     cu_active = struct.unpack_from('<I', raw, 48)[0]
@@ -1157,7 +1156,7 @@ try:
     rows = []
     for se in range(num_se):
         for sh in range(num_sh):
-            bm = struct.unpack_from('<I', raw, 56 + (se * 4 + sh) * 4)[0]  # 🔧 FIXED HERE TOO
+            bm = struct.unpack_from('<I', raw, 56 + (se * 4 + sh) * 4)[0]
             n = bin(bm).count('1')
             total += n
             bar = ''.join('■' if bm & (1 << i) else '□' for i in range(10))
@@ -1190,13 +1189,18 @@ PYEOF
     echo -e "   ${DIM}Command: sudo rpm-ostree kargs --append='amdgpu.bc250_cc_write_mode=3 amdgpu.disable_cu=0.0.2,0.0.4'${RESET}"
     echo -e "  ${DIM}─────────────────────────────────────────────────────────────────────${RESET}"
     echo ""
-    echo -e "  ${BOLD}${WHITE}ℹ Pinning Safety Strategy Rule:${RESET}"
-    echo -e "    If the system passes memory validation testing under your custom target block alignment,"
-    echo -e "    pin your current known deployment parameter states using standard ostree admin management:"
-    echo -e "    ${MAGENTA}rpm-ostree status && sudo ostree admin pin 0${RESET}"
+    echo -e "  ${BOLD}${WHITE}ℹ  Deployment Validation & Crash Recovery Strategy:${RESET}"
+    echo ""
+    echo -e "     • ${CYAN}Pin Deployment${RESET} : If the system boots cleanly, pin your known-good parameters via ostree:"
+    echo -e "                       ${MAGENTA}rpm-ostree status && sudo ostree admin pin 0${RESET}"
+    echo -e "     • ${YELLOW}Crash Safety${RESET}   : Leave governor services disabled while testing custom target variations."
+    echo -e "                       Any hard boot hang will let you safely fall back to stock hardware clocks."
+    echo -e "     • ${RED}Full Reversion${RESET} : Remove override masks completely to return to stock configuration parameters:"
+    echo -e "                       ${MAGENTA}sudo rpm-ostree kargs --delete=amdgpu.bc250_cc_write_mode=3${RESET}"
     echo -e "  ${DIM}─────────────────────────────────────────────────────────────────────${RESET}"
     echo ""
-    read -rp "  Press [Enter] to return to the toolkit main menu..."
+    type_prompt "  Press [Enter] to return to the toolkit main menu... " 0.03
+    read -rp "  "
 }
 
 # Wrapped in a Menu Loop
@@ -1350,7 +1354,8 @@ show_menu() {
                 ;;
             s)
                 run_status
-                echo -e "\n  ${YELLOW}Press any key to return to the menu...${RESET}"
+                type_prompt "  Press [any key] to return to the toolkit main menu... " 0.03
+                #echo -e "\n  ${YELLOW}Press any key to return to the menu...${RESET}"
                 read -n 1 -s -r || true
                 ;;
             r)
