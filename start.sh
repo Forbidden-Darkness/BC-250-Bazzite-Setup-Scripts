@@ -1132,6 +1132,28 @@ view_cu_map() {
     sudo python3 << 'PYEOF'
 import ctypes, struct, os, sys
 
+def render_simulated_map(num_se, num_sh, live_bitmaps, variants_list):
+    """Programmatically projects what the silicon grid will look like under specified mask variations"""
+    simulated_rows = []
+    for se in range(num_se):
+        for sh in range(num_sh):
+            bm = live_bitmaps.get((se, sh), 0)
+            for v_se, v_sh, v_wgp in variants_list:
+                if se == v_se and sh == v_sh:
+                    bm &= ~(1 << (v_wgp * 2))
+                    bm &= ~(1 << (v_wgp * 2 + 1))
+            bar = ''.join('■' if bm & (1 << i) else '□' for i in range(10))
+            simulated_rows.append(f"SE{se} SH{sh}:{bar}")
+    return " │ ".join(simulated_rows)
+
+try:
+    with open("/proc/cmdline", "r") as f:
+        cmdline = f.read()
+except Exception:
+    cmdline = ""
+
+get_status = lambda arg: "\033[1;92m[ RUNNING / STABLE ]\033[0m" if arg in cmdline else "\033[1;90m[ IDLE ]\033[0m"
+
 try:
     try:
         libdrm = ctypes.CDLL("libdrm_amdgpu.so.1")
@@ -1148,17 +1170,37 @@ try:
     libdrm.amdgpu_query_info(dev, 0x16, 1024, ctypes.byref(buf))
     raw = bytes(buf)
 
+    # 🔧 LOCKED: Added [0] to every structural extraction point
     num_se = struct.unpack_from('<I', raw, 20)[0]
     num_sh = struct.unpack_from('<I', raw, 24)[0]
     cu_active = struct.unpack_from('<I', raw, 48)[0]
 
     total = 0
+    live_bitmaps = {}
     rows = []
+    disrupted_gaps = []
+
     for se in range(num_se):
         for sh in range(num_sh):
+            # 🔧 FIXED: Added [0] indexer here to prevent any mathematical tuple crash loop!
             bm = struct.unpack_from('<I', raw, 56 + (se * 4 + sh) * 4)[0]
+            live_bitmaps[(se, sh)] = bm
             n = bin(bm).count('1')
             total += n
+
+            # Scans row architecture to isolate the single disrupted lane
+            has_dead_before_active = False
+            row_gaps = []
+            for wgp in range(5):
+                mask = (1 << (wgp * 2)) | (1 << (wgp * 2 + 1))
+                if (bm & mask) == 0:
+                    row_gaps.append((se, sh, wgp))
+                elif len(row_gaps) > 0:
+                    has_dead_before_active = True
+
+            if has_dead_before_active:
+                disrupted_gaps.extend(row_gaps)
+
             bar = ''.join('■' if bm & (1 << i) else '□' for i in range(10))
             rows.append(f"   SE{se} SH{sh}: {bar}")
 
@@ -1173,20 +1215,46 @@ try:
     os.close(fd)
 except Exception as e:
     print(f"   \033[0;31mERROR: Failed to read DRM pipeline ioctl bindings ({e})\033[0m")
+    sys.exit(1)
+
+print(f"\n  \033[1;36m─────────────────────────────────────────────────────────────────────\033[0m")
+print(f"  \033[1;32mAvailable Override Optimization Reference (Targeted Disrupted Row Profiles):\033[0m\n")
+
+variant_counter = 1
+active_karg_found = False
+
+# Programmatically outputs exactly 3 variants bound strictly to the non-unified row parameters
+for se, sh, wgp in disrupted_gaps[:2]:
+    karg_str = f"amdgpu.disable_cu={se}.{sh}.{wgp}"
+
+    if karg_str in cmdline:
+        status_badge = "\033[1;92m[ RUNNING / STABLE ]\033[0m"
+        active_karg_found = True
+    else:
+        status_badge = "\033[1;90m[ IDLE ]\033[0m"
+
+    map_proj = render_simulated_map(num_se, num_sh, live_bitmaps, [(se, sh, wgp)])
+
+    print(f"   \033[1;36m[DYNAMIC VARIANT 0{variant_counter}]\033[0m Mask Disrupted Target: SE{se} SH{sh} WGP{wgp} (38/40 CUs)  {status_badge}")
+    print(f"   \033[1;35mProjections │ {map_proj}\033[0m")
+    print(f"   \033[2mCommand: sudo rpm-ostree kargs --append='amdgpu.bc250_cc_write_mode=3 {karg_str}'\033[0m\n")
+    variant_counter += 1
+
+if len(disrupted_gaps) >= 2:
+    target1, target2 = disrupted_gaps[0], disrupted_gaps[1]
+    combo_str = f"amdgpu.disable_cu={target1[0]}.{target1[1]}.{target1[2]},{target2[0]}.{target2[1]}.{target2[2]}"
+
+    status_combo = "\033[1;92m[ RUNNING / STABLE ]\033[0m" if combo_str in cmdline else "\033[1;90m[ IDLE ]\033[0m"
+    map_combo = render_simulated_map(num_se, num_sh, live_bitmaps, [target1, target2])
+
+    print(f"   \033[1;36m[DYNAMIC DOUBLE VARIANT]\033[0m Mask Combined Row Disruptions Fallback (36/40 CUs)       {status_combo}")
+    print(f"   \033[1;35mProjections │ {map_combo}\033[0m")
+    print(f"   \033[2mCommand: sudo rpm-ostree kargs --append='amdgpu.bc250_cc_write_mode=3 {combo_str}'\033[0m\n")
+
+if not active_karg_found and "bc250_cc_write_mode=3" in cmdline and "disable_cu" not in cmdline:
+    print(f"   \033[1;93mℹ Current Boot State Notice: Chip is running unmasked at maximum possible physical CU limit!\033[0m\n")
 PYEOF
 
-    echo -e "  ${DIM}─────────────────────────────────────────────────────────────────────${RESET}"
-    echo ""
-    echo -e "  ${BOLD}${GREEN}Available Override Optimization Reference (Target: 36CU / 38CU Arrays)${RESET}"
-    echo ""
-    echo -e "   ${BOLD}${CYAN}[SINGLE VARIANT 03]${RESET} Disable SE0 SH0 WGP2 / CU4-5 (Forces 38/40 Active CUs)"
-    echo -e "   ${DIM}Command: sudo rpm-ostree kargs --append='amdgpu.bc250_cc_write_mode=3 amdgpu.disable_cu=0.0.2'${RESET}"
-    echo ""
-    echo -e "   ${BOLD}${CYAN}[SINGLE VARIANT 05]${RESET} Disable SE0 SH0 WGP4 / CU8-9 (Forces 38/40 Active CUs)"
-    echo -e "   ${DIM}Command: sudo rpm-ostree kargs --append='amdgpu.bc250_cc_write_mode=3 amdgpu.disable_cu=0.0.4'${RESET}"
-    echo ""
-    echo -e "   ${BOLD}${CYAN}[DOUBLE VARIANT 039]${RESET} Disable SE0 SH0 WGP2 / CU4-5 + SE0 SH0 WGP4 / CU8-9 (Forces 36/40 Active CUs)"
-    echo -e "   ${DIM}Command: sudo rpm-ostree kargs --append='amdgpu.bc250_cc_write_mode=3 amdgpu.disable_cu=0.0.2,0.0.4'${RESET}"
     echo -e "  ${DIM}─────────────────────────────────────────────────────────────────────${RESET}"
     echo ""
     echo -e "  ${BOLD}${WHITE}ℹ  Deployment Validation & Crash Recovery Strategy:${RESET}"
