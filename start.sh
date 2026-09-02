@@ -494,7 +494,7 @@ ram_split_current_uma() {
 }
 
 # ==============================================================================
-# RE-ORDERED CORE ENGINE: SYSTEM STATUS VISUALIZATION DASHBOARD (PART 1)
+# RE-ORDERED CORE ENGINE: SYSTEM STATUS VISUALIZATION DASHBOARD
 # ==============================================================================
 run_status() {
     print_banner
