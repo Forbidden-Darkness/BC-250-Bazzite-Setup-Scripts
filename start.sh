@@ -67,7 +67,7 @@ REAL_HOME="$(getent passwd "$REAL_USER" | cut -d: -f6)"
 # ==============================================================================
 # STEP 2: ASSIGN TARGET AUDIO & UPDATE REPOSITORIES
 # ==============================================================================
-AUDIO_FILE="$REAL_HOME/Bazzite_Toolbox/Wake_on_LAN/Red-Pill-Blue-Pill.wav"
+AUDIO_FILE="Wake_on_LAN/Red-Pill-Blue-Pill.wav"
 MUSIC_LOCK_FILE="$REAL_HOME/.bc250-toolkit-music.pid"
 GITHUB_RAW_URL="https://githubusercontent.com"
 
@@ -1118,7 +1118,7 @@ remove_acpi_fix() {
 }
 
 # ==============================================================================
-# INTEGRATED: LIVE DYNAMIC BC-250 SILICON HARVEST VERIFICATION MAP
+# INTEGRATED: UNIVERSAL DYNAMIC BC-250 SILICON HARVEST ENGINE MATRIX
 # ==============================================================================
 view_cu_map() {
     clear
@@ -1180,6 +1180,7 @@ try:
     live_bitmaps = {}
     rows = []
     disrupted_gaps = []
+    all_empty_gaps = []
 
     for se in range(num_se):
         for sh in range(num_sh):
@@ -1194,7 +1195,7 @@ try:
             n = wgp_states.count(True) * 2
             total += n
 
-            # 🛠️ HARDWARE AGNOSTIC SCANNER: Identifies all trapped dead zones dynamically
+            # Identify trapped or leading disruptions relative to active blocks
             if 0 < n < 10:
                 active_indices = [i for i, active in enumerate(wgp_states) if active]
                 if active_indices:
@@ -1203,9 +1204,8 @@ try:
 
                     for wgp_idx in range(5):
                         if not wgp_states[wgp_idx]:
-                            # Condition 1: Trapped in the middle
+                            all_empty_gaps.append((se, sh, wgp_idx))
                             is_middle_gap = first_active < wgp_idx < last_active
-                            # Condition 2: Front shifted displacement (WGP 0 is dead but row has active blocks following)
                             is_front_disruption = (wgp_idx == 0 and last_active > 0)
 
                             if is_middle_gap or is_front_disruption:
@@ -1235,46 +1235,99 @@ for item in disrupted_gaps:
     if item not in unique_gaps:
         unique_gaps.append(item)
 
-variant_counter = 1
-active_karg_found = False
+final_targets = list(unique_gaps)
+is_multi_row_front = len(unique_gaps) >= 2 and all(w == 0 for se, sh, w in unique_gaps)
 
-# Render the single variants dynamically based on what was uncovered
-for se, sh, screen_wgp in unique_gaps[:2]:
-    karg_str = f"amdgpu.disable_cu={se}.{sh}.{screen_wgp}"
+# 🎰 40/40 LOTTERY WINNER DETECTOR TRIGGER INSTANTIATOR
+if len(unique_gaps) == 0 and total == 24:
+    print(f"   \033[1;35m🎉 CONGRATULATIONS! THIS SILICON PROFILE IS A 40/40 LOTTERY WINNER! 🎉\033[0m")
+    print(f"   \033[1;37mNo disrupted rows detected natively on this baseline block configuration.\033[0m")
+    print(f"   \033[1;32mYour chip is completely uniform and eligible for direct 40 CU unlock rebases.\033[0m\n")
 
-    if karg_str in cmdline:
-        status_badge = "\033[1;92m[ RUNNING / STABLE ]\033[0m"
-        active_karg_found = True
-    else:
-        status_badge = "\033[1;90m[ IDLE ]\033[0m"
+elif is_multi_row_front:
+    # 🧬 BRANCH 1: MULTI-ROW FRONT DISRUPTION CONFIGURATION PATH
+    expanded_targets = []
+    quad_targets = []
 
-    map_proj = render_simulated_map(num_se, num_sh, live_bitmaps, [(se, sh, screen_wgp)])
+    for se, sh, w in unique_gaps:
+        tail_wgp = next((tw for s, h, tw in all_empty_gaps if s == se and h == sh and tw != w), None)
+        expanded_targets.append((se, sh, w))
+        quad_targets.append((se, sh, w))
+        if tail_wgp is not None:
+            expanded_targets.append((se, sh, tail_wgp))
+            quad_targets.append((se, sh, tail_wgp))
 
-    print(f"   \033[1;36m[DYNAMIC VARIANT 0{variant_counter}]\033[0m Mask Disrupted Target: SE{se} SH{sh} WGP{screen_wgp} (38/40 CUs)  {status_badge}")
-    print(f"   \033[1;35mProjections │ {map_proj}\033[0m")
-    print(f"   \033[2mCommand: sudo rpm-ostree kargs --append='amdgpu.bc250_cc_write_mode=3 {karg_str}'\033[0m\n")
-    variant_counter += 1
+    variant_counter = 1
+    active_karg_found = False
 
-# Render the multi-WGP combination block if multiple active gaps are uncovered
-if len(unique_gaps) >= 2:
+    for se, sh, screen_wgp in expanded_targets:
+        karg_str = f"amdgpu.disable_cu={se}.{sh}.{screen_wgp}"
+        status_badge = get_status(karg_str)
+        if "RUNNING" in status_badge: active_karg_found = True
+        map_proj = render_simulated_map(num_se, num_sh, live_bitmaps, [(se, sh, screen_wgp)])
+
+        print(f"   \033[1;36m[DYNAMIC VARIANT 0{variant_counter}]\033[0m Mask Disrupted Target: SE{se} SH{sh} WGP{screen_wgp} (38/40 CUs)  {status_badge}")
+        print(f"   \033[1;35mProjections │ {map_proj}\033[0m")
+        print(f"   \033[2mCommand: sudo rpm-ostree kargs --append='amdgpu.bc250_cc_write_mode=3 {karg_str}'\033[0m\n")
+        variant_counter += 1
+
     se1, sh1, w1 = unique_gaps[0]
     se2, sh2, w2 = unique_gaps[1]
-    combo_str = f"amdgpu.disable_cu={se1}.{sh1}.{w1},{se2}.{sh2}.{w2}"
+    double_combo_str = f"amdgpu.disable_cu={se1}.{sh1}.{w1},{se2}.{sh2}.{w2}"
+    status_double = get_status(double_combo_str)
+    map_double = render_simulated_map(num_se, num_sh, live_bitmaps, [(se1, sh1, w1), (se2, sh2, w2)])
 
-    status_combo = "\033[1;92m[ RUNNING / STABLE ]\033[0m" if combo_str in cmdline else "\033[1;90m[ IDLE ]\033[0m"
-    map_combo = render_simulated_map(num_se, num_sh, live_bitmaps, [(se1, sh1, w1), (se2, sh2, w2)])
+    print(f"   \033[1;36m[DYNAMIC DOUBLE VARIANT]\033[0m Mask Combined Row Disruptions Fallback (36/40 CUs)       {status_double}")
+    print(f"   \033[1;35mProjections │ {map_double}\033[0m")
+    print(f"   \033[2mCommand: sudo rpm-ostree kargs --append='amdgpu.bc250_cc_write_mode=3 {double_combo_str}'\033[0m\n")
 
-    print(f"   \033[1;36m[DYNAMIC DOUBLE VARIANT]\033[0m Mask Combined Row Disruptions Fallback (36/40 CUs)       {status_combo}")
-    print(f"   \033[1;35mProjections │ {map_combo}\033[0m")
-    print(f"   \033[2mCommand: sudo rpm-ostree kargs --append='amdgpu.bc250_cc_write_mode=3 {combo_str}'\033[0m\n")
+    quad_karg_parts = [f"{s}.{h}.{w}" for s, h, w in quad_targets]
+    quad_combo_str = f"amdgpu.disable_cu=" + ",".join(quad_karg_parts)
+    status_quad = get_status(quad_combo_str)
+    map_quad = render_simulated_map(num_se, num_sh, live_bitmaps, quad_targets)
+
+    print(f"   \033[1;36m[DYNAMIC QUADRUPLE VARIANT]\033[0m Mask Combined Row Disruptions Fallback (32/40 CUs)     {status_quad}")
+    print(f"   \033[1;35mProjections │ {map_quad}\033[0m")
+    print(f"   \033[2mCommand: sudo rpm-ostree kargs --append='amdgpu.bc250_cc_write_mode=3 {quad_combo_str}'\033[0m\n")
+
+else:
+    # 🧬 BRANCH 2: BASELINE TRACK FOR MIDDLE INTERRUPTIONS / SINGLE GAP BOARDS
+    if len(unique_gaps) == 1:
+        se1, sh1, w1 = unique_gaps[0]
+        next_wgp = next((w for se, sh, w in all_empty_gaps if se == se1 and sh == sh1 and w != w1), None)
+        if next_wgp is not None:
+            final_targets.append((se1, sh1, next_wgp))
+
+    variant_counter = 1
+    active_karg_found = False
+
+    for se, sh, screen_wgp in final_targets[:2]:
+        karg_str = f"amdgpu.disable_cu={se}.{sh}.{screen_wgp}"
+        status_badge = get_status(karg_str)
+        if "RUNNING" in status_badge: active_karg_found = True
+        map_proj = render_simulated_map(num_se, num_sh, live_bitmaps, [(se, sh, screen_wgp)])
+
+        print(f"   \033[1;36m[DYNAMIC VARIANT 0{variant_counter}]\033[0m Mask Disrupted Target: SE{se} SH{sh} WGP{screen_wgp} (38/40 CUs)  {status_badge}")
+        print(f"   \033[1;35mProjections │ {map_proj}\033[0m")
+        print(f"   \033[2mCommand: sudo rpm-ostree kargs --append='amdgpu.bc250_cc_write_mode=3 {karg_str}'\033[0m\n")
+        variant_counter += 1
+
+    if len(final_targets) >= 2:
+        se1, sh1, w1 = final_targets[0]
+        se2, sh2, w2 = final_targets[1]
+        combo_str = f"amdgpu.disable_cu={se1}.{sh1}.{w1},{se2}.{sh2}.{w2}"
+        status_combo = get_status(combo_str)
+        map_combo = render_simulated_map(num_se, num_sh, live_bitmaps, [(se1, sh1, w1), (se2, sh2, w2)])
+
+        print(f"   \033[1;36m[DYNAMIC DOUBLE VARIANT]\033[0m Mask Combined Row Disruptions Fallback (36/40 CUs)       {status_combo}")
+        print(f"   \033[1;35mProjections │ {map_combo}\033[0m")
+        print(f"   \033[2mCommand: sudo rpm-ostree kargs --append='amdgpu.bc250_cc_write_mode=3 {combo_str}'\033[0m\n")
 
 if not active_karg_found and "bc250_cc_write_mode=3" in cmdline and "disable_cu" not in cmdline:
     print(f"   \033[1;93mℹ Current Boot State Notice: Chip is running unmasked at maximum possible physical CU limit!\033[0m\n")
 PYEOF
 
     echo -e "  ${DIM}─────────────────────────────────────────────────────────────────────${RESET}"
-    echo ""
-    echo -e "  ${BOLD}${WHITE}ℹ  Deployment Validation & Crash Recovery Strategy:${RESET}"
     echo ""
     echo -e "     • ${CYAN}Pin Deployment${RESET} : If the system boots cleanly, pin your known-good parameters via ostree:"
     echo -e "                       ${MAGENTA}rpm-ostree status && sudo ostree admin pin 0${RESET}"
