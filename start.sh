@@ -1238,6 +1238,9 @@ for item in disrupted_gaps:
 final_targets = list(unique_gaps)
 is_multi_row_front = len(unique_gaps) >= 2 and all(w == 0 for se, sh, w in unique_gaps)
 
+# 🔧 FIXED: Globally initialize the tracking variable here so it handles all branches safely
+active_karg_found = False
+
 # 🎰 40/40 LOTTERY WINNER DETECTOR TRIGGER INSTANTIATOR
 if len(unique_gaps) == 0 and total == 24:
     print(f"   \033[1;35m🎉 CONGRATULATIONS! THIS SILICON PROFILE IS A 40/40 LOTTERY WINNER! 🎉\033[0m")
@@ -1258,7 +1261,6 @@ elif is_multi_row_front:
             quad_targets.append((se, sh, tail_wgp))
 
     variant_counter = 1
-    active_karg_found = False
 
     for se, sh, screen_wgp in expanded_targets:
         karg_str = f"amdgpu.disable_cu={se}.{sh}.{screen_wgp}"
@@ -1275,6 +1277,7 @@ elif is_multi_row_front:
     se2, sh2, w2 = unique_gaps[1]
     double_combo_str = f"amdgpu.disable_cu={se1}.{sh1}.{w1},{se2}.{sh2}.{w2}"
     status_double = get_status(double_combo_str)
+    if "RUNNING" in status_double: active_karg_found = True
     map_double = render_simulated_map(num_se, num_sh, live_bitmaps, [(se1, sh1, w1), (se2, sh2, w2)])
 
     print(f"   \033[1;36m[DYNAMIC DOUBLE VARIANT]\033[0m Mask Combined Row Disruptions Fallback (36/40 CUs)       {status_double}")
@@ -1284,6 +1287,7 @@ elif is_multi_row_front:
     quad_karg_parts = [f"{s}.{h}.{w}" for s, h, w in quad_targets]
     quad_combo_str = f"amdgpu.disable_cu=" + ",".join(quad_karg_parts)
     status_quad = get_status(quad_combo_str)
+    if "RUNNING" in status_quad: active_karg_found = True
     map_quad = render_simulated_map(num_se, num_sh, live_bitmaps, quad_targets)
 
     print(f"   \033[1;36m[DYNAMIC QUADRUPLE VARIANT]\033[0m Mask Combined Row Disruptions Fallback (32/40 CUs)     {status_quad}")
@@ -1299,7 +1303,6 @@ else:
             final_targets.append((se1, sh1, next_wgp))
 
     variant_counter = 1
-    active_karg_found = False
 
     for se, sh, screen_wgp in final_targets[:2]:
         karg_str = f"amdgpu.disable_cu={se}.{sh}.{screen_wgp}"
@@ -1317,15 +1320,16 @@ else:
         se2, sh2, w2 = final_targets[1]
         combo_str = f"amdgpu.disable_cu={se1}.{sh1}.{w1},{se2}.{sh2}.{w2}"
         status_combo = get_status(combo_str)
+        if "RUNNING" in status_combo: active_karg_found = True
         map_combo = render_simulated_map(num_se, num_sh, live_bitmaps, [(se1, sh1, w1), (se2, sh2, w2)])
 
         print(f"   \033[1;36m[DYNAMIC DOUBLE VARIANT]\033[0m Mask Combined Row Disruptions Fallback (36/40 CUs)       {status_combo}")
         print(f"   \033[1;35mProjections │ {map_combo}\033[0m")
         print(f"   \033[2mCommand: sudo rpm-ostree kargs --append='amdgpu.bc250_cc_write_mode=3 {combo_str}'\033[0m\n")
 
-if not active_karg_found and "bc250_cc_write_mode=3" in cmdline and "disable_cu" not in cmdline:
+    if not active_karg_found and "bc250_cc_write_mode=3" in cmdline and "disable_cu" not in cmdline:
     print(f"   \033[1;93mℹ Current Boot State Notice: Chip is running unmasked at maximum possible physical CU limit!\033[0m\n")
-PYEOF
+    PYEOF
 
     echo -e "  ${DIM}─────────────────────────────────────────────────────────────────────${RESET}"
     echo ""
