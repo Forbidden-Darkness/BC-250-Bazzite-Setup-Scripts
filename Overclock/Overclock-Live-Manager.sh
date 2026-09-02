@@ -168,6 +168,7 @@ ask_desktop_shortcut() {
     echo ""
     echo -e " 2) No, skip shortcut creation"
     echo ""
+    echo -e "${RED}     Hit Enter To Skip This Configuration${NC}"
     echo -e "${BIYellow}==================================================${NC}"
     read -rp "Select an option [1-2]: " shortcut_choice
 
