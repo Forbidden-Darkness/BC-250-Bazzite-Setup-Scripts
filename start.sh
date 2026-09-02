@@ -21,6 +21,7 @@ BIBlue='\033[1;94m'
 BIPurple='\033[1;95m'
 BICyan='\033[1;96m'
 BIWhite='\033[1;97m'
+MAGENTA="\033[1;95m"
 NC='\033[0m'
 BG_HEADER="\e[48;5;235m"
 # ==============================================================================
@@ -1118,7 +1119,7 @@ remove_acpi_fix() {
 }
 
 # ==============================================================================
-# INTEGRATED: UNIVERSAL DYNAMIC BC-250 SILICON HARVEST ENGINE MATRIX
+# INTEGRATED: MASTER UNIVERSAL DYNAMIC BC-250 SILICON HARVEST ENGINE MATRIX
 # ==============================================================================
 view_cu_map() {
     clear
@@ -1137,16 +1138,15 @@ def render_simulated_map(num_se, num_sh, live_bitmaps, variants_list):
     simulated_rows = []
     for se in range(num_se):
         for sh in range(num_sh):
-            bm = live_bitmaps.get((se, sh), 0)
-
-            # Mask the custom targeted screen-indexed WGPs programmatically
-            for v_se, v_sh, screen_wgp in variants_list:
-                if se == v_se and sh == v_sh:
-                    bm &= ~(1 << (screen_wgp * 2))
-                    bm &= ~(1 << (screen_wgp * 2 + 1))
-
-            bar = ''.join('■' if bm & (1 << i) else '□' for i in range(10))
-            simulated_rows.append(f"SE{se} SH{sh}:{bar}")
+            row_bars = []
+            for wgp in range(5):
+                is_targeted = any(v_se == se and v_sh == sh and v_wgp == wgp for v_se, v_sh, v_wgp in variants_list)
+                if is_targeted:
+                    row_bars.append("□□")
+                else:
+                    row_bars.append("■■")
+            bar = "".join(row_bars)
+            simulated_rows.append(f"SE{se}SH{sh}:{bar}")
     return " │ ".join(simulated_rows)
 
 try:
@@ -1173,6 +1173,7 @@ try:
     libdrm.amdgpu_query_info(dev, 0x16, 1024, ctypes.byref(buf))
     raw = bytes(buf)
 
+    # 🔧 FIXED: Added explicit [0] indexers to guarantee raw mathematical integers
     num_se = struct.unpack_from('<I', raw, 20)[0]
     num_sh = struct.unpack_from('<I', raw, 24)[0]
 
@@ -1184,6 +1185,7 @@ try:
 
     for se in range(num_se):
         for sh in range(num_sh):
+            # 🔧 FIXED: Unpacking array row blocks cleanly into integers
             bm = struct.unpack_from('<I', raw, 56 + (se * 4 + sh) * 4)[0]
             live_bitmaps[(se, sh)] = bm
 
@@ -1195,7 +1197,6 @@ try:
             n = wgp_states.count(True) * 2
             total += n
 
-            # Identify trapped or leading disruptions relative to active blocks
             if 0 < n < 10:
                 active_indices = [i for i, active in enumerate(wgp_states) if active]
                 if active_indices:
@@ -1238,17 +1239,17 @@ for item in disrupted_gaps:
 final_targets = list(unique_gaps)
 is_multi_row_front = len(unique_gaps) >= 2 and all(w == 0 for se, sh, w in unique_gaps)
 
-# 🔧 FIXED: Globally initialize the tracking variable here so it handles all branches safely
 active_karg_found = False
 
 # 🎰 40/40 LOTTERY WINNER DETECTOR TRIGGER INSTANTIATOR
 if len(unique_gaps) == 0 and total == 24:
+    map_40_unlock = render_simulated_map(num_se, num_sh, live_bitmaps, [])
     print(f"   \033[1;35m🎉 CONGRATULATIONS! THIS SILICON PROFILE IS A 40/40 LOTTERY WINNER! 🎉\033[0m")
+    print(f"   \033[1;35mUnlocked Matrix │ {map_40_unlock}\033[0m")
     print(f"   \033[1;37mNo disrupted rows detected natively on this baseline block configuration.\033[0m")
     print(f"   \033[1;32mYour chip is completely uniform and eligible for direct 40 CU unlock rebases.\033[0m\n")
 
 elif is_multi_row_front:
-    # 🧬 BRANCH 1: MULTI-ROW FRONT DISRUPTION CONFIGURATION PATH
     expanded_targets = []
     quad_targets = []
 
@@ -1273,29 +1274,46 @@ elif is_multi_row_front:
         print(f"   \033[2mCommand: sudo rpm-ostree kargs --append='amdgpu.bc250_cc_write_mode=3 {karg_str}'\033[0m\n")
         variant_counter += 1
 
-    se1, sh1, w1 = unique_gaps[0]
-    se2, sh2, w2 = unique_gaps[1]
-    double_combo_str = f"amdgpu.disable_cu={se1}.{sh1}.{w1},{se2}.{sh2}.{w2}"
-    status_double = get_status(double_combo_str)
-    if "RUNNING" in status_double: active_karg_found = True
-    map_double = render_simulated_map(num_se, num_sh, live_bitmaps, [(se1, sh1, w1), (se2, sh2, w2)])
+    print(f"   \033[1;32m─── Expanded Symmetrical Double Variant Combinations (36/40 Active CUs) ───\033[0m\n")
+    for i in range(len(expanded_targets)):
+        for j in range(i + 1, len(expanded_targets)):
+            t1, t2 = expanded_targets[i], expanded_targets[j]
+            double_combo_str = f"amdgpu.disable_cu={t1[0]}.{t1[1]}.{t1[2]},{t2[0]}.{t2[1]}.{t2[2]}"
+            status_double = get_status(double_combo_str)
+            if "RUNNING" in status_double: active_karg_found = True
+            map_double = render_simulated_map(num_se, num_sh, live_bitmaps, [t1, t2])
 
-    print(f"   \033[1;36m[DYNAMIC DOUBLE VARIANT]\033[0m Mask Combined Row Disruptions Fallback (36/40 CUs)       {status_double}")
-    print(f"   \033[1;35mProjections │ {map_double}\033[0m")
-    print(f"   \033[2mCommand: sudo rpm-ostree kargs --append='amdgpu.bc250_cc_write_mode=3 {double_combo_str}'\033[0m\n")
+            print(f"   \033[1;36m[DYNAMIC DOUBLE COMBINATION]\033[0m Masking Gaps: SE{t1[0]}SH{t1[1]}W{t1[2]} + SE{t2[0]}SH{t2[1]}W{t2[2]}   {status_double}")
+            print(f"   \033[1;35mProjections │ {map_double}\033[0m")
+            print(f"   \033[2mCommand: sudo rpm-ostree kargs --append='amdgpu.bc250_cc_write_mode=3 {double_combo_str}'\033[0m\n")
 
-    quad_karg_parts = [f"{s}.{h}.{w}" for s, h, w in quad_targets]
+    print(f"   \033[1;32m─── Expanded Symmetrical Triple Variant Combinations (34/40 Active CUs) ───\033[0m\n")
+    for i in range(len(expanded_targets)):
+        for j in range(i + 1, len(expanded_targets)):
+            for k in range(j + 1, len(expanded_targets)):
+                t1, t2, t3 = expanded_targets[i], expanded_targets[j], expanded_targets[k]
+                triple_combo_str = f"amdgpu.disable_cu={t1[0]}.{t1[1]}.{t1[2]},{t2[0]}.{t2[1]}.{t2[2]},{t3[0]}.{t3[1]}.{t3[2]}"
+                status_triple = get_status(triple_combo_str)
+                if "RUNNING" in status_triple: active_karg_found = True
+                map_triple = render_simulated_map(num_se, num_sh, live_bitmaps, [t1, t2, t3])
+
+                print(f"   \033[1;36m[DYNAMIC TRIPLE COMBINATION]\033[0m Masking: W{t1[2]} + W{t2[2]} + W{t3[2]} Balance Mask   {status_triple}")
+                print(f"   \033[1;35mProjections │ {map_triple}\033[0m")
+                print(f"   \033[2mCommand: sudo rpm-ostree kargs --append='amdgpu.bc250_cc_write_mode=3 {triple_combo_str}'\033[0m\n")
+
+    print(f"   \033[1;32m─── Maximum Quadruple Isolation Fallback Alignment (32/40 Active CUs) ───\033[0m\n")
+    quad_targets_clean = list(set(quad_targets))
+    quad_karg_parts = [f"{s}.{h}.{w}" for s, h, w in quad_targets_clean]
     quad_combo_str = f"amdgpu.disable_cu=" + ",".join(quad_karg_parts)
     status_quad = get_status(quad_combo_str)
     if "RUNNING" in status_quad: active_karg_found = True
-    map_quad = render_simulated_map(num_se, num_sh, live_bitmaps, quad_targets)
+    map_quad = render_simulated_map(num_se, num_sh, live_bitmaps, quad_targets_clean)
 
     print(f"   \033[1;36m[DYNAMIC QUADRUPLE VARIANT]\033[0m Mask Combined Row Disruptions Fallback (32/40 CUs)     {status_quad}")
     print(f"   \033[1;35mProjections │ {map_quad}\033[0m")
     print(f"   \033[2mCommand: sudo rpm-ostree kargs --append='amdgpu.bc250_cc_write_mode=3 {quad_combo_str}'\033[0m\n")
 
 else:
-    # 🧬 BRANCH 2: BASELINE TRACK FOR MIDDLE INTERRUPTIONS / SINGLE GAP BOARDS
     if len(unique_gaps) == 1:
         se1, sh1, w1 = unique_gaps[0]
         next_wgp = next((w for se, sh, w in all_empty_gaps if se == se1 and sh == sh1 and w != w1), None)
@@ -1327,9 +1345,9 @@ else:
         print(f"   \033[1;35mProjections │ {map_combo}\033[0m")
         print(f"   \033[2mCommand: sudo rpm-ostree kargs --append='amdgpu.bc250_cc_write_mode=3 {combo_str}'\033[0m\n")
 
-    if not active_karg_found and "bc250_cc_write_mode=3" in cmdline and "disable_cu" not in cmdline:
+if not active_karg_found and "bc250_cc_write_mode=3" in cmdline and "disable_cu" not in cmdline:
     print(f"   \033[1;93mℹ Current Boot State Notice: Chip is running unmasked at maximum possible physical CU limit!\033[0m\n")
-    PYEOF
+PYEOF
 
     echo -e "  ${DIM}─────────────────────────────────────────────────────────────────────${RESET}"
     echo ""
