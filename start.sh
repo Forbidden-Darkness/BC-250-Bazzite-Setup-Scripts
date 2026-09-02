@@ -494,7 +494,7 @@ ram_split_current_uma() {
 }
 
 # ==============================================================================
-# RE-ORDERED CORE ENGINE: SYSTEM STATUS VISUALIZATION DASHBOARD
+# RE-ORDERED CORE ENGINE: SYSTEM STATUS VISUALIZATION DASHBOARD (PART 1)
 # ==============================================================================
 run_status() {
     print_banner
@@ -554,7 +554,7 @@ run_status() {
     echo -e "  ${CYAN}Wake-on-LAN${RESET}           ${wol_icon} ${wol_label}"
     echo ""
 
-    print_section "Overclock"
+        print_section "Overclock"
 
     local cpu_preset="None" local cpu_profile="No Active Config"
     if [[ -f "$CPU_CONF" ]]; then
@@ -638,26 +638,64 @@ run_status() {
         fi
     fi
 
-    if cu_find_umr; then
-        local active_bitmap; active_bitmap=$(sudo umr -r *.gfx1030.mmSPI_SHADER_PG_CONFIG_CU 2>/dev/null | awk '{print $2}' | tr -d '[:space:]')
-
-        if [[ -n "$active_bitmap" ]]; then
-            local cu_total=0; cu_total=$(printf "%d" "$active_bitmap" 2>/dev/null || echo "0")
-            if [[ "$cu_total" -eq 0 ]]; then cu_total=38; fi
-            local cu_color cu_icon cu_warn_msg=""
-            if [ "$cu_total" -gt 24 ]; then
-                cu_icon="$ICON_WARN"; cu_color="$YELLOW"
-                cu_warn_msg=" ${YELLOW}⚠  CUs unlocked — verify power and cooling${RESET}"
-            else
-                cu_icon="$ICON_OK"; cu_color="$GREEN"
-            fi
-            echo -e "  ${CYAN}Active CUs${RESET}            ${cu_icon} ${cu_color}${BOLD}${cu_total}/40${RESET}  ${DIM}(default 24, max 40)${RESET}${cu_warn_msg}"
-        else
-            echo -e "  ${CYAN}Active CUs${RESET}            ${ICON_WARN} ${YELLOW}38/40${RESET}  ${DIM}(default 24, max 40)${RESET} ${YELLOW}⚠ Unlocked — verify power/cooling${RESET}"
+    # 🧬 UNIFIED HARDWARE DECODER: Queries registers directly via UMR or parses the active systemd boot profile table
+    local true_cu_count=24
+    if command -v umr &>/dev/null; then
+        # Query the exact hardware register configuration block matching your activation script targets
+        local raw_bits; raw_bits=$(sudo umr -O bits -r amdgpu0.gfx1013.mmSPI_PG_ENABLE_STATIC_WGP_MASK 2>/dev/null | awk '{print $2}' | tr -d '[:space:]' || echo "")
+        if [[ -z "$raw_bits" ]]; then
+            raw_bits=$(sudo umr -O bits -r amdgpu0.gfx1030.mmSPI_SHADER_PG_CONFIG_CU 2>/dev/null | awk '{print $2}' | tr -d '[:space:]' || echo "")
         fi
-    else
-        echo -e "  ${CYAN}Active CUs${RESET}            ${ICON_WARN} ${DIM}umr not installed${RESET}"
+
+        if [[ -n "$raw_bits" ]]; then
+            local hex_val; hex_val=$(printf "%d" "$raw_bits" 2>/dev/null || echo "0")
+            if (( hex_val > 0 )); then
+                # Dynamically convert the register bitmap count straight to active CUs
+                local masked_wgps; masked_wgps=$(printf "%d" "$hex_val")
+                # Count total active bits from the 5-bit WGP array layout mask
+                local active_count=0
+                for wgp in {0..4}; do
+                    if (( (masked_wgps & (1 << wgp)) != 0 )); then
+                        active_count=$((active_count + 2))
+                    fi
+                done
+                # If bits return valid variations, we assign them, otherwise scale globally
+                if (( active_count > 0 )); then true_cu_count=$(( active_count * 4 )); fi
+            fi
+        fi
     fi
+
+    # Fallback Option: If UMR pathing blocks out or drops, pull the active status table from your live manager config
+    if [[ "$true_cu_count" -eq 24 ]] && [[ -f "/etc/bc250-cu-live-manager.conf" ]]; then
+        local saved_masks; saved_masks=$(grep "BC250_WGP_MASKS=" /etc/bc250-cu-live-manager.conf | cut -d= -f2 | tr -d '"' || echo "")
+        if [[ -n "$saved_masks" ]]; then
+            # Calculate totals based on your saved profile allocations
+            local total_cus=0
+            IFS=',' read -ra masks_array <<< "$saved_masks"
+            for mask in "${masks_array[@]}"; do
+                local val=$((mask))
+                for wgp in {0..4}; do
+                    if (( (val & (1 << wgp)) != 0 )); then
+                        total_cus=$((total_cus + 2))
+                    fi
+                done
+            done
+            if (( total_cus > 24 )); then true_cu_count="$total_cus"; fi
+        fi
+    fi
+
+    # Final safety clamp to protect UI boundaries if hardware configurations report blank data lines
+    if [[ -z "$true_cu_count" || "$true_cu_count" -eq 0 || "$true_cu_count" -lt 24 ]]; then
+        true_cu_count=24
+    fi
+
+    local cu_icon="✓" local cu_color="\033[1;92m" local cu_warn_msg=""
+    if [ "$true_cu_count" -gt 24 ]; then
+        cu_icon="⚠"
+        cu_color="\033[1;93m"
+        cu_warn_msg=" \033[1;93m⚠ Unlocked — verify power/cooling\033[0m"
+    fi
+    echo -e "  ${CYAN}Active CUs${RESET}            ${cu_icon} ${cu_color}${true_cu_count}/40${RESET}  ${DIM}(default 24, max 40)${RESET}${cu_warn_msg}"
 
     if ram_split_installed; then
         local uma_now; uma_now=$(ram_split_current_uma 2>/dev/null)
@@ -667,8 +705,7 @@ run_status() {
     fi
     echo ""
 
-
-    print_section "Swap & ZRAM/ZSWAP"
+        print_section "Swap & ZRAM/ZSWAP"
 
     local swap_mb; swap_mb=$(swapfile_size_mb 2>/dev/null || echo "0")
     if (( swap_mb > 0 )); then
@@ -720,7 +757,6 @@ run_status() {
     esac
     echo -e "  ${CYAN}Xbox Wireless Adapter${RESET} ${xbox_icon} ${xbox_color}${xbox_label}${RESET}"
     echo ""
-
 
     print_section "Community Fixes"
 
@@ -856,7 +892,7 @@ echo -e "${GREEN}Starting Bazzite Toolbox Core UI...${NC}"
 # =====================================================================
 # 2. AUTO-UPDATE MECHANISM (WITH SILENT OFFLINE FAIL)
 # =====================================================================
-GITHUB_RAW_URL="https://github.com/Forbidden-Darkness/Bazzite_Toolbox/raw/refs/heads/main/start.sh"
+#GITHUB_RAW_URL="https://github.com/Forbidden-Darkness/Bazzite_Toolbox/raw/refs/heads/main/start.sh"
 
 if [ "$1" != "--no-update" ] && [ "$1" != "--updated" ]; then
     if curl -s -I -L --connect-timeout 2 "$GITHUB_RAW_URL" > /dev/null; then
