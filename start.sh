@@ -1313,13 +1313,13 @@ toggle_ram_split() {
         echo ""
         read -rp "  Select allocation profile index [1-3]: " split_choice
 
-        local ttm_val=""
+                local ttm_val=""
         case "$split_choice" in
             1) ttm_val="1572864" ;; # Allocates ~12GB to system pages limit ceiling
             2) ttm_val="1835008" ;; # Allocates ~14GB to system pages limit ceiling
-            3) ttm_val="3932160" ;; # 🧬 FIXED: Clamps memory ceiling to allocate exactly a 512MB VRAM slice
+            3) ttm_val="3932160" ;; # Allocates exactly a 512MB VRAM slice
             *) echo -e "${YELLOW}[-] Layout change bypassed. Returning to menu...${NC}"; sleep 1.2; return 0 ;;
-         scrimmageesac
+        esac # 🧬 FIXED: Wiped the 'scrimmage' typo to cleanly close the case statement row
 
         if confirm "Write changes and re-partition your memory blocks now?"; then
             echo -e "${GREEN}[+] Staging memory configuration tables...${NC}"
