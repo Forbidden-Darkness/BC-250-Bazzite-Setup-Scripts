@@ -1241,6 +1241,57 @@ remove_acpi_fix() {
 }
 
 # ==============================================================================
+# UNIFIED INTERACTIVE CLOSURE ENGINE: CONTROL SHUTDOWN / REBOOT / EXIT
+# ==============================================================================
+secure_system_exit() {
+    echo ""
+    echo -e "${BIYellow}==================================================${NC}"
+    echo -e "${BIYellow}          TOOLKIT SECURE EXIT MANAGEMENT          ${NC}"
+    echo -e "${BIYellow}==================================================${NC}"
+    echo -e " Select an environment state transition option:"
+    echo ""
+    echo -e "  ${CYAN}1)${RESET} Fast System Reboot     ${DIM}(Apply newly layered kernel elements)${RESET}"
+    echo -e "  ${CYAN}2)${RESET} Full System Shutdown   ${DIM}(Complete hardware power cycle)${RESET}"
+    echo -e "  ${CYAN}3)${RESET} Safe Exit Only         ${DIM}(Return cleanly back to host terminal)${RESET}"
+    echo -e "  ${RED}   Hit Enter or Any Key to Cancel and Return to Menu${NC}"
+    echo -e "${BIYellow}==================================================${NC}"
+    type_prompt "  Select option index [1-3]: " 0.03
+    
+    local exit_choice=""
+    read -n 1 -s exit_choice || true
+    echo ""
+
+    case "$exit_choice" in
+        1)
+            echo -e "${GREEN}[+] Cleaning environment and flushing changes to disk...${NC}"
+            stop_background_music
+            sleep 1.5
+            sudo systemctl reboot
+            ;;
+        2)
+            echo -e "${RED}[+] Powering down system block registers safely...${NC}"
+            stop_background_music
+            sleep 1.5
+            sudo systemctl poweroff
+            ;;
+        3)
+            echo -e "${GREEN}[+] Exiting Bazzite Toolbox cleanly. Clearing workspace...${NC}"
+            stop_background_music
+            sleep 1
+            if [ -n "$PPID" ]; then
+                kill -SIGHUP "$PPID" 2>/dev/null
+            fi
+            exit 0
+            ;;
+        *)
+            echo -e "${YELLOW}[-] Exit operation bypassed. Returning to toolkit menu...${NC}"
+            sleep 1.2
+            return 0
+            ;;
+    esac
+}
+
+# ==============================================================================
 # BAZZITE NATIVE DESKTOP PORTAL IPC INTERFACE SANDBOX BREAKOUT LAYER
 # ==============================================================================
 launch_html_dashboard() {
@@ -1722,14 +1773,9 @@ show_menu() {
 
             o) launch_html_dashboard ;;
 
+            # 🧬 REDIRECTED TO THE NEW INTERACTIVE CLOSURE SYSTEM:
             0)
-                echo -e "${GREEN}Exiting Bazzite Toolbox. Cleaning environment...${NC}"
-                stop_background_music
-                sleep 1
-                if [ -n "$PPID" ]; then
-                    kill -SIGHUP "$PPID" 2>/dev/null
-                fi
-                exit 0
+                secure_system_exit
                 ;;
             *)
                 echo -e "${RED}Invalid choice! Please select a valid number.${NC}"
