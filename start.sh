@@ -65,17 +65,16 @@ REAL_HOME="$(getent passwd "$REAL_USER" | cut -d: -f6)"
 [[ -z "$REAL_HOME" || ! -d "$REAL_HOME" ]] && REAL_HOME="/root"
 
 # ==============================================================================
-# ==============================================================================
 # STEP 2: ASSIGN TARGET AUDIO & UPDATE REPOSITORIES
 # ==============================================================================
-AUDIO_FILE="Wake_on_LAN/Red-Pill-Blue-Pill.wav"
-MUSIC_LOCK_FILE="$REAL_HOME/.bc250-toolkit-music.pid"
-GITHUB_RAW_URL="https://githubusercontent.com"
-
 # --- GLOBAL CORE CONFIGURATION TARGET PATHS ---
 EXTERNAL_DIR="$REAL_HOME/Bazzite_Toolbox"
 CORE_UNLOCK_CONF="/etc/bc250-core-unlock.conf"
 
+# 🧬 FIXED ABSOLUTE AUDIO PATHING: Maps explicitly to your true user directory space
+AUDIO_FILE="$EXTERNAL_DIR/Wake_on_LAN/Red-Pill-Blue-Pill.wav"
+MUSIC_LOCK_FILE="$REAL_HOME/.bc250-toolkit-music.pid"
+GITHUB_RAW_URL="https://githubusercontent.com"
 
 # ==============================================================================
 # STEP 3: CORE TOOLKIT INTERACTIVE ANIMATION ENGINES
@@ -125,23 +124,31 @@ matrix_melt_clear() {
 }
 
 # ==============================================================================
-# AUDIO PIPELINE ENGINES (PERMISSION-INSULATED PIPEWIRE CONTROL)
+# AUDIO PIPELINE ENGINES (PERMISSION-INSULATED CONTEXT PIPEWIRE CONTROL)
 # ==============================================================================
 start_background_music() {
     if [[ -f "$AUDIO_FILE" ]] && [[ ! -f "$MUSIC_LOCK_FILE" ]]; then
-        local user_id; user_id=$(id -u "$REAL_USER")
+        local user_id; user_id=$(id -u "$REAL_USER" 2>/dev/null || echo "1000")
 
-        # 1. Start the infinite audio playback loop
+        # 1. Start the infinite audio playback loop with verified session bus contexts
         (
             while true; do
-                sudo -u "$REAL_USER" XDG_RUNTIME_DIR="/run/user/$user_id" pw-play "$AUDIO_FILE"
+                # 🧬 AUDIO MATRIX SOCKET BRIDGE: Passes runtime links to bypass root privilege containment
+                sudo -u "$REAL_USER" \
+                     XDG_RUNTIME_DIR="/run/user/$user_id" \
+                     PIPEWIRE_RUNTIME_DIR="/run/user/$user_id" \
+                     DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/$user_id/bus" \
+                     pw-play "$AUDIO_FILE" 2>/dev/null
+                
+                # Prevent rapid thread spinning loops if the file experiences an interface drop
+                sleep 1
             done
         ) &>/dev/null &
 
         local music_pid=$!
         echo "$music_pid" > "$MUSIC_LOCK_FILE" || true
 
-        # FIX: Disowns the background process thread from the current terminal job table.
+        # Disowns the background process thread from the current terminal job table.
         # This completely stops Bash from printing the "Killed" status log on exit!
         disown "$music_pid" 2>/dev/null || true
 
@@ -149,11 +156,11 @@ start_background_music() {
         (
             sleep 71
 
-            local nodes; nodes=$(sudo -u "$REAL_USER" XDG_RUNTIME_DIR="/run/user/$user_id" pw-cli list-objects Node 2>/dev/null | grep -B 2 "pw-play" | awk -F'= ' '/id/ {print $2}' | tr -d ',')
+            local nodes; nodes=$(sudo -u "$REAL_USER" XDG_RUNTIME_DIR="/run/user/$user_id" PIPEWIRE_RUNTIME_DIR="/run/user/$user_id" pw-cli list-objects Node 2>/dev/null | grep -B 2 "pw-play" | awk -F'= ' '/id/ {print $2}' | tr -d ',')
             if [[ -n "$nodes" ]]; then
                 for vol in 0.8 0.6 0.4 0.2 0.1 0.0; do
                     for node in $nodes; do
-                        sudo -u "$REAL_USER" XDG_RUNTIME_DIR="/run/user/$user_id" pw-cli s "$node" Props "{ volume: $vol }" &>/dev/null || true
+                        sudo -u "$REAL_USER" XDG_RUNTIME_DIR="/run/user/$user_id" PIPEWIRE_RUNTIME_DIR="/run/user/$user_id" pw-cli s "$node" Props "{ volume: $vol }" &>/dev/null || true
                     done
                     sleep 0.8
                 done
@@ -168,12 +175,14 @@ start_background_music() {
     fi
 }
 
-
 stop_background_music() {
     if [[ -f "$MUSIC_LOCK_FILE" ]]; then
         local target_pid; target_pid=$(cat "$MUSIC_LOCK_FILE" 2>/dev/null || echo "")
         [[ -n "$target_pid" ]] && kill -9 "$target_pid" 2>/dev/null || true
-        killall pw-play 2>/dev/null || true
+        
+        # Kill the player engine instances across both root and standard user parameters cleanly
+        sudo -u "$REAL_USER" killall pw-play &>/dev/null || true
+        killall pw-play &>/dev/null || true
         rm -f "$MUSIC_LOCK_FILE" 2>/dev/null || true
     fi
 }
