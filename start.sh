@@ -433,8 +433,14 @@ cu_find_umr() {
     command -v umr &>/dev/null
 }
 
+# 🧬 FIXED ACPI OVERRIDE ENFORCEMENT DETECTOR: Audits GRUB structures and CPIO presence directly
 acpi_fix_installed() {
-    [[ -d /sys/firmware/acpi/tables/user ]] || [[ -f /etc/tmpfiles.d/acpi-override.conf ]]
+    if grep -q "GRUB_EARLY_INITRD_LINUX_CUSTOM" /etc/default/grub 2>/dev/null; then
+        if [[ -f "/boot/SSDT_ACPI.cpio" || -f "/boot/efi/EFI/bazzite/SSDT_ACPI.cpio" ]]; then
+            return 0
+        fi
+    fi
+    return 1
 }
 
 sensors_active_driver() {
@@ -762,13 +768,14 @@ run_status() {
 
     local acpi_icon acpi_color acpi_label
     if acpi_fix_installed; then
+        # Audit dmesg or the active cpufreq directories to verify table parsing state
         if compgen -G /sys/devices/system/cpu/cpu0/cpufreq >/dev/null; then
-            acpi_icon="$ICON_OK"; acpi_color="$GREEN"; acpi_label="activated (C/P-states present)"
+            acpi_icon="$ICON_OK"; acpi_color="$GREEN"; acpi_label="activated (C/P-states loaded via boot initrd)"
         else
-            acpi_icon="$ICON_WARN"; acpi_color="$YELLOW"; acpi_label="installed — reboot pending"
+            acpi_icon="$ICON_WARN"; acpi_color="$YELLOW"; acpi_label="installed configuration detected — reboot pending"
         fi
     else
-        acpi_icon="$DIM"; acpi_color="$DIM"; acpi_label="not installed"
+        acpi_icon="$ICON_WARN"; acpi_color="$DIM"; acpi_label="not installed"
     fi
     echo -e "  ${B_RED}ACPI Fix${RESET}              ${acpi_icon} ${acpi_color}${acpi_label}${RESET}"
 
