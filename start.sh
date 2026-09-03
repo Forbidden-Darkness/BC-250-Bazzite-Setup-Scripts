@@ -1470,6 +1470,52 @@ launch_html_dashboard() {
 }
 
 # ==============================================================================
+# UNIFIED XBOX WIRELESS ADAPTER TOGGLE ENGINE (NATIVE XONE DRIVER MANAGER)
+# ==============================================================================
+toggle_xbox_adapter() {
+    # Dynamically capture the current system driver status label
+    local state; state=$(xbox_adapter_status_label 2>/dev/null || echo "not installed")
+
+    if [[ "$state" == "loaded" || "$state" == *"installed"* ]]; then
+        echo -e "\n  ${YELLOW}[⚠] Xbox Wireless Adapter driver (xone) detected on this host.${RESET}"
+        echo -e "      Selecting this action will completely uninstall the driver layer."
+        
+        if confirm "Do you want to proceed with the removal?"; then
+            echo -e "${RED}[+] Purging xone driver stack from system tree...${NC}"
+            if ujust --list 2>/dev/null | grep -q "toggle-xone"; then
+                sudo ujust toggle-xone
+            else
+                sudo rpm-ostree uninstall xone kmod-xone >> /var/log/bc250_oc_install.log 2>&1 || true
+            fi
+            print_success "Xbox Wireless Adapter driver uninstalled successfully!"
+            prompt_reboot
+        else
+            echo -e "${CYAN}[-] Removal cancelled. Returning cleanly to main menu...${NC}"
+            sleep 1.5
+        fi
+    else
+        echo -e "\n  ${CYAN}[ℹ] Xbox Wireless Adapter driver is not currently installed.${RESET}"
+        echo -e "      This utility will layer the official 'xone' driver to activate your USB dongle."
+        
+        if confirm "Do you want to install and layer the xone driver now?"; then
+            echo -e "${GREEN}[+] Layering hardware kernel modules via system hooks...${NC}"
+            
+            if ujust --list 2>/dev/null | grep -q "toggle-xone"; then
+                sudo ujust toggle-xone
+            else
+                sudo rpm-ostree install xone kmod-xone >> /var/log/bc250_oc_install.log 2>&1
+            fi
+            
+            print_success "Driver successfully staged! A system reboot is required to load the modules."
+            prompt_reboot
+        else
+            echo -e "${RED}[-❌-] Installation aborted. No changes made.${NC}"
+            sleep 1.5
+        fi
+    fi
+}
+
+# ==============================================================================
 # INTEGRATED: MASTER UNIVERSAL DYNAMIC BC-250 SILICON HARVEST ENGINE MATRIX
 # ==============================================================================
 view_cu_map() {
@@ -1753,7 +1799,7 @@ show_menu() {
         echo "  ╚════════════════════════════════════════════════════════════════════════════════════════╝"
         echo -e "${RESET}"
 
-                # --- SECTION 1: STORAGE & INITIAL MEMORY CONFIG ---
+        # --- SECTION 1: STORAGE & INITIAL MEMORY CONFIG ---
         echo -e "  ${BOLD}${YELLOW}This is your last chance. After this, there is no turning back.${RESET}"
         echo -e "  ${DIM}─────────────────────────────────────────────────────────────────────${RESET}"
         echo -e "    ${CYAN}[1]${RESET} ${B_BLUE}BLUE  ●${CYAN} 16GB Swapfile Mapping   ${DIM}(Recommended for smaller NVMe setups)${RESET}"
@@ -1773,17 +1819,19 @@ show_menu() {
         echo -e "  ${DIM}─────────────────────────────────────────────────────────────────────${RESET}"
         echo ""
 
-                        # --- SECTION 2: COMPONENT SWITCHES & TOOLS ---
+        # --- SECTION 2: COMPONENT SWITCHES & TOOLS ---
         echo -e "  ${BOLD}${YELLOW}Hardware Unlocks & Core Optimizations${RESET}"
         echo -e "  ${DIM}─────────────────────────────────────────────────────────────────────${RESET}"
         
         echo -e "    ${CYAN}[3]${RESET} Toggle BC-250 ACPI Table Fix   ${DIM}(Automated Install / Uninstall Switch)${RESET}"
+        echo -e "    ${CYAN}[4]${RESET} Toggle RAM/VRAM Memory Split   ${DIM}(Dynamic Allocation Switch Profile)${RESET}"
         
         # 🧬 INJECT THIS NEW VISUAL MENU SELECTION ENTRY DIRECTLY HERE:
-        echo -e "    ${CYAN}[4]${RESET} Toggle RAM/VRAM Memory Split   ${DIM}(Dynamic Allocation Switch Profile)${RESET}"
+        echo -e "    ${CYAN}[x]${RESET} Toggle Xbox Wireless Adapter   ${DIM}(Automated Xone Driver Installer)${RESET}"
         
         echo -e "    ${CYAN}[5]${RESET} Launch BC-250 Overclock Manager ${DIM}(Live SMU adjustment utility)${RESET}"
         echo -e "    ${CYAN}[6]${RESET} Launch Wake-on-LAN Configuration ${DIM}(Interface port selector tool)${RESET}"
+
 
         echo -e "    ${CYAN}[7]${RESET} Upgrade Governor Binary Track  ${DIM}(Target: v0.4.12 via COPR repo)${RESET}"
         echo -e "    ${BOLD}${GREEN}[h] Interrogate Silicon CU Map Matrix ${DIM}(Analyze Harvest Override Variants)${RESET}"
@@ -1816,7 +1864,7 @@ show_menu() {
         echo -e "  ${DIM}─────────────────────────────────────────────────────────────────────${RESET}"
 
         # Safe Prompt Parser (Instant Typing Response Keystroke Engine)
-        type_prompt "  Select an option [0-7, a-g, h, o, s]: " 0.03
+        type_prompt "  Select an option [0-7, a-g, h, o, s, x]: " 0.03
         choice=""
         read -n 1 -s choice || true
         echo ""
@@ -1824,11 +1872,11 @@ show_menu() {
             case "$choice" in
             1) install_blue_pill ;;
             2) install_red_pill ;;
-            
             3) toggle_acpi_fix ;;
+            4) toggle_ram_split ;;
             
             # 🧬 CONNECT THE CODE ENTRY TO THE EXECUTION SWITCH HERE:
-            4) toggle_ram_split ;;
+            x|X) toggle_xbox_adapter ;;
             
             5) install_overclock ;;
             6) install_wake_on_lan ;;
