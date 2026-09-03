@@ -36,16 +36,11 @@ if [ -z "$TERMINAL_RESIZE_FORCED" ] && [ -t 0 ]; then
     HEIGHT=600
 
     if command -v wmctrl &> /dev/null; then
-        # Remove maximized states first so the window can accept custom dimensions
         wmctrl -r :ACTIVE: -b remove,maximized_vert,maximized_horz
-        # Resize window (0, X, Y, Width, Height)
         wmctrl -r :ACTIVE: -e 0,-1,-1,$WIDTH,$HEIGHT
     fi
 fi
 
-# ==========================================
-# FIX: Define the missing environment context
-# ==========================================
 REAL_USER="${SUDO_USER:-$USER}"
 REAL_HOME=$(getent passwd "$REAL_USER" | cut -d: -f6)
 
@@ -53,26 +48,19 @@ print_info() {
     echo -e "${GREEN}[INFO] $1${NC}"
 }
 
-#start
-# ==========================================
-# FIX: Handle Bazzite Atomic Package Layering & Containers
-# ==========================================
 ensure_bazzite_dependencies() {
     local missing_packages=()
 
-    # Check for UMR binary
     if ! command -v umr &> /dev/null; then
         print_info "UMR debugger tool is not installed on host."
         missing_packages+=("umr")
     fi
 
-    # Check for Stress utility
     if ! command -v stress &> /dev/null; then
         print_info "Stress testing utility is not installed."
         missing_packages+=("stress")
     fi
 
-    # If everything is present, skip completely
     if [ ${#missing_packages[@]} -eq 0 ]; then
         return 0
     fi
@@ -90,7 +78,6 @@ ensure_bazzite_dependencies() {
 
     case "$dep_choice" in
         1)
-            # Handle stress via native host deployment if missing
             if [[ " ${missing_packages[*]} " =~ " stress " ]]; then
                 print_info "Staging stress utility via host rpm-ostree..."
                 if runuser -l "$REAL_USER" -c "rpm-ostree install stress"; then
@@ -100,20 +87,14 @@ ensure_bazzite_dependencies() {
                 fi
             fi
 
-            # Handle umr via container abstraction
             if [[ " ${missing_packages[*]} " =~ " umr " ]]; then
                 print_info "Configuring UMR environment inside a safe Distrobox profile..."
-                
-                # Create and setup an Arch container where UMR is easily obtainable
                 runuser -l "$REAL_USER" -c "distrobox-create --name amd-toolkit --image archlinux:latest --yes"
                 print_info "Updating container and acquiring developer build engines..."
                 runuser -l "$REAL_USER" -c "distrobox-enter -n amd-toolkit -- sudo pacman -Syu --noconfirm base-devel git"
-                
                 print_info "Compiling and exposing UMR to host system..."
-                # Clone, compile and export the tool seamlessly back to your Bazzite path
                 runuser -l "$REAL_USER" -c "distrobox-enter -n amd-toolkit -- 'git clone https://freedesktop.org && cd umr && ./autogen.sh && ./configure && make && sudo make install'"
                 runuser -l "$REAL_USER" -c "distrobox-export -n amd-toolkit --bin /usr/local/bin/umr"
-                
                 echo -e "${B_GREEN}UMR tool successfully containerized and linked to host!${NC}"
             fi
 
@@ -130,22 +111,17 @@ ensure_bazzite_dependencies() {
             ;;
     esac
 }
-#end
 
-
-# ==========================================
 # Configuration
 LOG_FILE="/var/log/bc250_oc_install.log"
-REPO_URL="https://github.com/bc250-collective/bc250_smu_oc.git"
+REPO_URL="https://github.com"
 SERVICE_FILE="/etc/systemd/system/bc250-resume.service"
 SCRIPT_PATH=$(realpath "$0")
 
-# Logger function
 log() {
     echo -e "$1" | tee -a "$LOG_FILE"
 }
 
-# NEW: Interactive Desktop Shortcut Handler
 ask_desktop_shortcut() {
     local desktop_dir
     desktop_dir="$(sudo -u "$REAL_USER" xdg-user-dir DESKTOP 2>/dev/null || echo "")"
@@ -154,7 +130,6 @@ ask_desktop_shortcut() {
 
     local shortcut="$desktop_dir/Overclock Manager.desktop"
 
-    # If the shortcut already exists, don't keep bothering the user
     if [[ -f "$shortcut" ]]; then
         return 0
     fi
@@ -202,24 +177,22 @@ SHORTCUT_EOF
     esac
 }
 
-# Run the optional shortcut menu before opening the primary toolkit
 ask_desktop_shortcut
 
 clear
-# Warning message reflecting official repository safety parameters
+
 show_warning() {
     echo -e "${RED}!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
     echo "WARNING: OVERCLOCKING AND UNDERVOLTING CAN DAMAGE YOUR HARDWARE!"
     echo "NEVER EXCEED 1.325V (VID) UNDER ANY CIRCUMSTANCES!"
     echo "PROCEED ENTIRELY AT YOUR OWN RISK."
     echo -e "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!${NC}"
-    echo "Source: github.com/bc250-collective/bc250_smu_oc"
+    echo "Source: ://github.com"
     echo "Logs will be saved to: $LOG_FILE"
     echo ""
     read -p "Press [Enter] to accept the risk and continue, or Ctrl+C to abort..."
 }
 
-# Post-Detection Finalization Function
 finalize_settings() {
     log "${GREEN}[Step 9] Finalizing and activating SMU service...${NC}"
     bc250-apply --install overclock.conf >> "$LOG_FILE" 2>&1
@@ -233,7 +206,6 @@ finalize_settings() {
     read -p "Press [Enter] to return to the tuning menu..."
 }
 
-# Post-Detection Stress Function
 stress_settings() {
     log "${GREEN}[Step 9] Stressing CPU...${NC}"
     stress --cpu 16 --timeout 150 >> "$LOG_FILE" 2>&1
@@ -247,7 +219,6 @@ stress_settings() {
     read -p "Press [Enter] to return to the tuning menu..."
 }
 
-# Interactive Tuning Menu
 launch_tuning_menu() {
     while true; do
         clear
@@ -300,7 +271,6 @@ launch_tuning_menu() {
                 echo -e "${YELLOW}====================================================${NC}"
                 echo ""
 
-                # Input and Validate Frequency (MHz)
                 while true; do
                     read -p "Enter Target Frequency (MHz) [e.g., 3500]: " custom_freq
                     if [[ "$custom_freq" =~ ^[0-9]+$ ]] && [ "$custom_freq" -gt 0 ]; then
@@ -310,7 +280,6 @@ launch_tuning_menu() {
                     fi
                 done
 
-                # Input and Validate VID (mV) with strict safety rail
                 while true; do
                     read -p "Enter Target Voltage (mV / VID) [e.g., 1000]: " custom_vid
                     if [[ "$custom_vid" =~ ^[0-9]+$ ]] && [ "$custom_vid" -gt 0 ]; then
@@ -324,7 +293,6 @@ launch_tuning_menu() {
                     fi
                 done
 
-                # Input and Validate Max Temperature Limit
                 while true; do
                     read -p "Enter Max Temperature Target (°C) [e.g., 85]: " custom_temp
                     if [[ "$custom_temp" =~ ^[0-9]+$ ]] && [ "$custom_temp" -gt 0 ] && [ "$custom_temp" -lt 105 ]; then
@@ -345,8 +313,7 @@ launch_tuning_menu() {
                 ;;
             8)
                 read -p "Returning to Main Menu Press [Enter] to continue..."
-                echo "Pausing for 5 seconds..."
-                sleep 5
+                sleep 1
                 return 0
                 ;;
             *)
@@ -357,18 +324,12 @@ launch_tuning_menu() {
     done
 }
 
-# --- Script Initiation Path ---
-show_warning
-
-# ---------------------------------
-# Function to pause and offer a Cancel Reboot option
 prompt_reboot() {
     echo ""
     echo -e "${YELLOW}==================================================${NC}"
     echo -e "${YELLOW} Task complete! The system needs to reboot now.   ${NC}"
     echo -e "${YELLOW}--------------------------------------------------${NC}"
     echo " 1) Reboot Now (Recommended)"
-    # Changed the Text and Flow: Modified choice 2 inside prompt_reboot to explicitly state it returns to the main menu.
     echo " 2) Cancel Reboot & Return to Main Menu"
     echo -e "${YELLOW}==================================================${NC}"
     read -rp "Select an option [1-2]: " reboot_choice
@@ -380,9 +341,7 @@ prompt_reboot() {
             ;;
         2)
             echo -e "${YELLOW}Reboot cancelled. Returning to main menu. Remember to reboot manually later for changes to take effect.${NC}"
-            # Added sleep delays: Included short visual delays (sleep 2) so the user has time to read the status updates before the menu redraws and clears the screen.
             sleep 2
-            # Used return instead of exit: Replaced potential script termination points inside the sub-function with return 0, sending the code execution back to the primary menu loop.
             return 0
             ;;
         *)
@@ -421,7 +380,6 @@ EOF"
     log "${GREEN}[Step 2] Appending CPU mitigation kernel arguments...${NC}"
     sudo rpm-ostree kargs --append=mitigations=off >> "$LOG_FILE" 2>&1
 
-    # 🔧 BAZZITE 44 COMPATIBILITY FIX: Installs only python3 development headers, dropping deprecated pipx layers
     log "${GREEN}[Step 3] Staging core dependencies via rpm-ostree...${NC}"
     sudo rpm-ostree install stress python3-devel >> "$LOG_FILE" 2>&1
 
@@ -442,18 +400,15 @@ run_phase2() {
     git clone "$REPO_URL" /tmp/bc250_smu_oc >> "$LOG_FILE" 2>&1
     cd /tmp/bc250_smu_oc || exit
 
-    # 🧬 VENV LAYER INJECTION: Builds an immutable isolated python environment under system control
     log "${GREEN}[Step 6] Constructing permission-insulated Python virtual environment...${NC}"
     sudo mkdir -p /opt/bc250_smu_tools
     sudo python3 -m venv /opt/bc250_smu_tools/venv >> "$LOG_FILE" 2>&1
-    
+
     log "${GREEN}[Step 7] Compiling SMU tools inside the protected venv matrix...${NC}"
-    # Upgrade standard pip tools inside the virtual matrix before compilation
     sudo /opt/bc250_smu_tools/venv/bin/pip install --upgrade pip >> "$LOG_FILE" 2>&1
     sudo /opt/bc250_smu_tools/venv/bin/pip install . >> "$LOG_FILE" 2>&1
 
     log "${GREEN}[Step 8] Injecting global system symlinks for execution pathing...${NC}"
-    # Map the virtual execution binaries straight into /usr/local/bin so they are universally discoverable
     sudo ln -sf /opt/bc250_smu_tools/venv/bin/bc250-detect /usr/local/bin/bc250-detect
     sudo ln -sf /opt/bc250_smu_tools/venv/bin/bc250-apply /usr/local/bin/bc250-apply
 
@@ -463,8 +418,6 @@ run_phase2() {
     sudo systemctl daemon-reload
 
     log "${GREEN}[Success] Installation complete! 'bc250-detect' and 'bc250-apply' are ready.${NC}"
-
-    # Trigger the hardware template selection menu
     launch_tuning_menu
 }
 
@@ -508,41 +461,65 @@ run_manager_phase2() {
 
     log "${GREEN}[Step 5] Fetching live manager controller execution script...${NC}"
     cd /tmp || exit
-    curl -L -o bc250-cu-live-manager.sh https://raw.githubusercontent.com/WinnieLV/bc250-cu-live-manager/refs/heads/main/bc250-cu-live-manager.sh >> "$LOG_FILE" 2>&1
+    curl -L -o bc250-cu-live-manager.sh https://githubusercontent.com >> "$LOG_FILE" 2>&1
     chmod +x bc250-cu-live-manager.sh
 
     log "${GREEN}[Step 6] Transferring shell execution context directly to live manager profile...${NC}"
     sudo ./bc250-cu-live-manager.sh
 }
 
-# Rollback / Uninstall Routine
-run_uninstall() {
-    log "${RED}[Uninstall] Starting rollback process...${NC}"
+# ==============================================================================
+# SEPARATED ROLLBACK ENGINE SYSTEM CHANNELS
+# ==============================================================================
+uninstall_cpu_overclock() {
+    log "${RED}[Uninstall] Initializing CPU Overclock rollback suite...${NC}"
 
-    log "${RED}[1/6] Disabling startup services...${NC}"
-    sudo systemctl disable bc250-smu-oc >> "$LOG_FILE" 2>&1
-    sudo systemctl disable bc250-resume.service >> "$LOG_FILE" 2>&1
-    sudo rm -f $SERVICE_FILE
-    sudo systemctl daemon-reload
+    log "${RED}[1/5] Terminating active SMU Overclock boot layers...${NC}"
+    sudo systemctl disable --now bc250-smu-oc.service >> "$LOG_FILE" 2>&1 || true
+    sudo systemctl disable --now bc250-resume.service >> "$LOG_FILE" 2>&1 || true
+    sudo rm -f /etc/systemd/system/bc250-smu-oc.service
+    sudo rm -f "$SERVICE_FILE"
 
-    log "${RED}[2/6] Removing CPU mitigation kernel arguments...${NC}"
-    sudo rpm-ostree kargs --delete=mitigations=off >> "$LOG_FILE" 2>&1
+    log "${RED}[2/5] Purging global execution symlinks...${NC}"
+    sudo rm -f /usr/local/bin/bc250-detect
+    sudo rm -f /usr/local/bin/bc250-apply
 
-    log "${RED}[3/6] Removing pipx tool...${NC}"
-    pipx uninstall bc250_smu_oc >> "$LOG_FILE" 2>&1
-
-    log "${RED}[4/6] Removing toolchain and manager engine packages via rpm-ostree...${NC}"
-    sudo rpm-ostree uninstall stress pipx umr >> "$LOG_FILE" 2>&1
-
-    log "${RED}[5/6] Cleaning transient directory paths...${NC}"
-    sudo rm -f /tmp/bc250-cu-live-manager.sh
+    log "${RED}[3/5] Erasing protected Python virtual environment matrix...${NC}"
+    sudo rm -rf /opt/bc250_smu_tools
     sudo rm -rf /tmp/bc250_smu_oc
 
-    log "${GREEN}[6/6] Uninstall complete. Rebooting to clear packages and re-enable mitigations...${NC}"
+    log "${RED}[4/5] Removing kernel argument blocks...${NC}"
+    sudo rpm-ostree kargs --delete=mitigations=off >> "$LOG_FILE" 2>&1
+
+    log "${RED}[5/5] Purging core host packages via rpm-ostree...${NC}"
+    sudo rpm-ostree uninstall stress python3-devel >> "$LOG_FILE" 2>&1
+
+    sudo systemctl daemon-reload
+    log "${GREEN}[Success] CPU Overclock successfully uninstalled! Reboot required to clear layers.${NC}"
     prompt_reboot
 }
 
-# Main script logic handles direct commands or initializes main loop
+uninstall_cu_live_manager() {
+    log "${RED}[Uninstall] Initializing CU Live Manager rollback suite...${NC}"
+
+    log "${RED}[1/3] Purging background service units and profiles...${NC}"
+    sudo systemctl disable --now bc250-cu-live-manager.service >> "$LOG_FILE" 2>&1 || true
+    sudo rm -f /etc/systemd/system/bc250-cu-live-manager.service
+    sudo rm -f /usr/local/bin/bc250-cu-live-manager
+    sudo rm -f /etc/bc250-cu-live-manager.conf
+
+    log "${RED}[2/3] Cleaning temporary tool buffers...${NC}"
+    sudo rm -f /tmp/bc250-cu-live-manager.sh
+
+    log "${RED}[3/3] Layering out UMR hardware package tracker...${NC}"
+    sudo rpm-ostree uninstall umr >> "$LOG_FILE" 2>&1
+
+    sudo systemctl daemon-reload
+    log "${GREEN}[Success] CU Live Manager uninstalled cleanly! Reboot required to clear host tree.${NC}"
+    prompt_reboot
+}
+
+# Main command argument routes
 case "$1" in
     --phase2)
         run_phase2
@@ -552,49 +529,52 @@ case "$1" in
         run_manager_phase2
         exit 0
         ;;
-    --uninstall)
-        run_uninstall
+    --uninstall-cpu)
+        uninstall_cpu_overclock
+        exit 0
+        ;;
+    --uninstall-cu)
+        uninstall_cu_live_manager
         exit 0
         ;;
 esac
 
-# Persistent Main Menu Loop
+# Continuous Main Interactive Control Loop Window
 while true; do
     clear
     echo -e "${YELLOW}====================================================================================${NC}"
-    echo -e "${YELLOW}            BC-250 CPU OVERCLOCK & Compute Unite Live Manager Setup Tool            ${NC}"
+    echo -e "${YELLOW}            BC-250 CPU OVERCLOCK & Compute Unit Live Manager Setup Tool             ${NC}"
     echo -e "${YELLOW}====================================================================================${NC}"
     echo ""
     echo "Select an action to perform:"
     echo ""
-    echo -e "${BIRed}1a) CPU Overclock Install toolchain & configure settings (Phase 1 - Requires Reboot)${NC}"
-    echo -e "${BIRed}1b) CPU Overclock Complete toolchain installation (Phase 2)${NC}"
+    echo -e "${BIRed}1a) CPU Overclock: Install toolchain & configure settings (Phase 1 - Requires Reboot)${NC}"
+    echo -e "${BIRed}1b) CPU Overclock: Complete toolchain installation (Phase 2)${NC}"
     echo ""
-    echo -e "${BIBlue}2a) Install Compute Unite Live Manager Dependencies (Phase 1 - Requires Reboot)${NC}"
-    echo -e "${BIBlue}2b) Launch Compute Unite Live Manager Configuration (Phase 2)${NC}"
+    echo -e "${BIBlue}2a) CU Live Manager: Install package dependencies (Phase 1 - Requires Reboot)${NC}"
+    echo -e "${BIBlue}2b) CU Live Manager: Launch live matrix configuration (Phase 2)${NC}"
     echo ""
-    echo "3) Rollback: Running ./setup_oc.sh --uninstall"
+    echo -e "${BYELLOW}3a) Rollback: Uninstall CPU Overclock profiles completely${NC}"
+    echo -e "${BYELLOW}3b) Rollback: Uninstall Compute Unit Live Manager service paths${NC}"
     echo ""
     echo "0) Exit Overclock-Live-Manager"
     echo ""
-    read -p "Enter selection [ 1-3 or 0 to exit ]: " choice
+    read -p "Enter selection [1a-3b, or 0 to exit]: " choice
 
-    if [ "$choice" == "1a" ]; then
-        run_phase1
-    elif [ "$choice" == "1b" ]; then
-        run_phase2
-    elif [ "$choice" == "2a" ]; then
-        run_manager_phase1
-    elif [ "$choice" == "2b" ]; then
-        run_manager_phase2
-    elif [ "$choice" == "3" ]; then
-        run_uninstall
-    elif [ "$choice" == "0" ] || [ -z "$choice" ]; then
-    # Note: Run the script once manually to rewrite the .desktop shortcut file on your desktop.
-        echo "Exiting."
-        exit 0
-    else
-    echo "Invalid choice. Please choose between 1 and 6."
-            sleep 2
-        fi
-        done
+    case "$choice" in
+        1a) run_phase1 ;;
+        1b) run_phase2 ;;
+        2a) run_manager_phase1 ;;
+        2b) run_manager_phase2 ;;
+        3a) uninstall_cpu_overclock ;;
+        3b) uninstall_cu_live_manager ;;
+        0|"")
+            echo "Exiting."
+            exit 0
+            ;;
+        *)
+            echo -e "${RED}Invalid choice! Please select a valid number code option.${NC}"
+            sleep 1.5
+            ;;
+    esac
+done
