@@ -744,17 +744,33 @@ run_status() {
     fi
     echo -e "  ${CYAN}Active CUs${RESET}            ${cu_icon} ${cu_color}${true_cu_count}/40${RESET}  ${DIM}(default 24, max 40)${RESET}${cu_warn_msg}"
 
+    # ==============================================================================
+    # UPDATED CONFIGURATION INTERROGATOR ROW: HARDWARE UNLOCKS STATUS PANEL
+    # ==============================================================================
     if ram_split_installed; then
-    local uma_now; uma_now=$(ram_split_current_uma 2>/dev/null)
+        local uma_now; uma_now=$(ram_split_current_uma 2>/dev/null)
         
-        # Determine if the allocation is verified via system files or hardware memory thresholds
-    if rpm-ostree kargs 2>/dev/null | grep -q "ttm.pages_limit" || [[ -f /etc/modprobe.d/bc250-mem.conf ]]; then
-            echo -e "  ${CYAN}RAM/VRAM Split${RESET}        ${ICON_OK} ${GREEN}UMA_SIZE=${uma_now:-?}MB${RESET}, ttm.pages_limit ceiling active via OS layers"
-    else
-            # Hardware total analysis fallback when configured entirely via firmware
+        # 🧬 INTEL PORT ENGINE: Dynamically parse the live boot parameters if the binary tracker is empty
+        if [[ -z "$uma_now" || "$uma_now" == "?" ]]; then
+            local cmd_pages; cmd_pages=$(grep -o 'ttm.pages_limit=[0-9]*' /proc/cmdline | cut -d= -f2 2>/dev/null || echo "")
+            if [[ "$cmd_pages" == "3932160" ]]; then
+                uma_now="512"
+            elif [[ "$cmd_pages" == "1835008" ]]; then
+                uma_now="2048"
+            elif [[ "$cmd_pages" == "1572864" ]]; then
+                uma_now="4096"
+            else
+                uma_now="Custom"
+            fi
+        fi
+        
+        if rpm-ostree kargs 2>/dev/null | grep -q "ttm.pages_limit" || [[ -f /etc/modprobe.d/bc250-mem.conf ]]; then
+            echo -e "  ${CYAN}RAM/VRAM Split${RESET}        ${ICON_OK} ${GREEN}UMA_SIZE=${uma_now}MB${RESET}, ttm.pages_limit ceiling active via OS layers"
+        else
             local hw_mem_kb; hw_mem_kb=$(awk '/MemTotal/ {print $2}' /proc/meminfo 2>/dev/null || echo "0")
-            local hw_mem_gb=$(( (hw_mem_kb / 1024 / 1024) + 1 )) # Rounds up to nearest whole Gigabyte array
-            local implied_vram=$(( 16 - hw_mem_gb ))
+            local hw_mem_gb=$(( (hw_mem_kb / 1024 / 1024) + 1 ))
+            local implied_vram    
+            implied_vram=$(( 16 - hw_mem_gb ))
             
             echo -e "  ${CYAN}RAM/VRAM Split${RESET}        ${ICON_OK} ${GREEN}activated${RESET} (Natively partitioned via BIOS — ~${hw_mem_gb}G System RAM / ~${implied_vram}G Dedicated VRAM)"
         fi
