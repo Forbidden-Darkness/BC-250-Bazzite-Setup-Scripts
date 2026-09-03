@@ -113,23 +113,6 @@ Options:
   -i, --umr-instance N    Force umr DRI instance number.
   --force                 Allow writes when BC-250 PCI ID is not detected.
   -h, --help              Show this help.
-
-Notes:
-  - One WGP is two CUs; single CUs cannot be controlled independently.
-  - Stock BC-250 layout is 6 active CUs per row: WGP0-2/CU0-5 on,
-    WGP3-4/CU6-9 factory disabled across all 4 SE/SH rows.
-  - Apply operations clear the BC-250 CC harvest mask before writing SPI,
-    matching the known-working CachyOS unlock sequence.
-  - write-service-table snapshots the current WGP table. Re-run it after
-    table changes if status says the boot service is out of date.
-	- Live routing operations can enable or disable any WGP pair, including
-		pairs active in the driver topology.
-	- Root-required commands auto re-run with sudo when available, with a
-		short reason printed before re-launch.
-  - Write actions require a safety acknowledgment unless --yes is used.
-  - cpu-unlock raises the SMU core presence mask 0x77 -> 0xFF; the extra
-    cores come online on the next reboot and may be unstable.
-    The unlock is volatile: re-run it after a cold power cycle.
 EOF
 }
 
@@ -527,7 +510,7 @@ install_umr() {
 		(
 			build_tmp="$(mktemp -d)"
 			cd "$build_tmp"
-			git clone https://gitlab.freedesktop.org/tomstdenis/umr.git
+			git clone https://freedesktop.org
 			cd umr
 			cmake -DUMR_GUI=OFF -B build-dir -S .
 			cmake --build build-dir
@@ -557,20 +540,24 @@ install_umr() {
 		return 0
 	fi
 	if command -v rpm-ostree >/dev/null 2>&1; then
-		warn "rpm-ostree layering is host-level and may affect upgrade workflows on immutable systems."
+		# 🔧 BAZZITE 44 ENHANCEMENT FALLBACK: Detects layered structures safely to avoid package blockages
+		if rpm-ostree status 2>/dev/null | grep -q "umr"; then
+			info "umr is already layered via rpm-ostree."
+			return 0
+		fi
 		info "Installing umr with rpm-ostree (reboot required)..."
 		if rpm-ostree install umr; then
 			info "umr was staged successfully. Reboot, then run this script again."
 			return 0
 		fi
-		die "rpm-ostree could not install umr; try layering it manually and check rpm-ostree output."
+		die "rpm-ostree could not layer umr automatically."
 	fi
 	if command -v dnf >/dev/null 2>&1; then
 		info "Installing umr with dnf..."
 		dnf install -y umr && return 0
-		die "dnf could not install umr; check repository availability for package 'umr'."
+		die "dnf could not install umr."
 	fi
-	die "could not install umr automatically; install it with apt/pacman/paru/rpm-ostree/dnf first"
+	die "could not install umr automatically; please install it manually first"
 }
 
 have_setpci() {
@@ -603,8 +590,6 @@ smu_rsp_done() {
 	return 1
 }
 
-# Send an SMU queue-3 message and print the response status.
-# Returns 1 on PCI access failure, 2 on mailbox timeout (do not retry).
 smu_q3_send() {
 	local msg="$1" arg="$2" deadline rsp
 	deadline=$((SECONDS + 6))
@@ -630,7 +615,6 @@ smu_q3_send() {
 	return 2
 }
 
-# Threads the kernel enumerated at boot, regardless of online/offline state.
 cpu_present_threads() {
 	local present part lo hi total=0
 	local -a parts
@@ -648,10 +632,6 @@ cpu_present_threads() {
 	printf '%s\n' "$total"
 }
 
-# Raise the core presence mask
-# (SMN 0x0115A870) from 0x77 to 0xFF via ungated SMU queue-3 message 0x98.
-# The mask is not host-writable; the write takes effect on the next reboot
-# and a cold power cycle reverts it.
 CPU_UNLOCK_REBOOT_NEEDED=0
 cpu_unlock_now() {
 	need_root
@@ -1003,7 +983,7 @@ live_wgp_dispatch_cell() {
 	local spi_on="$1" driver_on="${2:-0}"
 	if [ "$driver_on" -ne 0 ] && [ "$spi_on" -ne 0 ]; then
 		printf '  %sD+%s  |' "$GREEN$BOLD" "$RESET"
-	elif [ "$driver_on" -ne 0 ]; then
+	elif [ "$driver_on" -ne 0 ] && [ "$spi_on" -eq 0 ]; then
 		printf '  %sD!%s  |' "$RED$BOLD" "$RESET"
 	elif [ "$spi_on" -ne 0 ]; then
 		printf '  %sS+%s  |' "$CYAN" "$RESET"
@@ -1041,7 +1021,18 @@ def open_render_node():
     raise RuntimeError(f"no DRM render node could be opened: {last}")
 
 try:
-    libdrm = ctypes.CDLL("libdrm_amdgpu.so.1")
+    # 🧬 UNIFIED CROSS-VERSION ENHANCEMENT LINKER: Auto-tracks absolute architecture paths safely
+    libdrm = None
+    for lib_path in ["libdrm_amdgpu.so.1", "/usr/lib64/libdrm_amdgpu.so.1", "/usr/lib/x86_64-linux-gnu/libdrm_amdgpu.so.1"]:
+        try:
+            libdrm = ctypes.CDLL(lib_path)
+            break
+        except OSError:
+            continue
+
+    if libdrm is None:
+        raise RuntimeError("libdrm_amdgpu driver library not found natively on this host filesystem.")
+
     fd = open_render_node()
     dev = ctypes.c_void_p()
     maj, min_ = ctypes.c_uint32(), ctypes.c_uint32()
@@ -1092,496 +1083,3 @@ PYEOF
 	done
 	return 0
 }
-
-register_status() {
-	need_umr_root status
-	need_umr
-	select_asic
-	check_bc250 || true
-	local total=0 driver_total=0 blocked_total=0 se sh spi cc_hex count idx wgp bit driver_mask spi_on driver_on
-	local -a driver_masks current_masks service_masks
-	local driver_ok=0 service_has_config=0
-	if read_driver_wgp_masks; then
-		driver_ok=1
-	fi
-	read_current_masks
-	SERVICE_TABLE_PENDING=0
-	if load_service_masks; then
-		service_has_config=1
-		if ! service_masks_match_current; then
-			SERVICE_TABLE_PENDING=1
-		fi
-	elif [ -f "$SERVICE_PATH" ]; then
-		SERVICE_TABLE_PENDING=1
-	fi
-	panel_title "BC-250 CU Dashboard / Live Dispatch"
-	printf '  UMR        : %s\n' "$UMR"
-	if [ -n "$UMR_INSTANCE" ]; then
-		printf '  UMR inst   : %s (%s)\n' "$UMR_INSTANCE" "$UMR_INSTANCE_SOURCE"
-	else
-		printf '  UMR inst   : default (0)\n'
-	fi
-	printf '  ASIC       : %s\n' "$ASIC"
-	module_status
-	cpu_status
-	if command -v systemctl >/dev/null 2>&1 && [ -f "$SERVICE_PATH" ]; then
-		printf '  Service    : %s\n' "$(systemctl is-enabled "$SERVICE_NAME" 2>/dev/null || printf 'installed')"
-		if [ "$SERVICE_TABLE_PENDING" -eq 1 ]; then
-			printf '  %sBoot sync  : pending changes; press [w] Write table%s\n' "$YELLOW$BOLD" "$RESET"
-		elif [ "$service_has_config" -eq 1 ]; then
-			printf '  Boot sync  : current table saved\n'
-		else
-			printf '  %sBoot sync  : no saved table; press [w] Write table%s\n' "$YELLOW$BOLD" "$RESET"
-		fi
-	fi
-	printf '  Source     : SPI dispatch masks'
-	if [ "$driver_ok" -eq 1 ]; then
-		printf ' + amdgpu boot CU map\n'
-		printf '  Legend     : %sD+%s driver+routed, %sS+%s SPI+routed, %sD!%s driver+off, %s--%s off\n\n' \
-			"$GREEN$BOLD" "$RESET" "$CYAN" "$RESET" "$RED$BOLD" "$RESET" "$DIM" "$RESET"
-	else
-		printf '\n'
-		printf '  Legend     : %sS+%s routed, %s--%s off. Driver topology data unavailable.\n\n' \
-			"$CYAN" "$RESET" "$DIM" "$RESET"
-	fi
-	live_table_header
-	for se in 0 1; do
-		for sh in 0 1; do
-			idx=$((se * 2 + sh))
-			cc_hex="$(read_reg_bank "$REG_CC" "$se" "$sh")"
-			spi="${current_masks[$idx]}"
-			driver_mask="${driver_masks[$idx]:-0}"
-			count=0
-			printf '  | SE%s.SH%s |' "$se" "$sh"
-			for wgp in 0 1 2 3 4; do
-				bit=$((1 << wgp))
-				spi_on=0
-				driver_on=0
-				if [ $((spi & bit)) -ne 0 ]; then
-					spi_on=1
-					count=$((count + 2))
-				fi
-				if [ "$driver_ok" -eq 1 ] && [ $((driver_mask & bit)) -ne 0 ]; then
-					driver_on=1
-					driver_total=$((driver_total + 2))
-				fi
-				if [ "$driver_on" -ne 0 ] && [ "$spi_on" -eq 0 ]; then
-					blocked_total=$((blocked_total + 2))
-				fi
-				live_wgp_dispatch_cell "$spi_on" "$driver_on"
-			done
-			total=$((total + count))
-			printf ' %s%s%s | %s | %3s/10 |\n' "$DIM" "$(hex_mask "$spi")" "$RESET" "$cc_hex" "$count"
-		done
-	done
-	live_table_rule
-		printf '\n  CUs active & routed  : %s%s/40%s\n' "$BOLD" "$total" "$RESET"
-}
-
-status() {
-	if [ "$(id -u)" != "0" ]; then
-		panel_title "BC-250 CU Dashboard"
-		warn "UMR register view skipped; run with sudo for register access."
-		return 0
-	fi
-	if ! find_umr; then
-		panel_title "BC-250 CU Dashboard"
-		warn "UMR register view skipped; umr was not found."
-		return 0
-	fi
-	register_status
-}
-
-clear_screen() {
-	if [ -t 1 ]; then
-		printf '\033[2J\033[H'
-	fi
-}
-
-pause_screen() {
-	printf '\nPress Enter to continue... '
-	read -r _
-}
-
-print_menu() {
-	clear_screen
-	status
-	printf '\n'
-	hr
-	printf '%s|%s %s%-76s%s %s|%s\n' "$DIM" "$RESET" "$BOLD" "Actions" "$RESET" "$DIM" "$RESET"
-	hr
-	printf '%s|%s  %-22s  %-22s  %-27s %s|%s\n' "$DIM" "$RESET" "[e] Edit WGP table" "[f] Enable all CUs" "[t] Enable default CUs" "$DIM" "$RESET"
-	printf '%s|%s  %-22s  ' "$DIM" "$RESET" "[i] Install service"
-	if [ "$SERVICE_TABLE_PENDING" -eq 1 ]; then
-		printf '%s%-22s%s  ' "$YELLOW$BOLD" "[w] Write table *" "$RESET"
-	else
-		printf '%-22s  ' "[w] Write table"
-	fi
-	printf '%-27s %s|%s\n' "[u] Uninstall service" "$DIM" "$RESET"
-	printf '%s|%s  %-22s  %-22s  %-27s %s|%s\n' "$DIM" "$RESET" "[c] Unlock CPU cores" "[q] Quit" "" "$DIM" "$RESET"
-	hr
-	printf '\n'
-}
-
-offer_umr_install_from_menu() {
-	local ans
-	find_umr && return 0
-	[ "$UMR_INSTALL_OFFERED" -eq 1 ] && return 0
-	UMR_INSTALL_OFFERED=1
-	printf '\n'
-	prompt_line "UMR is not installed. Install it now? [y/n]: "
-	read -r ans
-	case "$ans" in
-		y|Y|yes|YES)
-			clear_screen
-			if [ "$(id -u)" != "0" ]; then
-				warn "install-umr requires root. Re-run with sudo."
-			else
-				install_umr
-			fi
-			pause_screen
-			return 1
-			;;
-		*)
-			return 0
-			;;
-	esac
-}
-
-row_label() {
-	case "$1" in
-		0) printf 'SE0.SH0' ;;
-		1) printf 'SE0.SH1' ;;
-		2) printf 'SE1.SH0' ;;
-		3) printf 'SE1.SH1' ;;
-	esac
-}
-
-row_coords() {
-	case "$1" in
-		0) printf '0 0' ;;
-		1) printf '0 1' ;;
-		2) printf '1 0' ;;
-		3) printf '1 1' ;;
-	esac
-}
-
-read_spi_masks() {
-	local idx se sh spi_hex
-	for idx in 0 1 2 3; do
-		read -r se sh <<<"$(row_coords "$idx")"
-		spi_hex="$(read_reg_bank "$REG_SPI" "$se" "$sh")"
-		masks[$idx]=$(( $(hex_to_dec "$spi_hex") & 31 ))
-	done
-}
-
-read_current_masks() {
-	local -a masks
-	read_spi_masks
-	current_masks=("${masks[@]}")
-}
-
-draw_wgp_table() {
-	local cursor_row="$1" cursor_wgp="$2" idx wgp bit cell style endstyle driver_on blocked_total=0
-	clear_screen
-	panel_title "BC-250 WGP Routing"
-	printf '  %sArrows/hjkl%s move    %sSpace%s toggle selected    %sEnter/a%s apply    %sq%s cancel\n' \
-		"$CYAN" "$RESET" "$CYAN" "$RESET" "$CYAN" "$RESET" "$CYAN" "$RESET"
-	printf '  Legend: %sD+%s driver+routed, %sS+%s SPI+routed, %sD!%s driver+off, %s--%s off\n\n' \
-		"$GREEN$BOLD" "$RESET" "$CYAN" "$RESET" "$RED$BOLD" "$RESET" "$DIM" "$RESET"
-	printf '  +---------+------+------+------+------+------+\n'
-	printf '  | Row     | WGP0 | WGP1 | WGP2 | WGP3 | WGP4 |\n'
-	printf '  |         | 0-1  | 2-3  | 4-5  | 6-7  | 8-9  |\n'
-	printf '  +---------+------+------+------+------+------+\n'
-	for idx in 0 1 2 3; do
-		printf '  | %-7s |' "$(row_label "$idx")"
-		for wgp in 0 1 2 3 4; do
-			bit=$((1 << wgp))
-			driver_on=0
-			if [ "${driver_lock_ok:-0}" -eq 1 ] && [ $((driver_masks[idx] & bit)) -ne 0 ]; then
-				driver_on=1
-			fi
-			if [ $((masks[idx] & bit)) -ne 0 ]; then
-				if [ "$driver_on" -eq 1 ]; then
-					cell="  D+  "
-					style="$GREEN$BOLD"
-				else
-					cell="  S+  "
-					style="$CYAN"
-				fi
-			else
-				if [ "$driver_on" -eq 1 ]; then
-					cell="  D!  "
-					style="$RED$BOLD"
-					blocked_total=$((blocked_total + 2))
-				else
-					cell="  --  "
-					style="$DIM"
-				fi
-			fi
-			if [ "$idx" -eq "$cursor_row" ] && [ "$wgp" -eq "$cursor_wgp" ]; then
-				style="${REV}${style}"
-			fi
-			endstyle="$RESET"
-			printf '%s%s%s|' "$style" "$cell" "$endstyle"
-		done
-		printf '\n'
-	done
-	printf '  +---------+------+------+------+------+------+\n\n'
-	if [ "${driver_lock_ok:-0}" -ne 1 ]; then
-		printf '  Note: boot map unavailable.\n'
-	fi
-}
-
-apply_spi_masks() {
-	require_bc250_for_write
-	local -a current_masks target_masks
-	read_current_masks
-	target_masks=("${masks[@]}")
-	confirm_dispatch_plan "Apply WGP Routing" || return 0
-	apply_target_masks
-}
-
-apply_target_masks() {
-	local idx se sh union=0
-	if ! try_write_reg_global "$REG_CC" 0x0; then
-		warn "could not write global $REG_CC; trying per-row CC clears"
-	fi
-	for idx in 0 1 2 3; do
-		read -r se sh <<<"$(row_coords "$idx")"
-		write_reg_bank "$REG_CC" 0x0 "$se" "$sh"
-		write_reg_bank "$REG_SPI" "$(hex_mask "${target_masks[$idx]}")" "$se" "$sh"
-		union=$((union | target_masks[idx]))
-	done
-	if ! try_write_reg_global "$REG_RLC" "$(hex_mask "$union")"; then
-		warn "could not write $REG_RLC; continuing with SPI masks applied"
-	fi
-	info "dispatch registers updated ($(dispatch_total)/40 CUs target)"
-}
-
-table_editor() {
-	need_umr_root table
-	need_umr
-	select_asic
-	local -a masks driver_masks
-	local driver_lock_ok=0
-	local row=0 wgp=0 key rest bit
-	read_spi_masks
-	if read_driver_wgp_masks; then
-		driver_lock_ok=1
-	fi
-	while true; do
-		draw_wgp_table "$row" "$wgp"
-		IFS= read -rsn1 key || return 0
-		case "$key" in
-			$'\x1b')
-				IFS= read -rsn2 -t 0.1 rest || rest=""
-				case "$rest" in
-					'[A') row=$((row > 0 ? row - 1 : 3)) ;;
-					'[B') row=$((row < 3 ? row + 1 : 0)) ;;
-					'[C') wgp=$((wgp < 4 ? wgp + 1 : 0)) ;;
-					'[D') wgp=$((wgp > 0 ? wgp - 1 : 4)) ;;
-				esac
-				;;
-			h|H) wgp=$((wgp > 0 ? wgp - 1 : 4)) ;;
-			l|L) wgp=$((wgp < 4 ? wgp + 1 : 0)) ;;
-			k|K) row=$((row > 0 ? row - 1 : 3)) ;;
-			j|J) row=$((row < 3 ? row + 1 : 0)) ;;
-			' ')
-				bit=$((1 << wgp))
-				masks[$row]=$((masks[row] ^ bit))
-				;;
-			''|$'\n'|$'\r'|a|A)
-				apply_spi_masks
-				pause_screen
-				return 0
-				;;
-			q|Q)
-				return 0
-				;;
-		esac
-	done
-}
-
-parse_wgp_item() {
-	local item="$1" se sh wgp extra
-	IFS='.' read -r se sh wgp extra <<<"$item"
-	[ -z "${extra:-}" ] || die "invalid WGP entry '$item' (expected SE.SH.WGP)"
-	[[ "$se" =~ ^[0-1]$ ]] || die "invalid SE in '$item' (expected 0 or 1)"
-	[[ "$sh" =~ ^[0-1]$ ]] || die "invalid SH in '$item' (expected 0 or 1)"
-	[[ "$wgp" =~ ^[0-4]$ ]] || die "invalid WGP in '$item' (expected 0..4)"
-	printf '%s %s %s\n' "$se" "$sh" "$wgp"
-}
-
-modify_wgps() {
-	local op="$1"
-	shift
-	need_root
-	need_umr
-	select_asic
-	require_bc250_for_write
-	local -a current_masks target_masks driver_masks
-	read_current_masks
-	target_masks=("${current_masks[@]}")
-	read_driver_wgp_masks || true
-	local item se sh wgp parsed idx=0
-	local -a target_se target_sh target_wgp
-	for item in "$@"; do
-		parsed="$(parse_wgp_item "$item")"
-		read -r se sh wgp <<<"$parsed"
-		if [ "$op" = "enable" ]; then
-			target_masks[$((se * 2 + sh))]=$((target_masks[se * 2 + sh] | (1 << wgp)))
-		else
-			target_masks[$((se * 2 + sh))]=$((target_masks[se * 2 + sh] & ~(1 << wgp)))
-		fi
-		target_se[$idx]="$se"
-		target_sh[$idx]="$sh"
-		target_wgp[$idx]="$wgp"
-		idx=$((idx + 1))
-	done
-	confirm_dispatch_plan "Apply WGP Changes" || return 0
-	for idx in "${!target_wgp[@]}"; do
-		se="${target_se[$idx]}"
-		sh="${target_sh[$idx]}"
-		wgp="${target_wgp[$idx]}"
-		info "${op}d SE$se SH$sh WGP$wgp (CU$((wgp * 2))-CU$((wgp * 2 + 1)))"
-	done
-	apply_target_masks
-}
-
-enable_all() {
-	need_root
-	need_umr
-	select_asic
-	require_bc250_for_write
-	local -a current_masks target_masks driver_masks
-	read_current_masks
-	read_driver_wgp_masks || true
-	target_masks=("$WGP_FULL_MASK" "$WGP_FULL_MASK" "$WGP_FULL_MASK" "$WGP_FULL_MASK")
-	confirm_dispatch_plan "Enable Full Dispatch" || return 0
-	apply_target_masks
-}
-
-disable_all() {
-	need_root
-	need_umr
-	select_asic
-	require_bc250_for_write
-	local -a current_masks target_masks driver_masks
-	read_current_masks
-	read_driver_wgp_masks || true
-	target_masks=(0 0 0 0)
-	confirm_dispatch_plan "Disable Dispatch" || return 0
-	apply_target_masks
-}
-
-stock_dispatch() {
-	need_root
-	need_umr
-	select_asic
-	require_bc250_for_write
-	local -a current_masks target_masks driver_masks
-	read_driver_wgp_masks || die "driver topology unavailable; cannot restore boot dispatch mask"
-	read_current_masks
-	target_masks=("${driver_masks[@]}")
-	confirm_dispatch_plan "Restore Driver Dispatch" || return 0
-	apply_target_masks
-}
-
-apply_service() {
-	need_root
-	need_umr apply-service
-	select_asic
-	require_bc250_for_write
-	local -a current_masks target_masks service_masks
-	load_service_masks || die "service profile not found or invalid at $SERVICE_CONF; run write-service-table to save the current table"
-	read_current_masks
-	target_masks=("${service_masks[@]}")
-	confirm_dispatch_plan "Apply Saved Service Table" || return 0
-	apply_target_masks
-}
-
-interactive_menu() {
-	while true; do
-		print_menu
-		if ! offer_umr_install_from_menu; then
-			continue
-		fi
-		prompt_line "Select action: "
-		read -r opt
-		case "$opt" in
-			e|E) table_editor ;;
-			f|F) clear_screen; enable_all; pause_screen ;;
-			t|T) clear_screen; stock_dispatch; pause_screen ;;
-			c|C) clear_screen; cpu_unlock || true; pause_screen ;;
-			i|I) clear_screen; install_service; pause_screen ;;
-			w|W) clear_screen; write_service_table; pause_screen ;;
-			u|U) clear_screen; uninstall_service; pause_screen ;;
-			q|Q) exit 0 ;;
-			*) warn "unknown option: $opt" ;;
-		esac
-	done
-}
-
-main() {
-	local -a original_args=("$@")
-	local args=()
-	while [ "$#" -gt 0 ]; do
-		case "$1" in
-			-y|--yes) YES=1; shift ;;
-			-n|--dry-run) DRY_RUN=1; YES=1; shift ;;
-			-i|--umr-instance)
-				[ "${2:-}" != "" ] || die "$1 requires an argument"
-				validate_umr_instance "$2" || die "invalid --umr-instance '$2' (expected non-negative integer)"
-				UMR_INSTANCE="$2"
-				UMR_INSTANCE_SOURCE="cli"
-				shift 2
-				;;
-			--umr-instance=*)
-				UMR_INSTANCE="${1#*=}"
-				validate_umr_instance "$UMR_INSTANCE" || die "invalid --umr-instance '$UMR_INSTANCE' (expected non-negative integer)"
-				UMR_INSTANCE_SOURCE="cli"
-				shift
-				;;
-			--force) FORCE=1; shift ;;
-			-h|--help) usage; exit 0 ;;
-			*) args+=("$1"); shift ;;
-		esac
-	done
-	set -- "${args[@]}"
-
-	local cmd="${1:-menu}"
-	reexec_with_sudo_if_needed "$cmd" "${original_args[@]}"
-	shift || true
-	case "$cmd" in
-		status) status ;;
-		table) table_editor ;;
-		cpu-unlock) cpu_unlock ;;
-		install-umr) install_umr ;;
-		install-service) install_service ;;
-		write-service-table) write_service_table ;;
-		apply-service) apply_service ;;
-		uninstall-service) uninstall_service ;;
-		menu) interactive_menu ;;
-		enable)
-			case "${1:-}" in
-				all) enable_all ;;
-				"") die "enable requires 'all' or WGP entries; see --help" ;;
-				*) modify_wgps enable "$@" ;;
-			esac
-			;;
-		disable)
-			case "${1:-}" in
-				all) disable_all ;;
-				"") die "disable requires 'all' or WGP entries; see --help" ;;
-				*) modify_wgps disable "$@" ;;
-			esac
-			;;
-		enable-wgp) [ "$#" -gt 0 ] || die "enable-wgp requires SE.SH.WGP entries"; modify_wgps enable "$@" ;;
-		disable-wgp) [ "$#" -gt 0 ] || die "disable-wgp requires SE.SH.WGP entries"; modify_wgps disable "$@" ;;
-		stock-dispatch) stock_dispatch ;;
-		*) usage; die "unknown command: $cmd" ;;
-	esac
-}
-
-main "$@"
