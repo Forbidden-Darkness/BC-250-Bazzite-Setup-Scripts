@@ -393,12 +393,14 @@ prompt_reboot() {
     esac
 }
 
-# Phase 1: Initial Install
+# ==============================================================================
+# UNIFIED DEPLOYMENT ENGINE: PHASE 1 (INITIAL BASELINE SETUP)
+# ==============================================================================
 run_phase1() {
     show_warning
-    log "${GREEN}[Phase 1] Starting setup...${NC}"
+    log "${GREEN}[Phase 1] Initializing universal Bazzite 43/44 deployment tree...${NC}"
 
-    log "${GREEN}[Step 1] Creating temporary resume service...${NC}"
+    log "${GREEN}[Step 1] Creating permission-insulated resume service...${NC}"
     sudo bash -c "cat <<EOF > $SERVICE_FILE
 [Unit]
 Description=Resume BC-250 OC Installation
@@ -419,37 +421,45 @@ EOF"
     log "${GREEN}[Step 2] Appending CPU mitigation kernel arguments...${NC}"
     sudo rpm-ostree kargs --append=mitigations=off >> "$LOG_FILE" 2>&1
 
-    log "${GREEN}[Step 3] Installing dependencies via rpm-ostree...${NC}"
-    sudo rpm-ostree install stress pipx >> "$LOG_FILE" 2>&1
+    # 🔧 BAZZITE 44 COMPATIBILITY FIX: Installs only python3 development headers, dropping deprecated pipx layers
+    log "${GREEN}[Step 3] Staging core dependencies via rpm-ostree...${NC}"
+    sudo rpm-ostree install stress python3-devel >> "$LOG_FILE" 2>&1
 
     log "${RED}[Step 4] Rebooting system. Move on to CPU Overclock Phase 2 after a reboot...${NC}"
     prompt_reboot
 }
 
-# Phase 2: Post-Reboot Execution
+# ==============================================================================
+# UNIFIED DEPLOYMENT ENGINE: PHASE 2 (POST-REBOOT SYSTEM COMPILATION)
+# ==============================================================================
 run_phase2() {
-    log "${GREEN}[Phase 2] Resuming setup after reboot...${NC}"
+    log "${GREEN}[Phase 2] Resuming execution tree following successful reboot...${NC}"
 
-    log "${GREEN}[Step 5] Ensuring pipx path...${NC}"
-    pipx ensurepath >> "$LOG_FILE" 2>&1
-    export PATH="$HOME/.local/bin:$PATH"
-
-    log "${GREEN}[Step 6] Verifying pipx...${NC}"
-    pipx --version >> "$LOG_FILE" 2>&1
-
-    log "${GREEN}[Step 7] Cloning repo and installing SMU tool...${NC}"
+    log "${GREEN}[Step 5] Staging localized application repository...${NC}"
     cd /tmp || exit
     sudo rm -rf /tmp/bc250_smu_oc
 
     git clone "$REPO_URL" /tmp/bc250_smu_oc >> "$LOG_FILE" 2>&1
     cd /tmp/bc250_smu_oc || exit
 
-    # Run pipx install locally within the verified absolute path
-    pipx install . >> "$LOG_FILE" 2>&1
+    # 🧬 VENV LAYER INJECTION: Builds an immutable isolated python environment under system control
+    log "${GREEN}[Step 6] Constructing permission-insulated Python virtual environment...${NC}"
+    sudo mkdir -p /opt/bc250_smu_tools
+    sudo python3 -m venv /opt/bc250_smu_tools/venv >> "$LOG_FILE" 2>&1
+    
+    log "${GREEN}[Step 7] Compiling SMU tools inside the protected venv matrix...${NC}"
+    # Upgrade standard pip tools inside the virtual matrix before compilation
+    sudo /opt/bc250_smu_tools/venv/bin/pip install --upgrade pip >> "$LOG_FILE" 2>&1
+    sudo /opt/bc250_smu_tools/venv/bin/pip install . >> "$LOG_FILE" 2>&1
 
-    log "${GREEN}[Step 8] Cleaning up temporary automation service...${NC}"
+    log "${GREEN}[Step 8] Injecting global system symlinks for execution pathing...${NC}"
+    # Map the virtual execution binaries straight into /usr/local/bin so they are universally discoverable
+    sudo ln -sf /opt/bc250_smu_tools/venv/bin/bc250-detect /usr/local/bin/bc250-detect
+    sudo ln -sf /opt/bc250_smu_tools/venv/bin/bc250-apply /usr/local/bin/bc250-apply
+
+    log "${GREEN}[Step 9] Cleaning up temporary automation service...${NC}"
     sudo systemctl disable bc250-resume.service >> "$LOG_FILE" 2>&1
-    sudo rm -f $SERVICE_FILE
+    sudo rm -f "$SERVICE_FILE"
     sudo systemctl daemon-reload
 
     log "${GREEN}[Success] Installation complete! 'bc250-detect' and 'bc250-apply' are ready.${NC}"
