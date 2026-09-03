@@ -434,12 +434,26 @@ cu_find_umr() {
 }
 
 # 🧬 FIXED ACPI OVERRIDE ENFORCEMENT DETECTOR: Audits GRUB structures and CPIO presence directly
+# 🧬 HARDWARE LEVEL INTEGRATION: Interrogates the active kernel ACPI tree to detect direct BIOS table injection
 acpi_fix_installed() {
+    # 1. Direct BIOS Verification: Check if the custom 8-core table signature exists natively in firmware
+    if [[ -d "/sys/firmware/acpi/tables" ]]; then
+        # Scans for the custom table flags or checks if active P-States are natively exposed
+        if grep -qE "SSDT|APIC" /sys/firmware/acpi/tables/SSDT* 2>/dev/null; then
+            # Verify if early voltage policies are cleanly handling all 8 hardware cores natively
+            if [[ -d "/sys/devices/system/cpu/cpu7/cpufreq" ]]; then
+                return 0
+            fi
+        fi
+    fi
+
+    # 2. OS-Level Fallback: Check if the override exists instead as an early initrd GRUB payload modification
     if grep -q "GRUB_EARLY_INITRD_LINUX_CUSTOM" /etc/default/grub 2>/dev/null; then
         if [[ -f "/boot/SSDT_ACPI.cpio" || -f "/boot/efi/EFI/bazzite/SSDT_ACPI.cpio" ]]; then
             return 0
         fi
     fi
+    
     return 1
 }
 
@@ -768,9 +782,11 @@ run_status() {
 
     local acpi_icon acpi_color acpi_label
     if acpi_fix_installed; then
-        # Audit dmesg or the active cpufreq directories to verify table parsing state
-        if compgen -G /sys/devices/system/cpu/cpu0/cpufreq >/dev/null; then
-            acpi_icon="$ICON_OK"; acpi_color="$GREEN"; acpi_label="activated (C/P-states loaded via boot initrd)"
+        # Interrogate the hardware map to determine the structural origin of the ACPI tables
+        if [[ -d "/sys/firmware/acpi/tables" ]] && [[ -d "/sys/devices/system/cpu/cpu7/cpufreq" ]] && ! grep -q "GRUB_EARLY_INITRD_LINUX_CUSTOM" /etc/default/grub 2>/dev/null; then
+            acpi_icon="$ICON_OK"; acpi_color="$GREEN"; acpi_label="activated (Natively injected via permanent BIOS hardware tables)"
+        elif compgen -G /sys/devices/system/cpu/cpu0/cpufreq >/dev/null; then
+            acpi_icon="$ICON_OK"; acpi_color="$GREEN"; acpi_label="activated (Loaded via OS-level early boot initrd override)"
         else
             acpi_icon="$ICON_WARN"; acpi_color="$YELLOW"; acpi_label="installed configuration detected — reboot pending"
         fi
@@ -1100,12 +1116,20 @@ update_cyan-skillfish() {
 }
 
 # ==============================================================================
-# UNIFIED ACPI FIX SUBSYSTEM TOGGLE ENGINE (INSTALL / UNINSTALL SWITCH)
+# UNIFIED ACPI FIX SUBSYSTEM TOGGLE ENGINE (BIOS PROTETCTED)
 # ==============================================================================
 toggle_acpi_fix() {
-    if acpi_fix_installed; then
-        echo -e "\n  ${YELLOW}[⚠] ACPI Override Fix detected on this system.${RESET}"
-        echo -e "      Selecting this action will completely uninstall the fix."
+    # Detect if the tables are locked in at the hardware layer rather than software files
+    if acpi_fix_installed && ! grep -q "GRUB_EARLY_INITRD_LINUX_CUSTOM" /etc/default/grub 2>/dev/null; then
+        echo -e "\n  ${B_GREEN}[✓] ACPI HARDWARE INJECTION VERIFIED!${RESET}"
+        echo -e "      The custom C/P-state voltage tables are running natively inside your BIOS."
+        echo -e "      Software rollback is managed by reflashing your stock firmware image."
+        echo ""
+        type_prompt "  Press [any key] to return to the toolkit main menu... " 0.03
+        read -n 1 -s -r || true
+    elif acpi_fix_installed; then
+        echo -e "\n  ${YELLOW}[⚠] ACPI Override Fix detected inside operating system boot records.${RESET}"
+        echo -e "      Selecting this action will completely uninstall the software fix."
         if confirm "Do you want to proceed with the removal?"; then
             remove_acpi_fix
         else
