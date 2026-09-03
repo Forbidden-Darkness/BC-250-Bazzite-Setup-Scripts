@@ -409,8 +409,26 @@ core_unlock_cores_active() {
     [[ "$(nproc --all 2>/dev/null)" -eq 16 ]]
 }
 
+# 🧬 HARDWARE LEVEL INTEGRATION: Audits active system memory allocations to discover permanent BIOS RAM/VRAM splits
 ram_split_installed() {
-    rpm-ostree kargs 2>/dev/null | grep -q "ttm.pages_limit" || [[ -f /etc/modprobe.d/bc250-mem.conf ]]
+    # 1. OS-Level Check: Check if custom kernel argument overrides or modprobe profiles exist
+    if rpm-ostree kargs 2>/dev/null | grep -q "ttm.pages_limit" || [[ -f /etc/modprobe.d/bc250-mem.conf ]]; then
+        return 0
+    fi
+
+    # 2. BIOS-Level Check: Interrogate /proc/meminfo to parse hardware memory allocation profiles
+    if [[ -f "/proc/meminfo" ]]; then
+        local total_mem_kb; total_mem_kb=$(awk '/MemTotal/ {print $2}' /proc/meminfo 2>/dev/null || echo "16000000")
+        # Convert Kilobytes directly to Megabytes for clean boundary evaluation
+        local total_mem_mb=$(( total_mem_kb / 1024 ))
+        
+        # If total visible system RAM drops below 10,000MB, a permanent hardware allocation mask is active in BIOS
+        if (( total_mem_mb < 10000 )); then
+            return 0
+        fi
+    fi
+
+    return 1
 }
 
 zram_currently_disabled() {
@@ -718,10 +736,21 @@ run_status() {
     echo -e "  ${CYAN}Active CUs${RESET}            ${cu_icon} ${cu_color}${true_cu_count}/40${RESET}  ${DIM}(default 24, max 40)${RESET}${cu_warn_msg}"
 
     if ram_split_installed; then
-        local uma_now; uma_now=$(ram_split_current_uma 2>/dev/null)
-        echo -e "  ${CYAN}RAM/VRAM Split${RESET}        ${ICON_OK} ${GREEN}UMA_SIZE=${uma_now:-?}MB${RESET}, ttm.pages_limit ceiling active"
+    local uma_now; uma_now=$(ram_split_current_uma 2>/dev/null)
+        
+        # Determine if the allocation is verified via system files or hardware memory thresholds
+    if rpm-ostree kargs 2>/dev/null | grep -q "ttm.pages_limit" || [[ -f /etc/modprobe.d/bc250-mem.conf ]]; then
+            echo -e "  ${CYAN}RAM/VRAM Split${RESET}        ${ICON_OK} ${GREEN}UMA_SIZE=${uma_now:-?}MB${RESET}, ttm.pages_limit ceiling active via OS layers"
     else
-        echo -e "  ${CYAN}RAM/VRAM Split${RESET}        ${DIM}– not installed (stock split)${RESET}"
+            # Hardware total analysis fallback when configured entirely via firmware
+            local hw_mem_kb; hw_mem_kb=$(awk '/MemTotal/ {print $2}' /proc/meminfo 2>/dev/null || echo "0")
+            local hw_mem_gb=$(( (hw_mem_kb / 1024 / 1024) + 1 )) # Rounds up to nearest whole Gigabyte array
+            local implied_vram=$(( 16 - hw_mem_gb ))
+            
+            echo -e "  ${CYAN}RAM/VRAM Split${RESET}        ${ICON_OK} ${GREEN}activated${RESET} (Natively partitioned via BIOS — ~${hw_mem_gb}G System RAM / ~${implied_vram}G Dedicated VRAM)"
+        fi
+    else
+        echo -e "  ${CYAN}RAM/VRAM Split${RESET}        ${DIM}– not installed (Stock 8G/8G memory split blueprint)${RESET}"
     fi
     echo ""
 
