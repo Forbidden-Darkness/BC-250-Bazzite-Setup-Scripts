@@ -1279,6 +1279,67 @@ remove_acpi_fix() {
 }
 
 # ==============================================================================
+# UNIFIED RAM/VRAM SPLIT TOGGLE ENGINE (NATIVE INTERACTIVE IMPLEMENTATION)
+# ==============================================================================
+toggle_ram_split() {
+    if ram_split_installed; then
+        echo -e "\n  ${YELLOW}[⚠] Custom RAM/VRAM memory split layout detected on this host.${RESET}"
+        echo -e "      Selecting this action will revert your configuration back to the stock 8G/8G layout."
+        
+        if confirm "Do you want to proceed with the rollback?"; then
+            echo -e "${RED}[+] Removing configuration profiles and clearing modprobe overrides...${NC}"
+            sudo rm -f /etc/modprobe.d/bc250-mem.conf
+            
+            # Clear out atomic kernel argument allocations if present
+            if rpm-ostree kargs 2>/dev/null | grep -q "ttm.pages_limit"; then
+                sudo rpm-ostree kargs --delete=ttm.pages_limit >> /var/log/bc250_oc_install.log 2>&1
+            fi
+            
+            print_success "Memory profile successfully reset to stock configurations!"
+            prompt_reboot
+        else
+            echo -e "${CYAN}[-] Rollback cancelled. Returning cleanly to main menu...${NC}"
+            sleep 1.5
+        fi
+    else
+        echo -e "\n  ${CYAN}[ℹ] System is running the stock 8G/8G unified memory allocation profile.${RESET}"
+        echo -e "      This utility will reallocate your memory blocks to optimize System vs. VRAM space."
+        echo ""
+        echo -e "  Select a hardware partitioning profile target:"
+        echo -e "    ${CYAN}1)${RESET} Extreme VRAM Split  ${DIM}(~12GB System RAM / ~4GB Dedicated VRAM)${RESET}"
+        echo -e "    ${CYAN}2)${RESET} Maximum VRAM Split  ${DIM}(~14GB System RAM / ~2GB Dedicated VRAM)${RESET}"
+        echo -e "    ${RED}   Hit Enter or Any Key to Abort and Cancel Layout Changes${NC}"
+        echo ""
+        read -rp "  Select allocation profile index [1-2]: " split_choice
+
+        local ttm_val=""
+        case "$split_choice" in
+            1) ttm_val="1572864" ;; # Allocates ~12GB to system pages limit ceiling
+            2) ttm_val="1835008" ;; # Allocates ~14GB to system pages limit ceiling
+            *) echo -e "${YELLOW}[-] Layout change bypassed. Returning to menu...${NC}"; sleep 1.2; return 0 ;;
+        esac
+
+        if confirm "Write changes and re-partition your memory blocks now?"; then
+            echo -e "${GREEN}[+] Staging memory configuration tables...${NC}"
+            sudo mkdir -p /etc/modprobe.d
+            
+            # 🧬 ATOMIC DUAL-PATH INJECTION: Writes to modprobe configuration tables 
+            # AND appends directly to rpm-ostree kargs for 100% cross-version stability
+            echo "options amdgpu ttm_pages_limit=$ttm_val" | sudo tee /etc/modprobe.d/bc250-mem.conf >/dev/null
+            if command -v rpm-ostree &>/dev/null; then
+                sudo rpm-ostree kargs --append="ttm.pages_limit=$ttm_val" >> /var/log/bc250_oc_install.log 2>&1
+            fi
+            
+            print_success "RAM/VRAM memory split targets successfully written to hardware tree!"
+            prompt_reboot
+        else
+            echo -e "${RED}[-❌-] Partitioning aborted. No changes made.${NC}"
+            sleep 1.5
+        fi
+    fi
+}
+
+# ==============================================================================
 # UNIFIED INTERACTIVE CLOSURE ENGINE: CONTROL SHUTDOWN / REBOOT / EXIT
 # ==============================================================================
 secure_system_exit() {
@@ -1694,13 +1755,14 @@ show_menu() {
         echo -e "  ${DIM}─────────────────────────────────────────────────────────────────────${RESET}"
         echo ""
 
-                # --- SECTION 2: COMPONENT SWITCHES & TOOLS ---
-                # --- SECTION 2: COMPONENT SWITCHES & TOOLS ---
+                        # --- SECTION 2: COMPONENT SWITCHES & TOOLS ---
         echo -e "  ${BOLD}${YELLOW}Hardware Unlocks & Core Optimizations${RESET}"
         echo -e "  ${DIM}─────────────────────────────────────────────────────────────────────${RESET}"
         
-        # 🧬 MERGED VISUAL TOGGLE LINE:
         echo -e "    ${CYAN}[3]${RESET} Toggle BC-250 ACPI Table Fix   ${DIM}(Automated Install / Uninstall Switch)${RESET}"
+        
+        # 🧬 INJECT THIS NEW VISUAL MENU SELECTION ENTRY DIRECTLY HERE:
+        echo -e "    ${CYAN}[4]${RESET} Toggle RAM/VRAM Memory Split   ${DIM}(Dynamic Allocation Switch Profile)${RESET}"
         
         echo -e "    ${CYAN}[5]${RESET} Launch BC-250 Overclock Manager ${DIM}(Live SMU adjustment utility)${RESET}"
         echo -e "    ${CYAN}[6]${RESET} Launch Wake-on-LAN Configuration ${DIM}(Interface port selector tool)${RESET}"
@@ -1735,7 +1797,7 @@ show_menu() {
         echo -e "     ${WHITE}\"/etc/cyan-skillfish-governor-smu/config.toml\"${RESET}"
         echo -e "  ${DIM}─────────────────────────────────────────────────────────────────────${RESET}"
 
-                # Safe Prompt Parser (Instant Typing Response Keystroke Engine)
+        # Safe Prompt Parser (Instant Typing Response Keystroke Engine)
         type_prompt "  Select an option [0-7, a-g, h, o, s]: " 0.03
         choice=""
         read -n 1 -s choice || true
@@ -1745,8 +1807,10 @@ show_menu() {
             1) install_blue_pill ;;
             2) install_red_pill ;;
             
-            # 🧬 UPDATED PATHWAY: Route option 3 to your new toggle engine
             3) toggle_acpi_fix ;;
+            
+            # 🧬 CONNECT THE CODE ENTRY TO THE EXECUTION SWITCH HERE:
+            4) toggle_ram_split ;;
             
             5) install_overclock ;;
             6) install_wake_on_lan ;;
