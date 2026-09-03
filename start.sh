@@ -892,7 +892,7 @@ echo -e "${GREEN}Starting Bazzite Toolbox Core UI...${NC}"
 # =====================================================================
 # 2. AUTO-UPDATE MECHANISM (WITH SILENT OFFLINE FAIL)
 # =====================================================================
-#GITHUB_RAW_URL="https://github.com/Forbidden-Darkness/Bazzite_Toolbox/raw/refs/heads/main/start.sh"
+GITHUB_RAW_URL="https://github.com/Forbidden-Darkness/Bazzite_Toolbox/raw/refs/heads/main/start.sh"
 
 if [ "$1" != "--no-update" ] && [ "$1" != "--updated" ]; then
     if curl -s -I -L --connect-timeout 2 "$GITHUB_RAW_URL" > /dev/null; then
@@ -1098,7 +1098,7 @@ apply_acpi_fix() {
 
     cd /tmp || return 1
     rm -rf acpi_tables/kernel/firmware/acpi
-    git clone https://github.com/mendesrr/bc250-acpi-fix-updated-8c.git
+    git clone https://github.com
     cd bc250-acpi-fix-updated-8c || return 1
 
     if [ ! -d "/tmp/bc250-acpi-fix-updated-8c" ]; then
@@ -1114,12 +1114,36 @@ apply_acpi_fix() {
     cd /tmp/acpi_tables || return 1
     find kernel | cpio -H newc --create > SSDT_ACPI.cpio
 
-    sudo cp SSDT_ACPI.cpio /boot/.
-    echo 'GRUB_EARLY_INITRD_LINUX_CUSTOM="../../SSDT_ACPI.cpio"' | sudo tee -a /etc/default/grub
-    ujust regenerate-grub
+    # 🧬 ATOMIC PATHWAY UNIFICATION: Write to both locations to ensure cross-version compatibility
+    sudo cp SSDT_ACPI.cpio /boot/SSDT_ACPI.cpio 2>/dev/null || true
+    sudo mkdir -p /boot/efi/EFI/bazzite 2>/dev/null || true
+    sudo cp SSDT_ACPI.cpio /boot/efi/EFI/bazzite/SSDT_ACPI.cpio 2>/dev/null || true
 
+    # Inject the initrd custom line into the grub configuration
+    if ! grep -q "GRUB_EARLY_INITRD_LINUX_CUSTOM" /etc/default/grub; then
+        echo 'GRUB_EARLY_INITRD_LINUX_CUSTOM="../../SSDT_ACPI.cpio"' | sudo tee -a /etc/default/grub
+    fi
+
+    # 🔧 BAZZITE 44 TOOLCHAIN RESOLVER: Detect and install the split cpupower package safely
     echo -e "${B_VIOLET}=== Installing kernel-tools (cpupower) ===${NC}"
-    rpm-ostree install kernel-tools
+    if rpm-ostree search cpupower &>/dev/null; then
+        sudo rpm-ostree install cpupower >> /var/log/bc250_oc_install.log 2>&1
+    else
+        sudo rpm-ostree install kernel-tools >> /var/log/bc250_oc_install.log 2>&1
+    fi
+
+    # 🔧 BAZZITE 44 GRUB REGENERATION ROUTINE
+    echo -e "${B_VIOLET}=== Regenerating GRUB Configuration ===${NC}"
+    if ujust --list 2>/dev/null | grep -q "regenerate-grub"; then
+        ujust regenerate-grub
+    elif [ -f "/boot/grub2/grub.cfg" ]; then
+        sudo grub2-mkconfig -o /boot/grub2/grub.cfg
+    elif [ -f "/boot/efi/EFI/fedora/grub.cfg" ]; then
+        sudo grub2-mkconfig -o /boot/efi/EFI/fedora/grub.cfg
+    else
+        sudo grub2-mkconfig -o /etc/grub2.cfg 2>/dev/null || true
+    fi
+
     prompt_reboot
 }
 
@@ -1134,18 +1158,24 @@ remove_acpi_fix() {
         print_warning "No GRUB_EARLY_INITRD_LINUX_CUSTOM line found in /etc/default/grub."
     fi
 
-    if [ -f "/boot/SSDT_ACPI.cpio" ]; then
-        print_info "Deleting /boot/SSDT_ACPI.cpio..."
-        sudo rm -f /boot/SSDT_ACPI.cpio
+    # Clear files out from both potential directory targets cleanly
+    if [ -f "/boot/SSDT_ACPI.cpio" ] || [ -f "/boot/efi/EFI/bazzite/SSDT_ACPI.cpio" ]; then
+        print_info "Deleting custom SSDT_ACPI.cpio binaries..."
+        sudo rm -f /boot/SSDT_ACPI.cpio 2>/dev/null || true
+        sudo rm -f /boot/efi/EFI/bazzite/SSDT_ACPI.cpio 2>/dev/null || true
     else
-        print_warning "File /boot/SSDT_ACPI.cpio not found."
+        print_warning "No custom SSDT_ACPI.cpio binaries discovered."
     fi
 
-    print_info "Regenerating GRUB configuration..."
-    if command -v ujust &> /dev/null; then
+    print_info "Regenerating GRUB configuration safely..."
+    if ujust --list 2>/dev/null | grep -q "regenerate-grub"; then
         ujust regenerate-grub
+    elif [ -f "/boot/grub2/grub.cfg" ]; then
+        sudo grub2-mkconfig -o /boot/grub2/grub.cfg
+    elif [ -f "/boot/efi/EFI/fedora/grub.cfg" ]; then
+        sudo grub2-mkconfig -o /boot/efi/EFI/fedora/grub.cfg
     else
-        sudo grub2-mkconfig -o /etc/grub2.cfg
+        sudo grub2-mkconfig -o /etc/grub2.cfg 2>/dev/null || true
     fi
 
     print_info "Cleaning up temporary build directories..."
