@@ -1098,7 +1098,7 @@ apply_acpi_fix() {
 
     cd /tmp || return 1
     rm -rf acpi_tables/kernel/firmware/acpi
-    git clone https://github.com
+    git clone https://github.com/mendesrr/bc250-acpi-fix-updated-8c.git
     cd bc250-acpi-fix-updated-8c || return 1
 
     if [ ! -d "/tmp/bc250-acpi-fix-updated-8c" ]; then
