@@ -1099,6 +1099,31 @@ update_cyan-skillfish() {
     prompt_reboot
 }
 
+# ==============================================================================
+# UNIFIED ACPI FIX SUBSYSTEM TOGGLE ENGINE (INSTALL / UNINSTALL SWITCH)
+# ==============================================================================
+toggle_acpi_fix() {
+    if acpi_fix_installed; then
+        echo -e "\n  ${YELLOW}[⚠] ACPI Override Fix detected on this system.${RESET}"
+        echo -e "      Selecting this action will completely uninstall the fix."
+        if confirm "Do you want to proceed with the removal?"; then
+            remove_acpi_fix
+        else
+            echo -e "${CYAN}[-] Removal cancelled. Returning to main menu...${NC}"
+            sleep 1.5
+        fi
+    else
+        echo -e "\n  ${CYAN}[ℹ] ACPI Override Fix is not currently installed.${RESET}"
+        echo -e "      Selecting this action will download and inject the custom tables."
+        if confirm "Do you want to proceed with the installation?"; then
+            apply_acpi_fix
+        else
+            echo -e "${CYAN}[-] Installation cancelled. Returning to main menu...${NC}"
+            sleep 1.5
+        fi
+    fi
+}
+
 # Function to handle ACPI Override Fix
 apply_acpi_fix() {
     echo -e "${B_VIOLET}=== Executing BC-250 ACPI Fix ===${NC}"
@@ -1557,12 +1582,16 @@ show_menu() {
         echo ""
 
                 # --- SECTION 2: COMPONENT SWITCHES & TOOLS ---
+                # --- SECTION 2: COMPONENT SWITCHES & TOOLS ---
         echo -e "  ${BOLD}${YELLOW}Hardware Unlocks & Core Optimizations${RESET}"
         echo -e "  ${DIM}─────────────────────────────────────────────────────────────────────${RESET}"
-        echo -e "    ${CYAN}[3]${RESET} Inject BC-250 ACPI Table Fix   ${DIM}(Restores C/P-state voltage loops)${RESET}"
-        echo -e "    ${CYAN}[4]${RESET} Revert BC-250 ACPI Table Fix   ${DIM}(System Uninstaller Mode)${RESET}"
+        
+        # 🧬 MERGED VISUAL TOGGLE LINE:
+        echo -e "    ${CYAN}[3]${RESET} Toggle BC-250 ACPI Table Fix   ${DIM}(Automated Install / Uninstall Switch)${RESET}"
+        
         echo -e "    ${CYAN}[5]${RESET} Launch BC-250 Overclock Manager ${DIM}(Live SMU adjustment utility)${RESET}"
         echo -e "    ${CYAN}[6]${RESET} Launch Wake-on-LAN Configuration ${DIM}(Interface port selector tool)${RESET}"
+
         echo -e "    ${CYAN}[7]${RESET} Upgrade Governor Binary Track  ${DIM}(Target: v0.4.12 via COPR repo)${RESET}"
         echo -e "    ${BOLD}${GREEN}[h] Interrogate Silicon CU Map Matrix ${DIM}(Analyze Harvest Override Variants)${RESET}"
 
@@ -1599,13 +1628,16 @@ show_menu() {
         read -n 1 -s choice || true
         echo ""
 
-                case "$choice" in
+            case "$choice" in
             1) install_blue_pill ;;
             2) install_red_pill ;;
-            3) apply_acpi_fix ;;
-            4) remove_acpi_fix ;;
+            
+            # 🧬 UPDATED PATHWAY: Route option 3 to your new toggle engine
+            3) toggle_acpi_fix ;;
+            
             5) install_overclock ;;
             6) install_wake_on_lan ;;
+
             7) update_cyan-skillfish ;;
             h) view_cu_map ;;  # Hooks your new look securely into the runtime loop
 
