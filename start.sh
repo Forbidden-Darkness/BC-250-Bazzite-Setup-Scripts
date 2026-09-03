@@ -1284,7 +1284,7 @@ remove_acpi_fix() {
 toggle_ram_split() {
     if ram_split_installed; then
         echo -e "\n  ${YELLOW}[⚠] Custom RAM/VRAM memory split layout detected on this host.${RESET}"
-        echo -e "      Selecting this action will revert your configuration back to the stock 8G/8G layout."
+        echo -e "      Selecting this action will revert your configuration back to the stock layout."
         
         if confirm "Do you want to proceed with the rollback?"; then
             echo -e "${RED}[+] Removing configuration profiles and clearing modprobe overrides...${NC}"
@@ -1302,22 +1302,24 @@ toggle_ram_split() {
             sleep 1.5
         fi
     else
-        echo -e "\n  ${CYAN}[ℹ] System is running the stock 8G/8G unified memory allocation profile.${RESET}"
+        echo -e "\n  ${CYAN}[ℹ] System is running the stock unified memory allocation profile.${RESET}"
         echo -e "      This utility will reallocate your memory blocks to optimize System vs. VRAM space."
         echo ""
         echo -e "  Select a hardware partitioning profile target:"
         echo -e "    ${CYAN}1)${RESET} Extreme VRAM Split  ${DIM}(~12GB System RAM / ~4GB Dedicated VRAM)${RESET}"
         echo -e "    ${CYAN}2)${RESET} Maximum VRAM Split  ${DIM}(~14GB System RAM / ~2GB Dedicated VRAM)${RESET}"
+        echo -e "    ${CYAN}3)${RESET} Native 512MB Split  ${DIM}(Maximum Available System RAM / ~512MB Dedicated VRAM)${RESET}"
         echo -e "    ${RED}   Hit Enter or Any Key to Abort and Cancel Layout Changes${NC}"
         echo ""
-        read -rp "  Select allocation profile index [1-2]: " split_choice
+        read -rp "  Select allocation profile index [1-3]: " split_choice
 
         local ttm_val=""
         case "$split_choice" in
             1) ttm_val="1572864" ;; # Allocates ~12GB to system pages limit ceiling
             2) ttm_val="1835008" ;; # Allocates ~14GB to system pages limit ceiling
+            3) ttm_val="3932160" ;; # 🧬 FIXED: Clamps memory ceiling to allocate exactly a 512MB VRAM slice
             *) echo -e "${YELLOW}[-] Layout change bypassed. Returning to menu...${NC}"; sleep 1.2; return 0 ;;
-        esac
+         scrimmageesac
 
         if confirm "Write changes and re-partition your memory blocks now?"; then
             echo -e "${GREEN}[+] Staging memory configuration tables...${NC}"
