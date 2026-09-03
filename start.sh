@@ -494,7 +494,7 @@ ram_split_current_uma() {
 }
 
 # ==============================================================================
-# RE-ORDERED CORE ENGINE: SYSTEM STATUS VISUALIZATION DASHBOARD
+# RE-ORDERED CORE ENGINE: SYSTEM STATUS VISUALIZATION DASHBOARD (PART 1)
 # ==============================================================================
 run_status() {
     print_banner
@@ -1155,6 +1155,67 @@ remove_acpi_fix() {
 }
 
 # ==============================================================================
+# BAZZITE NATIVE DESKTOP PORTAL IPC INTERFACE SANDBOX BREAKOUT LAYER
+# ==============================================================================
+launch_html_dashboard() {
+    echo ""
+    echo -e "${YELLOW}[+] Scanning local environment paths for matrix dashboards...${NC}"
+
+    local target_html=""
+    for name in "index.html" "cu_map_matrix.html"; do
+        if [[ -f "$EXTERNAL_DIR/$name" ]]; then
+            target_html="$EXTERNAL_DIR/$name"
+            break
+        elif [[ -f "$(dirname "$SCRIPT_PATH")/$name" ]]; then
+            target_html="$(dirname "$SCRIPT_PATH")/$name"
+            break
+        elif [[ -f "$REAL_HOME/$name" ]]; then
+            target_html="$REAL_HOME/$name"
+            break
+        elif [[ -f "$REAL_HOME/Bazzite_Toolbox/$name" ]]; then
+            target_html="$REAL_HOME/Bazzite_Toolbox/$name"
+            break
+        fi
+    done
+
+    if [[ -n "$target_html" ]]; then
+        echo -e "${B_GREEN}[✔] Target discovered: ${WHITE}$target_html${NC}"
+        echo -e "${CYAN}[ℹ] Spawning detached host browser thread as user: ${WHITE}$REAL_USER${NC}"
+        echo -e "${DIM}    Passing payload variables through the active desktop portal pipeline...${RESET}"
+
+        # 🧬 BAZZITE ENVIRONMENT INTERPRETER: Reconstructs missing session bus links dynamically
+        local user_id
+        user_id=$(id -u "$REAL_USER" 2>/dev/null || echo "1000")
+
+        # Explicitly build the environmental socket variable string matching your user workspace
+        local session_bus="DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$user_id/bus"
+        local display_env=""
+        [[ -n "$DISPLAY" ]] && display_env="DISPLAY=$DISPLAY"
+        [[ -n "$XAUTHORITY" ]] && display_env="XAUTHORITY=$XAUTHORITY"
+
+        if command -v flatpak-spawn &>/dev/null; then
+            # Inject session bus credentials to give the spawner complete desktop validation permissions
+            eval "sudo -u \"$REAL_USER\" XDG_RUNTIME_DIR=\"/run/user/$user_id\" $session_bus $display_env flatpak-spawn --host xdg-open \"$target_html\"" &>/dev/null &
+        elif command -v busctl &>/dev/null; then
+            eval "sudo -u \"$REAL_USER\" XDG_RUNTIME_DIR=\"/run/user/$user_id\" $session_bus busctl --user call org.freedesktop.portal.Desktop /org/freedesktop/portal/desktop org.freedesktop.portal.OpenURI OpenURI ssss \"\" \"file://$target_html\" \"\" \"\"" &>/dev/null &
+        else
+            eval "sudo -u \"$REAL_USER\" XDG_RUNTIME_DIR=\"/run/user/$user_id\" $session_bus $display_env xdg-open \"$target_html\"" &>/dev/null &
+        fi
+
+        # Hold screen visibility open for 2.5 seconds to track state
+        sleep 2.5
+    else
+        echo -e "${RED}[-❌-] CRITICAL ERROR: 'index.html' or 'cu_map_matrix.html' was not found!${NC}"
+        echo -e "         Ensure your file sits cleanly in one of these directories:"
+        echo -e "         • $EXTERNAL_DIR"
+        echo -e "         • $(dirname "$SCRIPT_PATH")"
+        echo ""
+        type_prompt "  Press [any key] to return to the dashboard... " 0.03
+        read -n 1 -s -r || true
+    fi
+}
+
+# ==============================================================================
 # INTEGRATED: MASTER UNIVERSAL DYNAMIC BC-250 SILICON HARVEST ENGINE MATRIX
 # ==============================================================================
 view_cu_map() {
@@ -1467,6 +1528,9 @@ show_menu() {
         echo -e "    ${CYAN}[6]${RESET} Launch Wake-on-LAN Configuration ${DIM}(Interface port selector tool)${RESET}"
         echo -e "    ${CYAN}[7]${RESET} Upgrade Governor Binary Track  ${DIM}(Target: v0.4.12 via COPR repo)${RESET}"
         echo -e "    ${BOLD}${GREEN}[h] Interrogate Silicon CU Map Matrix ${DIM}(Analyze Harvest Override Variants)${RESET}"
+
+        # 🎨 ADD THIS VISUAL OPTION LINE DIRECTLY HERE TO ALIGN YOUR FRAME MARGINS:
+        echo -e "    ${BOLD}${MAGENTA}[o] Launch Interactive HTML Matrix Dashboard ${DIM}(Default Web Browser)${RESET}"
         echo ""
 
         # --- SECTION 3: SMU GOVERNOR LAYER CONTROLS ---
@@ -1493,7 +1557,7 @@ show_menu() {
         echo -e "  ${DIM}─────────────────────────────────────────────────────────────────────${RESET}"
 
                 # Safe Prompt Parser (Instant Typing Response Keystroke Engine)
-        type_prompt "  Select an option [0-7, a-g, h, s]: " 0.03
+        type_prompt "  Select an option [0-7, a-g, h, o, s]: " 0.03
         choice=""
         read -n 1 -s choice || true
         echo ""
@@ -1507,6 +1571,9 @@ show_menu() {
             6) install_wake_on_lan ;;
             7) update_cyan-skillfish ;;
             h) view_cu_map ;;  # Hooks your new look securely into the runtime loop
+
+            # 🧬 INJECT THIS CASE BRANCH DIRECTLY HERE:
+
 
             a)
                 echo -e "${GREEN}Executing Temporary Start...${NC}"
@@ -1559,6 +1626,9 @@ show_menu() {
                 sleep 0.5
                 exec bash "$SCRIPT_PATH" "$@"
                 ;;
+
+            o) launch_html_dashboard ;;
+
             0)
                 echo -e "${GREEN}Exiting Bazzite Toolbox. Cleaning environment...${NC}"
                 stop_background_music
