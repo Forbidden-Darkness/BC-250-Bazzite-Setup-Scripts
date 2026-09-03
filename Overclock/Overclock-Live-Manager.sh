@@ -6,7 +6,8 @@ RED='\033[0;31m'
 B_RED='\033[1;31m'   # Bold Red for high-visibility Red Pill elements
 GREEN='\033[0;32m'
 B_GREEN='\033[1;32m' # Bold Green for verified/active status
-YELLOW='\033[1;33m'
+YELLOW='\033[0;33m'
+B_YELLOW='\033[1;33m'
 B_BLUE='\033[1;34m'  # Bold Blue for high-visibility Blue Pill elements
 B_VIOLET='\033[1;35m' # Bold Violet for ACPI Fix elements
 CYAN='\033[0;36m'
@@ -554,8 +555,8 @@ while true; do
     echo -e "${BIBlue}2a) CU Live Manager: Install package dependencies (Phase 1 - Requires Reboot)${NC}"
     echo -e "${BIBlue}2b) CU Live Manager: Launch live matrix configuration (Phase 2)${NC}"
     echo ""
-    echo -e "${BYELLOW}3a) Rollback: Uninstall CPU Overclock profiles completely${NC}"
-    echo -e "${BYELLOW}3b) Rollback: Uninstall Compute Unit Live Manager service paths${NC}"
+    echo -e "${BIYELLOW}3a) Rollback: Uninstall CPU Overclock profiles completely${NC}"
+    echo -e "${BIYELLOW}3b) Rollback: Uninstall Compute Unit Live Manager service paths${NC}"
     echo ""
     echo "0) Exit Overclock-Live-Manager"
     echo ""
