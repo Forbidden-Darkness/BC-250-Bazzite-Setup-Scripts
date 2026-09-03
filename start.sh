@@ -1367,9 +1367,9 @@ secure_system_exit() {
     echo -e "${BIYellow}==================================================${NC}"
     echo -e " Select an environment state transition option:"
     echo ""
+    echo -e "  ${CYAN}0)${RESET} Safe Exit Only         ${DIM}(Return cleanly back to host terminal)${RESET}"
     echo -e "  ${CYAN}1)${RESET} Fast System Reboot     ${DIM}(Apply newly layered kernel elements)${RESET}"
-    echo -e "  ${CYAN}2)${RESET} Full System Shutdown   ${DIM}(Complete hardware power cycle)${RESET}"
-    echo -e "  ${CYAN}3)${RESET} Safe Exit Only         ${DIM}(Return cleanly back to host terminal)${RESET}"
+    echo -e "  ${CYAN}2)${RESET} Full System Shutdown   ${DIM}(Complete hardware power cycle)${RESET}"    
     echo -e "  ${RED}   Hit Enter or Any Key to Cancel and Return to Menu${NC}"
     echo -e "${BIYellow}==================================================${NC}"
     type_prompt "  Select option index [1-3]: " 0.03
@@ -1391,7 +1391,7 @@ secure_system_exit() {
             sleep 1.5
             sudo systemctl poweroff
             ;;
-        3)
+        0)
             echo -e "${GREEN}[+] Exiting Bazzite Toolbox cleanly. Clearing workspace...${NC}"
             stop_background_music
             sleep 1
