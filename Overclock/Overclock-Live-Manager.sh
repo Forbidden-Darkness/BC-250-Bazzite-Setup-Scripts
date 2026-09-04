@@ -217,7 +217,7 @@ stress_settings() {
     sudo systemctl enable bc250-smu-oc.service >> "$LOG_FILE" 2>&1
     clear
 
-    echo -e "${YELLOW}--- Current SMU Service Status ${RED}Ctrl+c then press enter to return to menu ---${NC}"
+    echo -e "${YELLOW}--- Current SMU Service Status ${RED}Press [Enter] to return to menu ---${NC}"
     sudo systemctl status bc250-smu-oc.service
     read -p "Press [Enter] to return to the tuning menu..."
 }
