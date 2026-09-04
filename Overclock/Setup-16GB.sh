@@ -14,9 +14,9 @@ sudo copr enable filippor/bazzite -y
 sudo rpm-ostree cleanup -m 2>/dev/null || true
 sudo rpm-ostree refresh-md || true
 
-echo -e "\033[1;33m[●] Installing Cyan Skillfish Governor SMU binary...\033[0m"
-# INSULATION TWEAK: Bypasses the strict crash if the package is already mapped to the layer
-sudo rpm-ostree install cyan-skillfish-governor-smu 2>/dev/null || true
+echo -e "\033[1;33m[●] Deploying Cyan Skillfish Governor and Compression Toolchain...\033[0m"
+# BWRAP INSULATION: Explicitly installs 'lz4' to guarantee dracut can compile the initramfs container
+sudo rpm-ostree install cyan-skillfish-governor-smu lz4 2>/dev/null || true
 
 echo -e "\033[1;33m[●] Adjusting atomic kernel parameters (Mitigations & ZSWAP)...\033[0m"
 local_kargs=(
