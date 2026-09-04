@@ -225,21 +225,35 @@ stress_settings() {
 launch_tuning_menu() {
     while true; do
         clear
+                echo ""
+        echo -e "  ${CYAN}╔═══════════════════════════════════════════════════════════════════╗${NC}"
+        echo -e "  ${CYAN}║                BC-250 TUNING & CONFIGURATION MENU                 ║${NC}"
+        echo -e "  ${CYAN}╚═══════════════════════════════════════════════════════════════════╝${NC}"
         echo ""
-        echo -e "${YELLOW}====================================================${NC}"
-        echo -e "${YELLOW}          BC-250 TUNING & CONFIGURATION MENU       ${NC}"
-        echo -e "${YELLOW}====================================================${NC}"
-        echo "Select a baseline template for your hardware variant:"
-        echo "1) 40CU Model    (3500 MHz @ 1000 mV, Max 85°C)"
-        echo "2) 36/38CU Model (3500 MHz @ 980 mV, Max 82°C)"
-        echo "3) 36/38CU Model (3500 MHz @ 1015 mV, Max 85°C)"
-        echo "4) 36/38CU Model (3500 MHz @ 1020 mV, Max 85°C)"
-        echo "5) 36/38CU Model (3500 MHz @ 1050 mV, Max 85°C)"
-        echo -e "${BIGreen}6) Manual Custom Profile (Manually fill MHz, mV, Max Temp)${NC}"
-        echo -e "${BIGreen}7) Manual Test Custom Profile (Manually fill MHz, mV, Max Temp)${NC}"
-        echo "8) Skip auto-tuning & Return to Main Menu"
+        echo -e "  ${YELLOW}Select a baseline template for your hardware variant:${NC}"
+        echo -e "  ${BIBlack}─────────────────────────────────────────────────────────────────────${NC}"
+        
+        # Factory Templates Cluster
+        echo -e "    ${CYAN}1)${NC} 40CU Model       ${BIBlack}───${NC}  3500 MHz  @  1000 mV  ${BIBlack}│${NC}  Max 85°C"
+        echo -e "    ${CYAN}2)${NC} 36/38CU Model    ${BIBlack}───${NC}  3500 MHz  @   980 mV  ${BIBlack}│${NC}  Max 82°C"
+        echo -e "    ${CYAN}3)${NC} 36/38CU Model    ${BIBlack}───${NC}  3500 MHz  @  1015 mV  ${BIBlack}│${NC}  Max 85°C"
+        echo -e "    ${CYAN}4)${NC} 36/38CU Model    ${BIBlack}───${NC}  3500 MHz  @  1020 mV  ${BIBlack}│${NC}  Max 85°C"
+        echo -e "    ${CYAN}5)${NC} 36/38CU Model    ${BIBlack}───${NC}  3500 MHz  @  1050 mV  ${BIBlack}│${NC}  Max 85°C"
         echo ""
-        read -p "Enter selection [1-8]: " tune_choice
+        
+        # Manual Profiles Cluster
+        echo -e "    ${BIGreen}6) Manual Custom Profile${NC}       ${BIBlack}(Fill MHz, mV, Max Temp manually)${NC}"
+        echo -e "    ${BIGreen}7) Manual Test Profile${NC}         ${BIBlack}(Fill MHz, mV, Max Temp for safety test)${NC}"
+        echo ""
+        
+        # Exit Routine
+        echo -e "    ${RED}8) Return to Main Menu${NC}         ${BIBlack}(Skip auto-tuning routine)${NC}"
+        echo -e "  ${BIBlack}─────────────────────────────────────────────────────────────────────${NC}"
+        echo ""
+
+        # Colorized Interactive Prompt
+        read -p "$(echo -e "  ${CYAN}Enter selection [1-8]: ${NC}")" tune_choice
+
 
         case "$tune_choice" in
             1)
