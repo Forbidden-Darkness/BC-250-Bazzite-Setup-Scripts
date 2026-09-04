@@ -135,18 +135,20 @@ ask_desktop_shortcut() {
         return 0
     fi
 
-    echo -e "${BIYellow}==================================================${NC}"
-    echo -e "${BIYellow}         DESKTOP SHORTCUT CONFIGURATION           ${NC}"
-    echo -e "${BIYellow}==================================================${NC}"
-    echo -e "Would you like to add a shortcut to your desktop?"
+    echo -e "${DIM}┌──────────────────────────────────────────────────┐${RESET}"
+    echo -e "${DIM}│${RESET}          ${BOLD}${MAGENTA}DESKTOP SHORTCUT CONFIGURATION${RESET}          ${DIM}│${RESET}"
+    echo -e "${DIM}└──────────────────────────────────────────────────┘${RESET}"
     echo ""
-    echo -e " 1) Yes, create desktop shortcut"
+    echo -e "  ${BOLD}${WHITE}Would you like to add a shortcut to your desktop?${RESET}"
+    echo -e "  ${DIM}──────────────────────────────────────────────────${RESET}"
     echo ""
-    echo -e " 2) No, skip shortcut creation"
+    echo -e "    ${CYAN}[1]${RESET} Yes, create desktop shortcut"
+    echo -e "    ${CYAN}[2]${RESET} No, skip shortcut creation"
     echo ""
-    echo -e "${RED}     Hit Enter To Skip This Configuration${NC}"
-    echo -e "${BIYellow}==================================================${NC}"
-    read -rp "Select an option [1-2]: " shortcut_choice
+    echo -e "    ${DIM}[↵] Hit Enter to skip this configuration${RESET}"
+    echo -e "  ${DIM}──────────────────────────────────────────────────${RESET}"
+    echo ""
+    read -rp "  Select an option [1-2]: " shortcut_choice
 
     case $shortcut_choice in
         1)
