@@ -1129,6 +1129,7 @@ install_blue_pill() {
 }
 
 # Function to handle Red Pill installation
+# Function to handle Red Pill installation
 install_red_pill() {
     echo -e "${YELLOW}[●] Disabling legacy governor services...${NC}"
     sudo systemctl disable --now cyan-skillfish-governor 2>/dev/null || true
@@ -1144,11 +1145,15 @@ install_red_pill() {
     sudo rpm-ostree install cyan-skillfish-governor-smu || { echo -e "${RED}Failed to install governor package.${NC}"; return 1; }
 
     echo -e "${YELLOW}[●] Adjusting kernel arguments (Mitigations & ZSWAP)...${NC}"
-    sudo rpm-ostree kargs --append-if-missing=mitigations=off \
-                          --append-if-missing=zswap.enabled=1 \
-                          --append-if-missing=zswap.max_pool_percent=25 \
-                          --append-if-missing=zswap.compressor=lz4 \
-                          --append-if-missing=systemd.zram=0 || { echo -e "${RED}Failed to modify kernel arguments.${NC}"; return 1; }
+    # Define parameters cleanly inside a standard array to eliminate backslash breaking traps
+    local kargs_args=(
+        --append-if-missing=mitigations=off
+        --append-if-missing=zswap.enabled=1
+        --append-if-missing=zswap.max_pool_percent=25
+        --append-if-missing=zswap.compressor=lz4
+        --append-if-missing=systemd.zram=0
+    )
+    sudo rpm-ostree kargs "${kargs_args[@]}" || { echo -e "${RED}Failed to modify kernel arguments.${NC}"; return 1; }
 
     echo -e "${YELLOW}[●] Building BTRFS 32GB disk swapfile infrastructure...${NC}"
     sudo swapoff /var/swap/swapfile 2>/dev/null || true
