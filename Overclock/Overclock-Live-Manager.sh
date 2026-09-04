@@ -543,24 +543,30 @@ esac
 # Continuous Main Interactive Control Loop Window
 while true; do
     clear
-    echo -e "${YELLOW}====================================================================================${NC}"
-    echo -e "${YELLOW}            BC-250 CPU OVERCLOCK & Compute Unit Live Manager Setup Tool             ${NC}"
-    echo -e "${YELLOW}====================================================================================${NC}"
+    echo -e "${DIM}┌──────────────────────────────────────────────────────────────────────────────────┐${RESET}"
+    echo -e "${DIM}│${RESET}            ${BOLD}${MAGENTA}BC-250 CPU OVERCLOCK & Compute Unit Live Manager Setup Tool${RESET}             ${DIM}│${RESET}"
+    echo -e "${DIM}└──────────────────────────────────────────────────────────────────────────────────┘${RESET}"
     echo ""
-    echo "Select an action to perform:"
+    echo -e "  ${BOLD}${WHITE}Select an action to perform:${RESET}"
+    echo -e "  ${DIM}──────────────────────────────────────────────────────────────────────────────────${RESET}"
     echo ""
-    echo -e "${BIRed}1a) CPU Overclock: Install toolchain & configure settings (Phase 1 - Requires Reboot)${NC}"
-    echo -e "${BIRed}1b) CPU Overclock: Complete toolchain installation (Phase 2)${NC}"
+    echo -e "    ${BOLD}${RED}• CPU Overclocking Suite${RESET}"
+    echo -e "      ${CYAN}[1a]${RESET} Install Toolchain & Configure Settings  ${DIM}(Phase 1 - Requires Reboot)${RESET}"
+    echo -e "      ${CYAN}[1b]${RESET} Complete Toolchain Installation         ${DIM}(Phase 2)${RESET}"
     echo ""
-    echo -e "${BIBlue}2a) CU Live Manager: Install package dependencies (Phase 1 - Requires Reboot)${NC}"
-    echo -e "${BIBlue}2b) CU Live Manager: Launch live matrix configuration (Phase 2)${NC}"
+    echo -e "    ${BOLD}${BLUE}• Compute Unit Live Manager${RESET}"
+    echo -e "      ${CYAN}[2a]${RESET} Install Package Dependencies            ${DIM}(Phase 1 - Requires Reboot)${RESET}"
+    echo -e "      ${CYAN}[2b]${RESET} Launch Live Matrix Configuration        ${DIM}(Phase 2)${RESET}"
     echo ""
-    echo -e "${B_YELLOW}3a) Rollback: Uninstall CPU Overclock profiles completely${NC}"
-    echo -e "${B_YELLOW}3b) Rollback: Uninstall Compute Unit Live Manager service paths${NC}"
+    echo -e "    ${BOLD}${YELLOW}• Rollback & Restoration Profiles${RESET}"
+    echo -e "      ${DIM}[3a] Uninstall CPU Overclock Profiles Completely${RESET}"
+    echo -e "      ${DIM}[3b] Uninstall Compute Unit Live Manager Service Paths${RESET}"
     echo ""
-    echo "0) Exit Overclock-Live-Manager"
+    echo -e "  ${DIM}──────────────────────────────────────────────────────────────────────────────────${RESET}"
+    echo -e "    ${BOLD}${MAGENTA}[0]${RESET} Secure Safe Exit Overclock-Live-Manager"
     echo ""
-    read -p "Enter selection [1a-3b, or 0 to exit]: " choice
+    
+    read -p "  Select an option [1a-3b, 0]: " choice
 
     case "$choice" in
         1a) run_phase1 ;;
