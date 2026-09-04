@@ -1123,21 +1123,41 @@ uninstall_blue_pill() {
 
 # Unified Wrapper handling the Intelligent Toggle Switch selection logic
 install_blue_pill() {
-    # TOGGLE FIX: Check for the absolute presence of the real binary file on the system track
+    # Check if the binary is present on the live layer
     if [ -f "/usr/bin/cyan-skillfish-governor-smu" ] || [ -f "/usr/local/bin/cyan-skillfish-governor-smu" ]; then
         echo -e "${YELLOW}[●] Active Blue Pill optimization suite detected on this machine.${NC}"
-        echo -e "${BOLD}${MAGENTA}Would you like to completely uninstall the suite and restore defaults?${RESET}"
-        read -rp "  Select [y/N]: " rollback_choice
+        echo -e "If you just ran an uninstall, this package will clear out completely AFTER your next system reboot."
+        echo ""
+        echo -e "${BOLD}${CYAN}Would you like to FORCE a fresh re-installation right now anyway?${RESET}"
+        read -rp "  Force Reinstall? [y/N]: " force_choice
         echo ""
 
-        if [[ "$rollback_choice" =~ ^[Yy]$ ]]; then
-            uninstall_blue_pill
+        if [[ "$force_choice" =~ ^[Yy]$ ]]; then
+            # Bypass mode: Jumps straight to the download and installation track
+            echo -e "${B_BLUE}=== Forcing Blue Pill Re-installation (16GB Setup) ===${NC}"
+            mkdir -p ~/Blue_Pill_16GB
+            cd ~/Blue_Pill_16GB || return 1
+            rm -f Setup-16GB.sh
+            wget https://raw.githubusercontent.com/Forbidden-Darkness/Bazzite_Toolbox/main/Overclock/Setup-16GB.sh
+            # wget https://raw.githubusercontent.com/NexGen-3D-Printing/SteamMachine/main/Setup-16GB.sh
+            chmod +x Setup-16GB.sh
+            sudo ./Setup-16GB.sh
+            prompt_reboot
         else
-            echo -e "${DIM}Operation canceled. Returning to main menu...${RESET}"
-            sleep 1
+            # Revert to standard removal selection track if they don't want to force
+            echo -e "${BOLD}${MAGENTA}Would you like to completely uninstall the suite and restore defaults instead?${RESET}"
+            read -rp "  Select [y/N]: " rollback_choice
+            echo ""
+
+            if [[ "$rollback_choice" =~ ^[Yy]$ ]]; then
+                uninstall_blue_pill
+            else
+                echo -e "${DIM}Operation canceled. Returning to main menu...${RESET}"
+                sleep 1
+            fi
         fi
     else
-        # Proceed safely with your original script execution download routine
+        # Standard clean execution path if no package presence is detected
         echo -e "${B_BLUE}=== Executing Blue Pill (16GB Setup) ===${NC}"
         mkdir -p ~/Blue_Pill_16GB
         cd ~/Blue_Pill_16GB || return 1
@@ -1149,7 +1169,6 @@ install_blue_pill() {
         prompt_reboot
     fi
 }
-
 # Complete, Deep-Clean Removal Logic for the Red Pill
 uninstall_red_pill() {
     echo -e "${YELLOW}[●] Forcibly stopping and disabling all governor services...${NC}"
@@ -1193,21 +1212,41 @@ uninstall_red_pill() {
 
 # Unified Wrapper handling the Intelligent Toggle Switch selection logic
 install_red_pill() {
-    # TOGGLE FIX: Check for the absolute presence of the real binary file on the system track
+    # Check if the binary is present on the live layer
     if [ -f "/usr/bin/cyan-skillfish-governor-smu" ] || [ -f "/usr/local/bin/cyan-skillfish-governor-smu" ]; then
         echo -e "${YELLOW}[●] Active Red Pill optimization suite detected on this machine.${NC}"
-        echo -e "${BOLD}${MAGENTA}Would you like to completely uninstall the suite and restore defaults?${RESET}"
-        read -rp "  Select [y/N]: " rollback_choice
+        echo -e "If you just ran an uninstall, this package will clear out completely AFTER your next system reboot."
+        echo ""
+        echo -e "${BOLD}${CYAN}Would you like to FORCE a fresh re-installation right now anyway?${RESET}"
+        read -rp "  Force Reinstall? [y/N]: " force_choice
         echo ""
 
-        if [[ "$rollback_choice" =~ ^[Yy]$ ]]; then
-            uninstall_red_pill
+        if [[ "$force_choice" =~ ^[Yy]$ ]]; then
+            # Bypass mode: Jumps straight to the download and installation track
+            echo -e "${RED}=== Forcing Red Pill Re-installation (32GB Setup) ===${NC}"
+            mkdir -p ~/Red_Pill_32GB
+            cd ~/Red_Pill_32GB || return 1
+            rm -f Setup-32GB.sh
+            wget https://raw.githubusercontent.com/Forbidden-Darkness/Bazzite_Toolbox/main/Overclock/Setup-32GB.sh
+            # wget https://raw.githubusercontent.com/NexGen-3D-Printing/SteamMachine/main/Setup-32GB.sh
+            chmod +x Setup-32GB.sh
+            sudo ./Setup-32GB.sh
+            prompt_reboot
         else
-            echo -e "${DIM}Operation canceled. Returning to main menu...${RESET}"
-            sleep 1
+            # Revert to standard removal selection track if they don't want to force
+            echo -e "${BOLD}${MAGENTA}Would you like to completely uninstall the suite and restore defaults instead?${RESET}"
+            read -rp "  Select [y/N]: " rollback_choice
+            echo ""
+
+            if [[ "$rollback_choice" =~ ^[Yy]$ ]]; then
+                uninstall_red_pill
+            else
+                echo -e "${DIM}Operation canceled. Returning to main menu...${RESET}"
+                sleep 1
+            fi
         fi
     else
-        # Proceed safely with your original script execution download routine
+        # Standard clean execution path if no package presence is detected
         echo -e "${RED}=== Executing Red Pill (32GB Setup) ===${NC}"
         mkdir -p ~/Red_Pill_32GB
         cd ~/Red_Pill_32GB || return 1
