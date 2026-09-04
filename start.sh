@@ -2033,7 +2033,7 @@ show_menu() {
                 ;;
             f)
                 clear
-                echo -e "${CYAN}Displaying Service Status...${NC} ${RED}( Press Ctrl-c to continue )${NC}"
+                echo -e "${CYAN}Displaying Service Status...${NC}"
                 sudo systemctl status cyan-skillfish-governor-smu
                 echo ""
                 read -rp "Press [Enter] to return to the main menu..."
