@@ -1084,8 +1084,11 @@ uninstall_blue_pill() {
     sudo systemctl stop cyan-skillfish-governor-smu cyan-skillfish-governor cyan-skillfish-governor-tt oberon-governor 2>/dev/null || true
     sudo systemctl disable cyan-skillfish-governor-smu cyan-skillfish-governor cyan-skillfish-governor-tt oberon-governor 2>/dev/null || true
 
+    echo -e "${YELLOW}[●] Stripping away corrupted system initramfs flags...${NC}"
+    # FIX: Disables the stuck manual initramfs flag inside the script to fix background transaction crashes
+    sudo rpm-ostree initramfs --disable 2>/dev/null || true
+
     echo -e "${YELLOW}[●] Unlayering package packages from the system tree...${NC}"
-    # This schedules the absolute removal of the binary on your next boot
     sudo rpm-ostree remove cyan-skillfish-governor-smu lz4 2>/dev/null || true
     sudo copr disable filippor/bazzite -y 2>/dev/null || true
 
@@ -1107,18 +1110,16 @@ uninstall_blue_pill() {
     echo -e "${YELLOW}[●] Wiping configuration files, systemd symlinks, and caches...${NC}"
     sudo sed -i '\/var\/swap\/swapfile/d' /etc/fstab 2>/dev/null || true
     sudo rm -f /etc/sysctl.d/99-swappiness.conf 2>/dev/null || true
-
-    # Clean out the directory tracking triggers immediately in the active session
     sudo rm -rf /etc/systemd/system/cyan-skillfish-governor* 2>/dev/null || true
     sudo rm -rf /etc/cyan-skillfish-governor-smu 2>/dev/null || true
+
+    sudo rpm-ostree cleanup -m 2>/dev/null || true
     sudo systemctl daemon-reload
 
     echo -e "${GREEN}\n[✓] Safe Removal Scheduled Successfully!${NC}"
     echo -e "${BOLD}${YELLOW}CRITICAL STEP:${RESET} You must reboot your machine now to apply the clean system layer."
-    echo "Once rebooted, the toggle will let you do a completely fresh install."
     echo ""
-    #read -rp "Press [Enter] to return to the toolkit main menu..."
-    prompt_reboot
+    read -rp "Press [Enter] to return to the toolkit main menu..."
 }
 
 # Unified Wrapper handling the Intelligent Toggle Switch selection logic
@@ -1175,6 +1176,10 @@ uninstall_red_pill() {
     sudo systemctl stop cyan-skillfish-governor-smu cyan-skillfish-governor cyan-skillfish-governor-tt oberon-governor 2>/dev/null || true
     sudo systemctl disable cyan-skillfish-governor-smu cyan-skillfish-governor cyan-skillfish-governor-tt oberon-governor 2>/dev/null || true
 
+    echo -e "${YELLOW}[●] Stripping away corrupted system initramfs flags...${NC}"
+    # FIX: Disables the stuck manual initramfs flag inside the script to fix background transaction crashes
+    sudo rpm-ostree initramfs --disable 2>/dev/null || true
+
     echo -e "${YELLOW}[●] Unlayering package packages from the system tree...${NC}"
     sudo rpm-ostree remove cyan-skillfish-governor-smu lz4 2>/dev/null || true
     sudo copr disable filippor/bazzite -y 2>/dev/null || true
@@ -1197,17 +1202,16 @@ uninstall_red_pill() {
     echo -e "${YELLOW}[●] Wiping configuration files, systemd symlinks, and caches...${NC}"
     sudo sed -i '\/var\/swap\/swapfile/d' /etc/fstab 2>/dev/null || true
     sudo rm -f /etc/sysctl.d/99-swappiness.conf 2>/dev/null || true
-
     sudo rm -rf /etc/systemd/system/cyan-skillfish-governor* 2>/dev/null || true
     sudo rm -rf /etc/cyan-skillfish-governor-smu 2>/dev/null || true
+
+    sudo rpm-ostree cleanup -m 2>/dev/null || true
     sudo systemctl daemon-reload
 
     echo -e "${GREEN}\n[✓] Safe Removal Scheduled Successfully!${NC}"
     echo -e "${BOLD}${YELLOW}CRITICAL STEP:${RESET} You must reboot your machine now to apply the clean system layer."
-    echo "Once rebooted, the toggle will let you do a completely fresh install."
     echo ""
-    #read -rp "Press [Enter] to return to the toolkit main menu..."
-    prompt_reboot
+    read -rp "Press [Enter] to return to the toolkit main menu..."
 }
 
 # Unified Wrapper handling the Intelligent Toggle Switch selection logic
