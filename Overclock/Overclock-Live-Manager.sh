@@ -585,7 +585,7 @@ while true; do
     echo -e "      ${BOLD}${MAGENTA}[↵]${RESET} Hit Enter to Secure Safe Exit Overclock-Live-Manager"
     echo ""
     
-    read -p "  Select an option [1a-3b, ↵]: " choice
+    read -p "  Select an option [ 1a-3b, ↵ ]: " choice
 
     case "$choice" in
         1a) run_phase1 ;;
