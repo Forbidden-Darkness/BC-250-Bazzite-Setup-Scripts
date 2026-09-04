@@ -2,7 +2,7 @@
 # ────────────────────────────────────────────────────────────────
 #  Setup-16GB (Bazzite) – NexGen3D v1.5 [Stabilized]
 # ────────────────────────────────────────────────────────────────
-set -e # Terminate safely only if a true catastrophic fault happens
+set -e
 
 echo -e "\033[1;33m[●] Disabling legacy governor services...\033[0m"
 sudo systemctl disable --now cyan-skillfish-governor 2>/dev/null || true
@@ -12,7 +12,9 @@ sudo systemctl disable --now oberon-governor 2>/dev/null || true
 echo -e "\033[1;33m[●] Initializing COPR repository package maps...\033[0m"
 sudo copr enable filippor/bazzite -y
 sudo rpm-ostree cleanup -m 2>/dev/null || true
-sudo rpm-ostree refresh-md
+
+# INSULATION TWEAK: Prevents unrelated mirror failures from breaking your deployment
+sudo rpm-ostree refresh-md || true
 
 echo -e "\033[1;33m[●] Installing Cyan Skillfish Governor SMU binary...\033[0m"
 sudo rpm-ostree install cyan-skillfish-governor-smu
