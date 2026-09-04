@@ -544,7 +544,7 @@ esac
 while true; do
     clear
     echo -e "${DIM}┌──────────────────────────────────────────────────────────────────────────────────┐${RESET}"
-    echo -e "${DIM}│${RESET}            ${BOLD}${MAGENTA}BC-250 CPU OVERCLOCK & Compute Unit Live Manager Setup Tool${RESET}             ${DIM}│${RESET}"
+    echo -e "${DIM}│${RESET}            ${BOLD}${MAGENTA}BC-250 CPU OVERCLOCK & Compute Unit Live Manager Setup Tool${RESET}           ${DIM}│${RESET}"
     echo -e "${DIM}└──────────────────────────────────────────────────────────────────────────────────┘${RESET}"
     echo ""
     echo -e "  ${BOLD}${WHITE}Select an action to perform:${RESET}"
@@ -563,7 +563,7 @@ while true; do
     echo -e "      ${DIM}[3b] Uninstall Compute Unit Live Manager Service Paths${RESET}"
     echo ""
     echo -e "  ${DIM}──────────────────────────────────────────────────────────────────────────────────${RESET}"
-    echo -e "    ${BOLD}${MAGENTA}[0]${RESET} Secure Safe Exit Overclock-Live-Manager"
+    echo -e "      ${BOLD}${MAGENTA}[0]${RESET} Secure Safe Exit Overclock-Live-Manager"
     echo ""
     
     read -p "  Select an option [1a-3b, 0]: " choice
