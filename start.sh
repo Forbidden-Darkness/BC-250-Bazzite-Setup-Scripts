@@ -1750,10 +1750,13 @@ PYEOF
     echo ""
     echo -e "     • ${CYAN}Pin Deployment${RESET} : If the system boots cleanly, pin your known-good parameters via ostree:"
     echo -e "                       ${MAGENTA}rpm-ostree status && sudo ostree admin pin 0${RESET}"
+    echo ""
     echo -e "     • ${YELLOW}Crash Safety${RESET}   : Leave governor services disabled while testing custom target variations."
     echo -e "                       Any hard boot hang will let you safely fall back to stock hardware clocks."
+    echo ""
     echo -e "     • ${RED}Full Reversion${RESET} : Remove override masks completely to return to stock configuration parameters:"
     echo -e "                       ${MAGENTA}sudo rpm-ostree kargs --delete=amdgpu.bc250_cc_write_mode=3${RESET}"
+    echo ""
     echo -e "  ${DIM}─────────────────────────────────────────────────────────────────────${RESET}"
     echo ""
     type_prompt "  Press [Enter] to return to the toolkit main menu... " 0.03
@@ -1791,7 +1794,6 @@ show_menu() {
         echo -e "  ║         ${YELLOW}██╔══██╗██╔══██║ ███╔╝   ███╔╝  ██║   ██║   ██╔══╝     ██║   ██║╚════██║\033[38;2;0;255;0m       ║"
         echo -e "  ║         ${YELLOW}██████╔╝██║  ██║███████╗███████╗██║   ██║   ███████╗   ╚██████╔╝███████║\033[38;2;0;255;0m       ║"
         echo -e "  ║         ${YELLOW}╚══════╝ ╚═╝  ╚═╝╚══════╝╚══════╝╚═╝   ╚═╝   ╚══════╝    ╚═════╝ ╚══════╝\033[38;2;0;255;0m      ║"
-        echo -e "  ║  ${RED}⚠ Warning... Do Not Use This Script With the Latest Release Of Bazzite 44 Deck\033[38;2;0;255;0m        ║"
         echo "  ║                                                                                        ║"
         echo -e "  ║    ${B_BLUE}[●] BLUE Pill\033[38;2;0;255;0m             📟  System Core Telemetry  📟             ${RED}RED Pill [●]\033[38;2;0;255;0m    ║"
         echo "  ║                                                                                        ║"
@@ -1800,14 +1802,14 @@ show_menu() {
         echo -e "${RESET}"
 
         # --- SECTION 1: STORAGE & INITIAL MEMORY CONFIG ---
-        echo -e "  ${BOLD}${YELLOW}This is your last chance. After this, there is no turning back.${RESET}"
+        echo -e "  ${BOLD}${MAGENTA}This is your last chance. After this, there is no turning back.${RESET}"
         echo -e "  ${DIM}─────────────────────────────────────────────────────────────────────${RESET}"
         echo -e "    ${CYAN}[1]${RESET} ${B_BLUE}BLUE  ●${CYAN} 16GB Swapfile Mapping   ${DIM}(Recommended for smaller NVMe setups)${RESET}"
         echo -e "    ${CYAN}[2]${RESET} ${RED}RED   ●${CYAN} 32GB Swapfile Mapping   ${DIM}(Recommended for high-capacity NVMe)${RESET}"
         echo ""
 
         # --- AUTOMATED SETUP OVERVIEW PANEL ---
-        echo -e "  ${BOLD}${WHITE}  ℹ  Automated Deployment Sequence Summary (Options 1 & 2):${RESET}"
+        echo -e "  ${BOLD}${CYAN}  ℹ  Automated Deployment Sequence Summary (Options 1 & 2):${RESET}"
         echo -e "     Executing either option triggers a complete professional optimization suite:"
         echo -e "     • Repository Setup    : Hooks the filippor-bazzite COPR package tracking"
         echo -e "     • Governor Upgrade    : Installs cyan-skillfish-governor-smu (Enhanced Overclock)"
@@ -1820,37 +1822,25 @@ show_menu() {
         echo ""
 
         # --- SECTION 2: COMPONENT SWITCHES & TOOLS ---
-        echo -e "  ${BOLD}${YELLOW}Hardware Unlocks & Core Optimizations${RESET}"
+        echo -e "  ${BOLD}${BLUE}Hardware Unlocks & Core Optimizations${RESET}"
         echo -e "  ${DIM}─────────────────────────────────────────────────────────────────────${RESET}"
-        
-        echo -e "    ${CYAN}[3]${RESET} Toggle BC-250 ACPI Table Fix   ${DIM}(Automated Install / Uninstall Switch)${RESET}"
-        echo -e "    ${CYAN}[4]${RESET} Toggle RAM/VRAM Memory Split   ${DIM}(Dynamic Allocation Switch Profile)${RESET}"
-        
-        # 🧬 INJECT THIS NEW VISUAL MENU SELECTION ENTRY DIRECTLY HERE:
-        echo -e "    ${CYAN}[x]${RESET} Toggle Xbox Wireless Adapter   ${DIM}(Automated Xone Driver Installer)${RESET}"
-        
-        echo -e "    ${CYAN}[5]${RESET} Launch BC-250 Overclock Manager ${DIM}(Live SMU adjustment utility)${RESET}"
-        echo -e "    ${CYAN}[6]${RESET} Launch Wake-on-LAN Configuration ${DIM}(Interface port selector tool)${RESET}"
-
-
-        echo -e "    ${CYAN}[7]${RESET} Upgrade Governor Binary Track  ${DIM}(Target: v0.4.12 via COPR repo)${RESET}"
-        echo -e "    ${BOLD}${GREEN}[h] Interrogate Silicon CU Map Matrix ${DIM}(Analyze Harvest Override Variants)${RESET}"
-
-        # 🎨 ADD THIS VISUAL OPTION LINE DIRECTLY HERE TO ALIGN YOUR FRAME MARGINS:
-        echo -e "    ${BOLD}${MAGENTA}[o] Launch Interactive HTML Matrix Dashboard ${DIM}(Default Web Browser)${RESET}"
+        echo -e "    ${CYAN}[3]${RESET} ACPI Table Fix  ${DIM}(Install/Uni)${RESET}    ${CYAN}[4]${RESET} RAM/VRAM Split  ${DIM}(Dynamic Split)${RESET}"
+        echo -e "    ${CYAN}[x]${RESET} Xbox Adapter    ${DIM}(Xone Driver)${RESET}    ${CYAN}[5]${RESET} Overclock Mgr   ${DIM}(Live SMU tool)${RESET}"
+        echo -e "    ${CYAN}[6]${RESET} Wake-on-LAN     ${DIM}(Port Selector)${RESET}  ${CYAN}[7]${RESET} Upgrade Gov Track ${DIM}(v0.4.12 COPR)${RESET}"
+        echo -e "    ${MAGENTA}[h] CU Map Matrix    ${DIM}(Harvest Map)${RESET}   ${MAGENTA}[o] HTML Dashboard ${DIM}(Web Browser)${RESET}"
         echo ""
 
         # --- SECTION 3: SMU GOVERNOR LAYER CONTROLS ---
-        echo -e "  ${BOLD}${YELLOW}Cyan Skillfish Governor Daemon Service Management${RESET}"
+        echo -e "  ${BOLD}${BLUE}Cyan Skillfish Governor Daemon Service Management${RESET}"
         echo -e "  ${DIM}─────────────────────────────────────────────────────────────────────${RESET}"
-        echo -e "    ${GREEN}[a] Runtime Start${RESET}  ${DIM}(Temporary Session)${RESET}  ${YELLOW}[d] Runtime Stop${RESET}  ${DIM}(Kill Process)${RESET}"
-        echo -e "    ${GREEN}[b] Persistent Boot Enable${RESET} ${DIM}(--now)${RESET}      ${RED}[e] Persistent Disable${RESET} ${DIM}(--now)${RESET}"
-        echo -e "    ${CYAN}[c] Soft Restart Service Layer${RESET}          ${CYAN}[f] Stream Live Status${RESET} ${DIM}(Ctrl+C to Exit)${RESET}"
-        echo -e "    ${BLUE}[g] Interrogate Active Driver Version${RESET}   ${B_BLUE}[s] Print Core System Status${RESET}"
+        echo -e "    ${CYAN}[a] Runtime Start${RESET}  ${DIM}(Temporary Session)${RESET}  ${YELLOW}[d] Runtime Stop${RESET}  ${DIM}(Kill Process)${RESET}"
+        echo -e "    ${CYAN}[b] Persistent Boot Enable${RESET} ${DIM}(--now)${RESET}      ${YELLOW}[e] Persistent Disable${RESET} ${DIM}(--now)${RESET}"
+        echo -e "    ${BLUE}[c] Soft Restart Service Layer${RESET}          ${BLUE}[f] Stream Live Status${RESET} ${DIM}(Ctrl+C to Exit)${RESET}"
+        echo -e "    ${MAGENTA}[g] Interrogate Active Driver Version${RESET}   ${MAGENTA}[s] Print Core System Status${RESET}"
         echo ""
 
         # --- GLOBAL OPERATIONS ---
-        echo -e "    ${BLUE}[r] Reload Menu Interface${RESET}"
+        echo -e "    ${CYAN}[r] Reload Menu Interface${RESET}"
         echo -e "    ${BOLD}${RED}[0] Secure Safe Exit${RESET}"
         echo ""
 
@@ -1858,7 +1848,7 @@ show_menu() {
         echo -e "  ${BOLD}${RED}  ${ICON_WARN}  WARNING: OVERCLOCKING AND UNDERVOLTING CAN DAMAGE SILICON TARGETS!${RESET}"
         echo -e "  ${RED}            PROCEED ENTIRELY AT YOUR OWN RISK AND VERIFY SYSTEM COOLING.${RESET}"
         echo -e "  ${DIM}─────────────────────────────────────────────────────────────────────${RESET}"
-        echo -e "  ${YELLOW}  ℹ  Configuration Path Notice:${RESET}"
+        echo -e "  ${CYAN}  ℹ  Configuration Path Notice:${RESET}"
         echo -e "     Ensure adjustments are populated inside the config container path before launch:"
         echo -e "     ${WHITE}\"/etc/cyan-skillfish-governor-smu/config.toml\"${RESET}"
         echo -e "  ${DIM}─────────────────────────────────────────────────────────────────────${RESET}"
