@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ────────────────────────────────────────────────────────────────
-#  Setup-16GB (Bazzite) – NexGen3D v1.5 [Atomic Fix]
+#  Setup-16GB (Bazzite) – NexGen3D v1.5 [No-Triggers Fast-Track]
 # ────────────────────────────────────────────────────────────────
 set -e
 
@@ -14,18 +14,18 @@ sudo copr enable filippor/bazzite -y
 sudo rpm-ostree cleanup -m 2>/dev/null || true
 sudo rpm-ostree refresh-md || true
 
-echo -e "\033[1;33m[●] Batched Core Deployment Layering (Avoids rpmdb conflicts)...\033[0m"
-# Check if package is layered; if missing, install it and configure kargs in one solid operation
+echo -e "\033[1;33m[●] Executing Defensive Atomic Layering (Bypassing Triggers)...\033[0m"
 if ! rpm-ostree status | grep -q "cyan-skillfish-governor-smu"; then
-    sudo rpm-ostree install cyan-skillfish-governor-smu lz4 \
+    # --no-triggers completely bypasses the broken ibus sandbox loop crashing your install
+    sudo rpm-ostree install cyan-skillfish-governor-smu lz4 --no-triggers \
         --karg-append=mitigations=off \
         --karg-append=zswap.enabled=1 \
         --karg-append=zswap.max_pool_percent=25 \
         --karg-append=zswap.compressor=lz4 \
         --karg-append=systemd.zram=0
 else
-    echo -e "\033[1;32m[✓] Package already layered. Applying atomic kargs configurations safely...\033[0m"
-    sudo rpm-ostree kargs \
+    echo -e "\033[1;32m[✓] Package already layered. Forcing atomic kargs configurations safely...\033[0m"
+    sudo rpm-ostree kargs --no-triggers \
         --append-if-missing=mitigations=off \
         --append-if-missing=zswap.enabled=1 \
         --append-if-missing=zswap.max_pool_percent=25 \
