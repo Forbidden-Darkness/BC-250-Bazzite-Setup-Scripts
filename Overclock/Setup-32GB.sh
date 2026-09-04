@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ────────────────────────────────────────────────────────────────
-#  Setup-32GB (Bazzite) – NexGen3D v1.5 [Safe Version]
+#  Setup-32GB (Bazzite) – NexGen3D v1.5 [Stabilized & Repaired]
 # ────────────────────────────────────────────────────────────────
 set -e
 
@@ -14,8 +14,15 @@ sudo copr enable filippor/bazzite -y
 sudo rpm-ostree cleanup -m 2>/dev/null || true
 sudo rpm-ostree refresh-md || true
 
-echo -e "\033[1;33m[●] Deploying Cyan Skillfish Governor and Toolchain...\033[0m"
-sudo rpm-ostree install cyan-skillfish-governor-smu lz4 2>/dev/null || true
+echo -e "\033[1;33m[●] Checking for pre-existing package layer flags...\033[0m"
+# REINSTALL FIX: If the package is stuck in layered space, uninstall it first to guarantee file re-extraction
+if rpm-ostree status | grep -q "cyan-skillfish-governor-smu"; then
+    echo -e "\033[1;33m[●] Stuck package entry detected. Preparing system tree for override...\033[0m"
+    sudo rpm-ostree remove cyan-skillfish-governor-smu 2>/dev/null || true
+fi
+
+echo -e "\033[1;33m[●] Deploying Cyan Skillfish Governor and Compression Toolchain...\033[0m"
+sudo rpm-ostree install cyan-skillfish-governor-smu lz4
 
 echo -e "\033[1;33m[●] Adjusting atomic kernel parameters (Mitigations & ZSWAP)...\033[0m"
 local_kargs=(
@@ -48,6 +55,5 @@ echo 'vm.swappiness = 180' | sudo tee /etc/sysctl.d/99-swappiness.conf >/dev/nul
 echo -e "\033[1;32m"
 echo "Setup Complete"
 echo "Please reboot your system using the following command: systemctl reboot"
-echo "After the system has rebooted, if you wish to test GPU overclocking, then run the following command in the terminal: systemctl start cyan-skillfish-governor-smu"
-echo "CAUTION -> Overclocking the GPU can cause increased system heat and system instability"
+echo "After the system has rebooted, the /etc/cyan-skillfish-governor-smu configuration files will be active."
 echo -e "\033[0m"
