@@ -1123,8 +1123,8 @@ uninstall_blue_pill() {
 
 # Unified Wrapper handling the Intelligent Toggle Switch selection logic
 install_blue_pill() {
-    # TOGGLE FIX: Check if the systemd service file or active daemon is present, not just the directory
-    if systemctl list-unit-files | grep -q "cyan-skillfish-governor-smu" || [ -f "/etc/systemd/system/multi-user.wants/cyan-skillfish-governor-smu.service" ]; then
+    # TOGGLE FIX: Check for the absolute presence of the real binary file on the system track
+    if [ -f "/usr/bin/cyan-skillfish-governor-smu" ] || [ -f "/usr/local/bin/cyan-skillfish-governor-smu" ]; then
         echo -e "${YELLOW}[●] Active Blue Pill optimization suite detected on this machine.${NC}"
         echo -e "${BOLD}${MAGENTA}Would you like to completely uninstall the suite and restore defaults?${RESET}"
         read -rp "  Select [y/N]: " rollback_choice
@@ -1193,8 +1193,8 @@ uninstall_red_pill() {
 
 # Unified Wrapper handling the Intelligent Toggle Switch selection logic
 install_red_pill() {
-    # TOGGLE FIX: Check if the systemd service file or active daemon is present, not just the directory
-    if systemctl list-unit-files | grep -q "cyan-skillfish-governor-smu" || [ -f "/etc/systemd/system/multi-user.wants/cyan-skillfish-governor-smu.service" ]; then
+    # TOGGLE FIX: Check for the absolute presence of the real binary file on the system track
+    if [ -f "/usr/bin/cyan-skillfish-governor-smu" ] || [ -f "/usr/local/bin/cyan-skillfish-governor-smu" ]; then
         echo -e "${YELLOW}[●] Active Red Pill optimization suite detected on this machine.${NC}"
         echo -e "${BOLD}${MAGENTA}Would you like to completely uninstall the suite and restore defaults?${RESET}"
         read -rp "  Select [y/N]: " rollback_choice
