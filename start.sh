@@ -1124,7 +1124,8 @@ uninstall_blue_pill() {
     echo "The system tree has been completely cleaned and restored to stock."
     echo "Please reboot your system now: systemctl reboot"
     echo ""
-    read -rp "Press [Enter] to return to the toolkit main menu..."
+    #read -rp "Press [Enter] to return to the toolkit main menu..."
+    prompt_reboot
 }
 
 # Unified Wrapper handling the Intelligent Toggle Switch selection logic
@@ -1199,7 +1200,8 @@ uninstall_red_pill() {
     echo "The system tree has been completely cleaned and restored to stock."
     echo "Please reboot your system now: systemctl reboot"
     echo ""
-    read -rp "Press [Enter] to return to the toolkit main menu..."
+    #read -rp "Press [Enter] to return to the toolkit main menu..."
+    prompt_reboot
 }
 
 # Unified Wrapper handling the Intelligent Toggle Switch selection logic
