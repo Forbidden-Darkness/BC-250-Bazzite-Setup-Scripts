@@ -1080,15 +1080,12 @@ prompt_reboot() {
 # =====================================================================
 # Complete, Deep-Clean Removal Logic for the Blue Pill
 uninstall_blue_pill() {
-    echo -e "${YELLOW}[●] Forcibly stopping and masking all governor services...${NC}"
-    # Stop them immediately in active memory
+    echo -e "${YELLOW}[●] Forcibly stopping and disabling all governor services...${NC}"
     sudo systemctl stop cyan-skillfish-governor-smu cyan-skillfish-governor cyan-skillfish-governor-tt oberon-governor 2>/dev/null || true
-    
-    # Mask them so systemd can NEVER trigger them under any dependency profile
-    sudo systemctl mask cyan-skillfish-governor-smu cyan-skillfish-governor cyan-skillfish-governor-tt oberon-governor 2>/dev/null || true
     sudo systemctl disable cyan-skillfish-governor-smu cyan-skillfish-governor cyan-skillfish-governor-tt oberon-governor 2>/dev/null || true
 
-    echo -e "${YELLOW}[●] Removing package layers & cleaning transaction maps...${NC}"
+    echo -e "${YELLOW}[●] Unlayering package packages from the system tree...${NC}"
+    # This schedules the absolute removal of the binary on your next boot
     sudo rpm-ostree remove cyan-skillfish-governor-smu lz4 2>/dev/null || true
     sudo copr disable filippor/bazzite -y 2>/dev/null || true
 
@@ -1107,22 +1104,18 @@ uninstall_blue_pill() {
     sudo rm -f /var/swap/swapfile 2>/dev/null || true
     sudo btrfs subvolume delete /var/swap 2>/dev/null || true
 
-    echo -e "${YELLOW}[●] Cleaning up system mount rules & sysctl configuration...${NC}"
+    echo -e "${YELLOW}[●] Wiping configuration files, systemd symlinks, and caches...${NC}"
     sudo sed -i '\/var\/swap\/swapfile/d' /etc/fstab 2>/dev/null || true
     sudo rm -f /etc/sysctl.d/99-swappiness.conf 2>/dev/null || true
-    
-    # Wipe leftover persistent systemd configurations or multi-user presets
+
+    # Clean out the directory tracking triggers immediately in the active session
     sudo rm -rf /etc/systemd/system/cyan-skillfish-governor* 2>/dev/null || true
     sudo rm -rf /etc/cyan-skillfish-governor-smu 2>/dev/null || true
     sudo systemctl daemon-reload
 
-    echo -e "${YELLOW}[●] Forcing clean atomic system rollback reset...${NC}"
-    sudo rpm-ostree rollback 2>/dev/null || true
-    sudo rpm-ostree cleanup -m 2>/dev/null || true
-
-    echo -e "${GREEN}\n[✓] Deep Uninstall Complete!${NC}"
-    echo "The system tree has been completely cleaned and restored to stock."
-    echo "Please reboot your system now: systemctl reboot"
+    echo -e "${GREEN}\n[✓] Safe Removal Scheduled Successfully!${NC}"
+    echo -e "${BOLD}${YELLOW}CRITICAL STEP:${RESET} You must reboot your machine now to apply the clean system layer."
+    echo "Once rebooted, the toggle will let you do a completely fresh install."
     echo ""
     #read -rp "Press [Enter] to return to the toolkit main menu..."
     prompt_reboot
@@ -1130,13 +1123,13 @@ uninstall_blue_pill() {
 
 # Unified Wrapper handling the Intelligent Toggle Switch selection logic
 install_blue_pill() {
-    # Check if the optimization package directory exists on disk to dictate state
-    if [ -d "/etc/cyan-skillfish-governor-smu" ]; then
-        echo -e "${YELLOW}[●] Blue Pill optimization detected on this machine.${NC}"
-        echo -e "${BOLD}${MAGENTA}Would you like to uninstall the suite and restore defaults?${RESET}"
+    # TOGGLE FIX: Check if the systemd service file or active daemon is present, not just the directory
+    if systemctl list-unit-files | grep -q "cyan-skillfish-governor-smu" || [ -f "/etc/systemd/system/multi-user.wants/cyan-skillfish-governor-smu.service" ]; then
+        echo -e "${YELLOW}[●] Active Blue Pill optimization suite detected on this machine.${NC}"
+        echo -e "${BOLD}${MAGENTA}Would you like to completely uninstall the suite and restore defaults?${RESET}"
         read -rp "  Select [y/N]: " rollback_choice
         echo ""
-        
+
         if [[ "$rollback_choice" =~ ^[Yy]$ ]]; then
             uninstall_blue_pill
         else
@@ -1144,7 +1137,7 @@ install_blue_pill() {
             sleep 1
         fi
     else
-        # Fall back to your original script execution download routine if clean target
+        # Proceed safely with your original script execution download routine
         echo -e "${B_BLUE}=== Executing Blue Pill (16GB Setup) ===${NC}"
         mkdir -p ~/Blue_Pill_16GB
         cd ~/Blue_Pill_16GB || return 1
@@ -1159,12 +1152,11 @@ install_blue_pill() {
 
 # Complete, Deep-Clean Removal Logic for the Red Pill
 uninstall_red_pill() {
-    echo -e "${YELLOW}[●] Forcibly stopping and masking all governor services...${NC}"
+    echo -e "${YELLOW}[●] Forcibly stopping and disabling all governor services...${NC}"
     sudo systemctl stop cyan-skillfish-governor-smu cyan-skillfish-governor cyan-skillfish-governor-tt oberon-governor 2>/dev/null || true
-    sudo systemctl mask cyan-skillfish-governor-smu cyan-skillfish-governor cyan-skillfish-governor-tt oberon-governor 2>/dev/null || true
     sudo systemctl disable cyan-skillfish-governor-smu cyan-skillfish-governor cyan-skillfish-governor-tt oberon-governor 2>/dev/null || true
 
-    echo -e "${YELLOW}[●] Removing package layers & cleaning transaction maps...${NC}"
+    echo -e "${YELLOW}[●] Unlayering package packages from the system tree...${NC}"
     sudo rpm-ostree remove cyan-skillfish-governor-smu lz4 2>/dev/null || true
     sudo copr disable filippor/bazzite -y 2>/dev/null || true
 
@@ -1183,22 +1175,17 @@ uninstall_red_pill() {
     sudo rm -f /var/swap/swapfile 2>/dev/null || true
     sudo btrfs subvolume delete /var/swap 2>/dev/null || true
 
-    echo -e "${YELLOW}[●] Cleaning up system mount rules & sysctl configuration...${NC}"
+    echo -e "${YELLOW}[●] Wiping configuration files, systemd symlinks, and caches...${NC}"
     sudo sed -i '\/var\/swap\/swapfile/d' /etc/fstab 2>/dev/null || true
     sudo rm -f /etc/sysctl.d/99-swappiness.conf 2>/dev/null || true
-    
-    # Wipe leftover persistent systemd configurations or multi-user presets
+
     sudo rm -rf /etc/systemd/system/cyan-skillfish-governor* 2>/dev/null || true
     sudo rm -rf /etc/cyan-skillfish-governor-smu 2>/dev/null || true
     sudo systemctl daemon-reload
 
-    echo -e "${YELLOW}[●] Forcing clean atomic system rollback reset...${NC}"
-    sudo rpm-ostree rollback 2>/dev/null || true
-    sudo rpm-ostree cleanup -m 2>/dev/null || true
-
-    echo -e "${GREEN}\n[✓] Deep Uninstall Complete!${NC}"
-    echo "The system tree has been completely cleaned and restored to stock."
-    echo "Please reboot your system now: systemctl reboot"
+    echo -e "${GREEN}\n[✓] Safe Removal Scheduled Successfully!${NC}"
+    echo -e "${BOLD}${YELLOW}CRITICAL STEP:${RESET} You must reboot your machine now to apply the clean system layer."
+    echo "Once rebooted, the toggle will let you do a completely fresh install."
     echo ""
     #read -rp "Press [Enter] to return to the toolkit main menu..."
     prompt_reboot
@@ -1206,13 +1193,13 @@ uninstall_red_pill() {
 
 # Unified Wrapper handling the Intelligent Toggle Switch selection logic
 install_red_pill() {
-    # Check if the optimization package directory exists on disk to dictate state
-    if [ -d "/etc/cyan-skillfish-governor-smu" ]; then
-        echo -e "${YELLOW}[●] Red Pill optimization detected on this machine.${NC}"
-        echo -e "${BOLD}${MAGENTA}Would you like to uninstall the suite and restore defaults?${RESET}"
+    # TOGGLE FIX: Check if the systemd service file or active daemon is present, not just the directory
+    if systemctl list-unit-files | grep -q "cyan-skillfish-governor-smu" || [ -f "/etc/systemd/system/multi-user.wants/cyan-skillfish-governor-smu.service" ]; then
+        echo -e "${YELLOW}[●] Active Red Pill optimization suite detected on this machine.${NC}"
+        echo -e "${BOLD}${MAGENTA}Would you like to completely uninstall the suite and restore defaults?${RESET}"
         read -rp "  Select [y/N]: " rollback_choice
         echo ""
-        
+
         if [[ "$rollback_choice" =~ ^[Yy]$ ]]; then
             uninstall_red_pill
         else
@@ -1220,7 +1207,7 @@ install_red_pill() {
             sleep 1
         fi
     else
-        # Fall back to your original script execution download routine if clean target
+        # Proceed safely with your original script execution download routine
         echo -e "${RED}=== Executing Red Pill (32GB Setup) ===${NC}"
         mkdir -p ~/Red_Pill_32GB
         cd ~/Red_Pill_32GB || return 1
