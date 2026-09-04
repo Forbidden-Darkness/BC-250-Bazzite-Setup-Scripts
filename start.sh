@@ -1103,11 +1103,14 @@ install_blue_pill() {
     echo -e "${YELLOW}[●] Building BTRFS 16GB disk swapfile infrastructure...${NC}"
     sudo swapoff /var/swap/swapfile 2>/dev/null || true
     sudo rm -f /var/swap/swapfile 2>/dev/null || true
-    sudo btrfs subvolume delete /var/swap 2>/dev/null || true
     
+    # Insulate BTRFS subvolume alterations against pre-existing paths
+    sudo btrfs subvolume delete /var/swap 2>/dev/null || true
     sudo btrfs subvolume create /var/swap || { echo -e "${RED}Failed to create BTRFS subvolume.${NC}"; return 1; }
+    
+    # Insulate SELinux mapping against pre-existing definitions to prevent silent exits
     sudo semanage fcontext -a -t var_t /var/swap 2>/dev/null || true
-    sudo restorecon /var/swap 2>/dev/null || true
+    sudo restorecon -R /var/swap 2>/dev/null || true
     
     sudo btrfs filesystem mkswapfile --size 16G /var/swap/swapfile || { echo -e "${RED}Failed to provision 16G swapfile.${NC}"; return 1; }
     sudo semanage fcontext -a -t swapfile_t /var/swap/swapfile 2>/dev/null || true
@@ -1150,11 +1153,14 @@ install_red_pill() {
     echo -e "${YELLOW}[●] Building BTRFS 32GB disk swapfile infrastructure...${NC}"
     sudo swapoff /var/swap/swapfile 2>/dev/null || true
     sudo rm -f /var/swap/swapfile 2>/dev/null || true
-    sudo btrfs subvolume delete /var/swap 2>/dev/null || true
     
+    # Insulate BTRFS subvolume alterations against pre-existing paths
+    sudo btrfs subvolume delete /var/swap 2>/dev/null || true
     sudo btrfs subvolume create /var/swap || { echo -e "${RED}Failed to create BTRFS subvolume.${NC}"; return 1; }
+    
+    # Insulate SELinux mapping against pre-existing definitions to prevent silent exits
     sudo semanage fcontext -a -t var_t /var/swap 2>/dev/null || true
-    sudo restorecon /var/swap 2>/dev/null || true
+    sudo restorecon -R /var/swap 2>/dev/null || true
     
     sudo btrfs filesystem mkswapfile --size 32G /var/swap/swapfile || { echo -e "${RED}Failed to provision 32G swapfile.${NC}"; return 1; }
     sudo semanage fcontext -a -t swapfile_t /var/swap/swapfile 2>/dev/null || true
