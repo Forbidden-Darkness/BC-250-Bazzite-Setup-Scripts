@@ -1078,30 +1078,132 @@ prompt_reboot() {
 # =====================================================================
 # RESTORED PERFORMANCE PIPELINES (OPTIONS 1-4 EXPLICIT ARRAYS)
 # =====================================================================
-# Function to handle Blue Pill installation
-install_blue_pill() {
-    echo -e "${B_BLUE}=== Executing Blue Pill (16GB Setup) ===${NC}"
-    mkdir -p ~/Blue_Pill_16GB
-    cd ~/Blue_Pill_16GB || return 1
-    rm -f Setup-16GB.sh
-    wget https://raw.githubusercontent.com/Forbidden-Darkness/Bazzite_Toolbox/main/Overclock/Setup-16GB.sh
-    # wget https://raw.githubusercontent.com/NexGen-3D-Printing/SteamMachine/main/Setup-16GB.sh
-    chmod +x Setup-16GB.sh
-    sudo ./Setup-16GB.sh
-    prompt_reboot
+# Function to cleanly remove the optimization suite if chosen
+uninstall_blue_pill() {
+    echo -e "${YELLOW}[●] Beginning safe removal sequence...${NC}"
+    
+    echo -e "${YELLOW}[●] Removing package layers...${NC}"
+    sudo rpm-ostree remove cyan-skillfish-governor-smu lz4 2>/dev/null || true
+
+    echo -e "${YELLOW}[●] Disabling COPR repository track...${NC}"
+    sudo copr disable filippor/bazzite -y 2>/dev/null || true
+
+    echo -e "${YELLOW}[●] Restoring factory kernel arguments (kargs)...${NC}"
+    local kargs_remove=(
+        --delete=mitigations=off
+        --delete=zswap.enabled=1
+        --delete=zswap.max_pool_percent=25
+        --delete=zswap.compressor=lz4
+        --delete=systemd.zram=0
+    )
+    sudo rpm-ostree kargs "${kargs_remove[@]}" || true
+
+    echo -e "${YELLOW}[●] Tearing down BTRFS disk swapfile subvolume...${NC}"
+    sudo swapoff /var/swap/swapfile 2>/dev/null || true
+    sudo rm -f /var/swap/swapfile 2>/dev/null || true
+    sudo btrfs subvolume delete /var/swap 2>/dev/null || true
+
+    echo -e "${YELLOW}[●] Cleaning up system mount rules & sysctl configuration...${NC}"
+    sudo sed -i '\/var\/swap\/swapfile/d' /etc/fstab 2>/dev/null || true
+    sudo rm -f /etc/sysctl.d/99-swappiness.conf 2>/dev/null || true
+
+    echo -e "${GREEN}\n[✓] Blue Pill Rollback Complete!${NC}"
+    echo "Please reboot your system to apply factory configurations: systemctl reboot"
+    echo ""
+    read -rp "Press [Enter] to return to the toolkit main menu..."
 }
 
-# Function to handle Red Pill installation
+# Unified Wrapper handling the Intelligent Toggle Switch selection logic
+install_blue_pill() {
+    # Check if the optimization package directory exists on disk to dictate state
+    if [ -d "/etc/cyan-skillfish-governor-smu" ]; then
+        echo -e "${YELLOW}[●] Blue Pill optimization detected on this machine.${NC}"
+        echo -e "${BOLD}${MAGENTA}Would you like to uninstall the suite and restore defaults?${RESET}"
+        read -rp "  Select [y/N]: " rollback_choice
+        echo ""
+        
+        if [[ "$rollback_choice" =~ ^[Yy]$ ]]; then
+            uninstall_blue_pill
+        else
+            echo -e "${DIM}Operation canceled. Returning to main menu...${RESET}"
+            sleep 1
+        fi
+    else
+        # Fall back to your original script execution download routine if clean target
+        echo -e "${B_BLUE}=== Executing Blue Pill (16GB Setup) ===${NC}"
+        mkdir -p ~/Blue_Pill_16GB
+        cd ~/Blue_Pill_16GB || return 1
+        rm -f Setup-16GB.sh
+        wget https://raw.githubusercontent.com/Forbidden-Darkness/Bazzite_Toolbox/main/Overclock/Setup-16GB.sh
+        # wget https://raw.githubusercontent.com/NexGen-3D-Printing/SteamMachine/main/Setup-16GB.sh
+        chmod +x Setup-16GB.sh
+        sudo ./Setup-16GB.sh
+        prompt_reboot
+    fi
+}
+
+# Function to cleanly remove the optimization suite if chosen
+uninstall_red_pill() {
+    echo -e "${YELLOW}[●] Beginning safe removal sequence...${NC}"
+    
+    echo -e "${YELLOW}[●] Removing package layers...${NC}"
+    sudo rpm-ostree remove cyan-skillfish-governor-smu lz4 2>/dev/null || true
+
+    echo -e "${YELLOW}[●] Disabling COPR repository track...${NC}"
+    sudo copr disable filippor/bazzite -y 2>/dev/null || true
+
+    echo -e "${YELLOW}[●] Restoring factory kernel arguments (kargs)...${NC}"
+    local kargs_remove=(
+        --delete=mitigations=off
+        --delete=zswap.enabled=1
+        --delete=zswap.max_pool_percent=25
+        --delete=zswap.compressor=lz4
+        --delete=systemd.zram=0
+    )
+    sudo rpm-ostree kargs "${kargs_remove[@]}" || true
+
+    echo -e "${YELLOW}[●] Tearing down BTRFS disk swapfile subvolume...${NC}"
+    sudo swapoff /var/swap/swapfile 2>/dev/null || true
+    sudo rm -f /var/swap/swapfile 2>/dev/null || true
+    sudo btrfs subvolume delete /var/swap 2>/dev/null || true
+
+    echo -e "${YELLOW}[●] Cleaning up system mount rules & sysctl configuration...${NC}"
+    sudo sed -i '\/var\/swap\/swapfile/d' /etc/fstab 2>/dev/null || true
+    sudo rm -f /etc/sysctl.d/99-swappiness.conf 2>/dev/null || true
+
+    echo -e "${GREEN}\n[✓] Red Pill Rollback Complete!${NC}"
+    echo "Please reboot your system to apply factory configurations: systemctl reboot"
+    echo ""
+    read -rp "Press [Enter] to return to the toolkit main menu..."
+}
+
+# Unified Wrapper handling the Intelligent Toggle Switch selection logic
 install_red_pill() {
-    echo -e "${B_RED}=== Executing Red Pill (32GB Setup) ===${NC}"
-    mkdir -p ~/Red_Pill_32GB
-    cd ~/Red_Pill_32GB || return 1
-    rm -f Setup-32GB.sh
-    wget https://raw.githubusercontent.com/Forbidden-Darkness/Bazzite_Toolbox/main/Overclock/Setup-32GB.sh
-    # wget https://raw.githubusercontent.com/NexGen-3D-Printing/SteamMachine/main/Setup-32GB.sh
-    chmod +x Setup-32GB.sh
-    sudo ./Setup-32GB.sh
-    prompt_reboot
+    # Check if the optimization package directory exists on disk to dictate state
+    if [ -d "/etc/cyan-skillfish-governor-smu" ]; then
+        echo -e "${YELLOW}[●] Red Pill optimization detected on this machine.${NC}"
+        echo -e "${BOLD}${MAGENTA}Would you like to uninstall the suite and restore defaults?${RESET}"
+        read -rp "  Select [y/N]: " rollback_choice
+        echo ""
+        
+        if [[ "$rollback_choice" =~ ^[Yy]$ ]]; then
+            uninstall_red_pill
+        else
+            echo -e "${DIM}Operation canceled. Returning to main menu...${RESET}"
+            sleep 1
+        fi
+    else
+        # Fall back to your original script execution download routine if clean target
+        echo -e "${RED}=== Executing Red Pill (32GB Setup) ===${NC}"
+        mkdir -p ~/Red_Pill_32GB
+        cd ~/Red_Pill_32GB || return 1
+        rm -f Setup-32GB.sh
+        wget https://raw.githubusercontent.com/Forbidden-Darkness/Bazzite_Toolbox/main/Overclock/Setup-32GB.sh
+        # wget https://raw.githubusercontent.com/NexGen-3D-Printing/SteamMachine/main/Setup-32GB.sh
+        chmod +x Setup-32GB.sh
+        sudo ./Setup-32GB.sh
+        prompt_reboot
+    fi
 }
 
 # Function to Launch Overclock
