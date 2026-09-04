@@ -2040,7 +2040,7 @@ show_menu() {
                 ;;
             g)
                 clear
-                echo -e "${CYAN}Displaying Cyan Skillfish Governor SMU Version...${NC} ${RED}( Press Ctrl-c to continue )${NC}"
+                echo -e "${CYAN}Displaying Cyan Skillfish Governor SMU Version...${NC}"
                 echo ""
                 sudo cyan-skillfish-governor-smu --version
                 echo ""
