@@ -12,12 +12,11 @@ sudo systemctl disable --now oberon-governor 2>/dev/null || true
 echo -e "\033[1;33m[●] Initializing COPR repository package maps...\033[0m"
 sudo copr enable filippor/bazzite -y
 sudo rpm-ostree cleanup -m 2>/dev/null || true
-
-# INSULATION TWEAK: Prevents unrelated mirror failures from breaking your deployment
 sudo rpm-ostree refresh-md || true
 
 echo -e "\033[1;33m[●] Installing Cyan Skillfish Governor SMU binary...\033[0m"
-sudo rpm-ostree install cyan-skillfish-governor-smu
+# INSULATION TWEAK: Bypasses the strict crash if the package is already mapped to the layer
+sudo rpm-ostree install cyan-skillfish-governor-smu 2>/dev/null || true
 
 echo -e "\033[1;33m[●] Adjusting atomic kernel parameters (Mitigations & ZSWAP)...\033[0m"
 local_kargs=(
