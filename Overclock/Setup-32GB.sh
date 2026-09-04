@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ────────────────────────────────────────────────────────────────
-#  Setup-32GB (Bazzite) – NexGen3D v1.5 [Bazzite 44 Repaired]
+#  Setup-32GB (Bazzite) – NexGen3D v1.5 [Defensive Package Fix]
 # ────────────────────────────────────────────────────────────────
 set -e
 
@@ -15,7 +15,15 @@ sudo rpm-ostree cleanup -m 2>/dev/null || true
 sudo rpm-ostree refresh-md || true
 
 echo -e "\033[1;33m[●] Deploying Cyan Skillfish Governor Toolchain...\033[0m"
-sudo rpm-ostree install cyan-skillfish-governor-smu lz4
+# Safety Check: Only install if not already requested to prevent rpm-ostree fatal exit
+if ! rpm-ostree status | grep -q "cyan-skillfish-governor-smu"; then
+    sudo rpm-ostree install cyan-skillfish-governor-smu lz4
+else
+    echo -e "\033[1;32m[✓] cyan-skillfish-governor-smu already requested. Ensuring lz4 is present...\033[0m"
+    if ! rpm-ostree status | grep -q "lz4"; then
+        sudo rpm-ostree install lz4 || true
+    fi
+fi
 
 echo -e "\033[1;33m[●] Adjusting atomic kernel parameters (Mitigations & ZSWAP)...\033[0m"
 sudo rpm-ostree kargs --append-if-missing=mitigations=off || true
