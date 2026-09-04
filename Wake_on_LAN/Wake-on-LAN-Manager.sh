@@ -53,18 +53,23 @@ ask_desktop_shortcut() {
         return 0
     fi
 
-    echo -e "${BIYellow}==================================================${NC}"
-    echo -e "${BIYellow}         DESKTOP SHORTCUT CONFIGURATION           ${NC}"
-    echo -e "${BIYellow}==================================================${NC}"
-    echo -e "Would you like to add a shortcut to your desktop?"
+        # Clean Geometric Heading Panel
+    echo -e "  ${CYAN}╔═══════════════════════════════════════════════════════════════════╗${NC}"
+    echo -e "  ${CYAN}║                  DESKTOP SHORTCUT CONFIGURATION                   ║${NC}"
+    echo -e "  ${CYAN}╚═══════════════════════════════════════════════════════════════════╝${NC}"
     echo ""
-    echo -e " 1) Yes, create desktop shortcut"
+    echo -e "  ${BIYellow}Would you like to add an application shortcut to your desktop?${NC}"
+    echo -e "  ${BIBlack}─────────────────────────────────────────────────────────────────────${NC}"
+    echo -e "    ${CYAN}1)${NC} Yes, create desktop shortcut     ${BIBlack}(Generates native launcher file)${NC}"
     echo ""
-    echo -e " 2) No, skip shortcut creation"
+    echo -e "    ${CYAN}2)${NC} No, skip shortcut creation"
     echo ""
-    echo -e "${RED}     Hit Enter To Skip This Configuration${NC}"
-    echo -e "${BIYellow}==================================================${NC}"
-    read -rp "Select an option [1-2]: " shortcut_choice
+    echo -e "    ${RED}[Enter]${NC} Skip and continue to main manager"
+    echo -e "  ${BIBlack}─────────────────────────────────────────────────────────────────────${NC}"
+    echo ""
+
+    # Colorized Input Prompt
+    read -rp "$(echo -e "  ${CYAN}Select an option [1-2]: ${NC}")" shortcut_choice
 
     case $shortcut_choice in
         1)
@@ -102,19 +107,23 @@ ask_desktop_shortcut
 
 clear
 # 2. Ask user for Action (Enable or Disable)
-echo -e "${YELLOW}=============================================${NC}"
-echo " Wake-on-LAN Configuration Manager"
-echo -e "${YELLOW}=============================================${NC}"
+# Clean Geometric Heading Panel
+echo -e "  ${CYAN}╔═══════════════════════════════════════════════════════════════════╗${NC}"
+echo -e "  ${CYAN}║                  WAKE-ON-LAN CONFIGURATION MANAGER                ║${NC}"
+echo -e "  ${CYAN}╚═══════════════════════════════════════════════════════════════════╝${NC}"
 echo ""
-echo -e "${YELLOW}What action would you like to perform?${NC}"
+echo -e "  ${YELLOW}Deployment Actions & Settings${NC}"
+echo -e "  ${BIBlack}─────────────────────────────────────────────────────────────────────${NC}"
+echo -e "    ${B_BLUE}1)${NC} Enable WoL (magic packet)       ${BIBlack}(Recommended for remote power-on)${NC}"
 echo ""
-echo -e "${B_BLUE}1) Enable WoL (magic packet)${NC}"
+echo -e "    ${B_RED}2)${NC} Disable WoL (ignore)            ${BIBlack}(Standard power-saving state)${NC}"
 echo ""
-echo -e "${RED}2) Disable WoL (ignore)${NC}"
+echo -e "    ${YELLOW}0)${NC} Exit Wake-on-LAN"
+echo -e "  ${BIBlack}─────────────────────────────────────────────────────────────────────${NC}"
 echo ""
-echo -e "${YELLOW}0) Exit Wake-on-LAN${NC}"
-echo ""
-read -rp "Select an option (1 or 2): " ACTION_CHOICE
+
+# Colorized Input Prompt
+read -rp "$(echo -e "  ${CYAN}Select an option [0-2]: ${NC}")" ACTION_CHOICE
 
 if [ "$ACTION_CHOICE" = "1" ]; then
     WOL_SETTING="magic"
@@ -217,12 +226,16 @@ for CONN in "${TARGET_CONNECTIONS[@]}"; do
 done
 
 # 6. Post-Configuration Actions
-echo "Configuration complete."
-echo "What would you like to do next?"
-echo "1) Restart NetworkManager service (Apply settings immediately)"
-echo "2) Reboot the entire system"
-echo "3) Do nothing (Exit script)"
-read -rp "Select an option (1, 2, or 3): " POST_CHOICE
+echo -e "${GREEN}Configuration complete.${NC}"
+echo -e "${YELLOW}What would you like to do next?${NC}"
+echo ""
+echo -e " ${CYAN}1)${NC} Restart NetworkManager service ${BIBlack}(Apply settings immediately)${NC}"
+echo ""
+echo -e " ${CYAN}2)${NC} Reboot the entire system"
+echo ""
+echo -e " ${RED}3) Do nothing (Exit script)${NC}"
+echo ""
+read -rp "$(echo -e "${YELLOW}Select an option (1, 2, or 3): ${NC}")" POST_CHOICE
 
 case "$POST_CHOICE" in
     1)
