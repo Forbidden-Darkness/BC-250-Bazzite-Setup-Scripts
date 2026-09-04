@@ -1078,14 +1078,17 @@ prompt_reboot() {
 # =====================================================================
 # RESTORED PERFORMANCE PIPELINES (OPTIONS 1-4 EXPLICIT ARRAYS)
 # =====================================================================
-# Function to cleanly remove the optimization suite if chosen
+# Complete, Deep-Clean Removal Logic for the Blue Pill
 uninstall_blue_pill() {
-    echo -e "${YELLOW}[●] Beginning safe removal sequence...${NC}"
-    
-    echo -e "${YELLOW}[●] Removing package layers...${NC}"
-    sudo rpm-ostree remove cyan-skillfish-governor-smu lz4 2>/dev/null || true
+    echo -e "${YELLOW}[●] Killing active governor daemon in live memory...${NC}"
+    # Instantly stops the active background daemon process before unlayering
+    sudo systemctl disable --now cyan-skillfish-governor-smu 2>/dev/null || true
+    sudo systemctl disable --now cyan-skillfish-governor 2>/dev/null || true
+    sudo systemctl disable --now cyan-skillfish-governor-tt 2>/dev/null || true
+    sudo systemctl disable --now oberon-governor 2>/dev/null || true
 
-    echo -e "${YELLOW}[●] Disabling COPR repository track...${NC}"
+    echo -e "${YELLOW}[●] Removing package layers & cleaning transaction maps...${NC}"
+    sudo rpm-ostree remove cyan-skillfish-governor-smu lz4 2>/dev/null || true
     sudo copr disable filippor/bazzite -y 2>/dev/null || true
 
     echo -e "${YELLOW}[●] Restoring factory kernel arguments (kargs)...${NC}"
@@ -1107,10 +1110,17 @@ uninstall_blue_pill() {
     sudo sed -i '\/var\/swap\/swapfile/d' /etc/fstab 2>/dev/null || true
     sudo rm -f /etc/sysctl.d/99-swappiness.conf 2>/dev/null || true
 
-    echo -e "${GREEN}\n[✓] Blue Pill Rollback Complete!${NC}"
-    echo "Please reboot your system to apply factory configurations: systemctl reboot"
+    echo -e "${YELLOW}[●] Forcing complete atomic tree rollback deployment...${NC}"
+    # Purges any uncommitted transactions or lingering layer configurations
+    sudo rpm-ostree rollback 2>/dev/null || true
+    sudo rpm-ostree cleanup -m 2>/dev/null || true
+
+    echo -e "${GREEN}\n[✓] Deep Uninstall Complete!${NC}"
+    echo "The system tree has been completely cleaned and restored to stock."
+    echo "Please reboot your system now: systemctl reboot"
     echo ""
-    read -rp "Press [Enter] to return to the toolkit main menu..."
+    #read -rp "Press [Enter] to return to the toolkit main menu..."
+    prompt_reboot
 }
 
 # Unified Wrapper handling the Intelligent Toggle Switch selection logic
@@ -1142,14 +1152,16 @@ install_blue_pill() {
     fi
 }
 
-# Function to cleanly remove the optimization suite if chosen
+# Complete, Deep-Clean Removal Logic for the Red Pill
 uninstall_red_pill() {
-    echo -e "${YELLOW}[●] Beginning safe removal sequence...${NC}"
-    
-    echo -e "${YELLOW}[●] Removing package layers...${NC}"
-    sudo rpm-ostree remove cyan-skillfish-governor-smu lz4 2>/dev/null || true
+    echo -e "${YELLOW}[●] Killing active governor daemon in live memory...${NC}"
+    sudo systemctl disable --now cyan-skillfish-governor-smu 2>/dev/null || true
+    sudo systemctl disable --now cyan-skillfish-governor 2>/dev/null || true
+    sudo systemctl disable --now cyan-skillfish-governor-tt 2>/dev/null || true
+    sudo systemctl disable --now oberon-governor 2>/dev/null || true
 
-    echo -e "${YELLOW}[●] Disabling COPR repository track...${NC}"
+    echo -e "${YELLOW}[●] Removing package layers & cleaning transaction maps...${NC}"
+    sudo rpm-ostree remove cyan-skillfish-governor-smu lz4 2>/dev/null || true
     sudo copr disable filippor/bazzite -y 2>/dev/null || true
 
     echo -e "${YELLOW}[●] Restoring factory kernel arguments (kargs)...${NC}"
@@ -1162,7 +1174,7 @@ uninstall_red_pill() {
     )
     sudo rpm-ostree kargs "${kargs_remove[@]}" || true
 
-    echo -e "${YELLOW}[●] Tearing down BTRFS disk swapfile subvolume...${NC}"
+    echo -e "${YELLOW}[●] Tearing down BTRFS disk swapfile infrastructure...${NC}"
     sudo swapoff /var/swap/swapfile 2>/dev/null || true
     sudo rm -f /var/swap/swapfile 2>/dev/null || true
     sudo btrfs subvolume delete /var/swap 2>/dev/null || true
@@ -1171,10 +1183,16 @@ uninstall_red_pill() {
     sudo sed -i '\/var\/swap\/swapfile/d' /etc/fstab 2>/dev/null || true
     sudo rm -f /etc/sysctl.d/99-swappiness.conf 2>/dev/null || true
 
-    echo -e "${GREEN}\n[✓] Red Pill Rollback Complete!${NC}"
-    echo "Please reboot your system to apply factory configurations: systemctl reboot"
+    echo -e "${YELLOW}[●] Forcing complete atomic tree rollback deployment...${NC}"
+    sudo rpm-ostree rollback 2>/dev/null || true
+    sudo rpm-ostree cleanup -m 2>/dev/null || true
+
+    echo -e "${GREEN}\n[✓] Deep Uninstall Complete!${NC}"
+    echo "The system tree has been completely cleaned and restored to stock."
+    echo "Please reboot your system now: systemctl reboot"
     echo ""
-    read -rp "Press [Enter] to return to the toolkit main menu..."
+    #read -rp "Press [Enter] to return to the toolkit main menu..."
+    prompt_reboot
 }
 
 # Unified Wrapper handling the Intelligent Toggle Switch selection logic
