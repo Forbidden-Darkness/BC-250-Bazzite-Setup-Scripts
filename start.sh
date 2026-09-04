@@ -1127,13 +1127,48 @@ install_blue_pill() {
 
 # Function to handle Red Pill installation
 install_red_pill() {
-    echo -e "${B_RED}=== Executing Red Pill (32GB Setup) ===${NC}"
-    mkdir -p ~/Red_Pill_32GB
-    cd ~/Red_Pill_32GB || return 1
-    rm -f Setup-32GB.sh
-    wget https://raw.githubusercontent.com/NexGen-3D-Printing/SteamMachine/main/Setup-32GB.sh
-    chmod +x Setup-32GB.sh
-    sudo ./Setup-32GB.sh
+    echo -e "${YELLOW}[●] Disabling legacy governor services...${NC}"
+    sudo systemctl disable --now cyan-skillfish-governor 2>/dev/null || true
+    sudo systemctl disable --now cyan-skillfish-governor-tt 2>/dev/null || true
+    sudo systemctl disable --now oberon-governor 2>/dev/null || true
+
+    echo -e "${YELLOW}[●] Initializing COPR and packaging layers...${NC}"
+    sudo copr enable filippor/bazzite -y || { echo -e "${RED}Failed to enable COPR repository.${NC}"; return 1; }
+    sudo rpm-ostree cleanup -m 2>/dev/null || true
+    sudo rpm-ostree refresh-md || { echo -e "${RED}Failed to refresh rpm-ostree metadata.${NC}"; return 1; }
+
+    echo -e "${YELLOW}[●] Deploying Cyan Skillfish Governor SMU binary...${NC}"
+    sudo rpm-ostree install cyan-skillfish-governor-smu || { echo -e "${RED}Failed to install governor package.${NC}"; return 1; }
+
+    echo -e "${YELLOW}[●] Adjusting kernel arguments (Mitigations & ZSWAP)...${NC}"
+    sudo rpm-ostree kargs --append-if-missing=mitigations=off \
+                          --append-if-missing=zswap.enabled=1 \
+                          --append-if-missing=zswap.max_pool_percent=25 \
+                          --append-if-missing=zswap.compressor=lz4 \
+                          --append-if-missing=systemd.zram=0 || { echo -e "${RED}Failed to modify kernel arguments.${NC}"; return 1; }
+
+    echo -e "${YELLOW}[●] Building BTRFS 32GB disk swapfile infrastructure...${NC}"
+    sudo swapoff /var/swap/swapfile 2>/dev/null || true
+    sudo rm -f /var/swap/swapfile 2>/dev/null || true
+    sudo btrfs subvolume delete /var/swap 2>/dev/null || true
+    
+    sudo btrfs subvolume create /var/swap || { echo -e "${RED}Failed to create BTRFS subvolume.${NC}"; return 1; }
+    sudo semanage fcontext -a -t var_t /var/swap 2>/dev/null || true
+    sudo restorecon /var/swap 2>/dev/null || true
+    
+    sudo btrfs filesystem mkswapfile --size 32G /var/swap/swapfile || { echo -e "${RED}Failed to provision 32G swapfile.${NC}"; return 1; }
+    sudo semanage fcontext -a -t swapfile_t /var/swap/swapfile 2>/dev/null || true
+    sudo restorecon /var/swap/swapfile 2>/dev/null || true
+
+    echo -e "${YELLOW}[●] Registering persistent system mounts & sysctl parameters...${NC}"
+    sudo sed -i '\/var\/swap\/swapfile/d' /etc/fstab 2>/dev/null || true
+    echo "/var/swap/swapfile none swap defaults,nofail 0 0" | sudo tee -a /etc/fstab >/dev/null
+    echo 'vm.swappiness = 180' | sudo tee /etc/sysctl.d/99-swappiness.conf >/dev/null
+
+    echo -e "${YELLOW}[●] Regenerating initramfs container image with LZ4 support...${NC}"
+    sudo rpm-ostree initramfs --enable --arg=--add-drivers --arg=lz4 || { echo -e "${RED}Failed to rebuild initramfs.${NC}"; return 1; }
+
+    echo -e "${GREEN}[✓] Red Pill Deployment sequence completed successfully.${NC}"
     prompt_reboot
 }
 
