@@ -544,7 +544,7 @@ esac
 while true; do
     clear
     echo -e "${DIM}┌──────────────────────────────────────────────────────────────────────────────────┐${RESET}"
-    echo -e "${DIM}│${RESET}             ${BOLD}${MAGENTA}BC-250 CPU OVERCLOCK & Compute Unit Live Manager Setup Tool            ${DIM}│${RESET}"
+    echo -e "${DIM}│${RESET}             ${BOLD}${MAGENTA}BC-250 CPU OVERCLOCK & Compute Unit Live Manager Setup Tool${RESET}          ${DIM}  │${RESET}"
     echo -e "${DIM}└──────────────────────────────────────────────────────────────────────────────────┘${RESET}"
     echo ""
     echo -e "  ${BOLD}${WHITE}Select an action to perform:${RESET}"
