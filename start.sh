@@ -1125,8 +1125,8 @@ uninstall_blue_pill() {
 
 # Unified Wrapper handling the Intelligent Toggle Switch selection logic
 install_blue_pill() {
-    # TOGGLE FIX: Uses the config directory check so you can re-run the install right away without a prompt loop
-    if [ -d "/etc/cyan-skillfish-governor-smu" ]; then
+    # Check for the dynamic tracker file in your workspace path
+    if [ -f "$HOME/Blue_Pill_16GB/.installed" ]; then
         echo -e "${YELLOW}[●] Active Blue Pill optimization suite detected on this machine.${NC}"
         echo -e "${BOLD}${MAGENTA}Would you like to completely uninstall the suite and restore defaults?${RESET}"
         read -rp "  Select [y/N]: " rollback_choice
@@ -1134,12 +1134,12 @@ install_blue_pill() {
 
         if [[ "$rollback_choice" =~ ^[Yy]$ ]]; then
             uninstall_blue_pill
+            rm -f "$HOME/Blue_Pill_16GB/.installed" 2>/dev/null || true
         else
             echo -e "${DIM}Operation canceled. Returning to main menu...${RESET}"
             sleep 1
         fi
     else
-        # Jumps straight to execution if the directory is missing
         echo -e "${B_BLUE}=== Executing Blue Pill (16GB Setup) ===${NC}"
         mkdir -p ~/Blue_Pill_16GB
         cd ~/Blue_Pill_16GB || return 1
@@ -1148,6 +1148,9 @@ install_blue_pill() {
         # wget https://raw.githubusercontent.com/NexGen-3D-Printing/SteamMachine/main/Setup-16GB.sh
         chmod +x Setup-16GB.sh
         sudo ./Setup-16GB.sh
+
+        # Drop the persistent tracker file right after successful execution
+        touch "$HOME/Blue_Pill_16GB/.installed"
         prompt_reboot
     fi
 }
@@ -1199,8 +1202,8 @@ uninstall_red_pill() {
 
 # Unified Wrapper handling the Intelligent Toggle Switch selection logic
 install_red_pill() {
-    # TOGGLE FIX: Uses the config directory check so you can re-run the install right away without a prompt loop
-    if [ -d "/etc/cyan-skillfish-governor-smu" ]; then
+    # Check for the dynamic tracker file in your workspace path
+    if [ -f "$HOME/Red_Pill_32GB/.installed" ]; then
         echo -e "${YELLOW}[●] Active Red Pill optimization suite detected on this machine.${NC}"
         echo -e "${BOLD}${MAGENTA}Would you like to completely uninstall the suite and restore defaults?${RESET}"
         read -rp "  Select [y/N]: " rollback_choice
@@ -1208,12 +1211,12 @@ install_red_pill() {
 
         if [[ "$rollback_choice" =~ ^[Yy]$ ]]; then
             uninstall_red_pill
+            rm -f "$HOME/Red_Pill_32GB/.installed" 2>/dev/null || true
         else
             echo -e "${DIM}Operation canceled. Returning to main menu...${RESET}"
             sleep 1
         fi
     else
-        # Jumps straight to execution if the directory is missing
         echo -e "${RED}=== Executing Red Pill (32GB Setup) ===${NC}"
         mkdir -p ~/Red_Pill_32GB
         cd ~/Red_Pill_32GB || return 1
@@ -1222,6 +1225,9 @@ install_red_pill() {
         # wget https://raw.githubusercontent.com/NexGen-3D-Printing/SteamMachine/main/Setup-32GB.sh
         chmod +x Setup-32GB.sh
         sudo ./Setup-32GB.sh
+
+        # Drop the persistent tracker file right after successful execution
+        touch "$HOME/Red_Pill_32GB/.installed"
         prompt_reboot
     fi
 }
