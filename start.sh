@@ -1119,7 +1119,8 @@ uninstall_blue_pill() {
     echo -e "${GREEN}\n[✓] Safe Removal Scheduled Successfully!${NC}"
     echo -e "${BOLD}${YELLOW}CRITICAL STEP:${RESET} You must reboot your machine now to apply the clean system layer."
     echo ""
-    read -rp "Press [Enter] to return to the toolkit main menu..."
+    #read -rp "Press [Enter] to return to the toolkit main menu..."
+    prompt_reboot
 }
 
 # Unified Wrapper handling the Intelligent Toggle Switch selection logic
@@ -1211,7 +1212,8 @@ uninstall_red_pill() {
     echo -e "${GREEN}\n[✓] Safe Removal Scheduled Successfully!${NC}"
     echo -e "${BOLD}${YELLOW}CRITICAL STEP:${RESET} You must reboot your machine now to apply the clean system layer."
     echo ""
-    read -rp "Press [Enter] to return to the toolkit main menu..."
+    #read -rp "Press [Enter] to return to the toolkit main menu..."
+    prompt_reboot
 }
 
 # Unified Wrapper handling the Intelligent Toggle Switch selection logic
