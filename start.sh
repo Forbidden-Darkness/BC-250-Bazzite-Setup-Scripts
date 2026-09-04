@@ -1080,12 +1080,13 @@ prompt_reboot() {
 # =====================================================================
 # Complete, Deep-Clean Removal Logic for the Blue Pill
 uninstall_blue_pill() {
-    echo -e "${YELLOW}[●] Killing active governor daemon in live memory...${NC}"
-    # Instantly stops the active background daemon process before unlayering
-    sudo systemctl disable --now cyan-skillfish-governor-smu 2>/dev/null || true
-    sudo systemctl disable --now cyan-skillfish-governor 2>/dev/null || true
-    sudo systemctl disable --now cyan-skillfish-governor-tt 2>/dev/null || true
-    sudo systemctl disable --now oberon-governor 2>/dev/null || true
+    echo -e "${YELLOW}[●] Forcibly stopping and masking all governor services...${NC}"
+    # Stop them immediately in active memory
+    sudo systemctl stop cyan-skillfish-governor-smu cyan-skillfish-governor cyan-skillfish-governor-tt oberon-governor 2>/dev/null || true
+    
+    # Mask them so systemd can NEVER trigger them under any dependency profile
+    sudo systemctl mask cyan-skillfish-governor-smu cyan-skillfish-governor cyan-skillfish-governor-tt oberon-governor 2>/dev/null || true
+    sudo systemctl disable cyan-skillfish-governor-smu cyan-skillfish-governor cyan-skillfish-governor-tt oberon-governor 2>/dev/null || true
 
     echo -e "${YELLOW}[●] Removing package layers & cleaning transaction maps...${NC}"
     sudo rpm-ostree remove cyan-skillfish-governor-smu lz4 2>/dev/null || true
@@ -1109,9 +1110,13 @@ uninstall_blue_pill() {
     echo -e "${YELLOW}[●] Cleaning up system mount rules & sysctl configuration...${NC}"
     sudo sed -i '\/var\/swap\/swapfile/d' /etc/fstab 2>/dev/null || true
     sudo rm -f /etc/sysctl.d/99-swappiness.conf 2>/dev/null || true
+    
+    # Wipe leftover persistent systemd configurations or multi-user presets
+    sudo rm -rf /etc/systemd/system/cyan-skillfish-governor* 2>/dev/null || true
+    sudo rm -rf /etc/cyan-skillfish-governor-smu 2>/dev/null || true
+    sudo systemctl daemon-reload
 
-    echo -e "${YELLOW}[●] Forcing complete atomic tree rollback deployment...${NC}"
-    # Purges any uncommitted transactions or lingering layer configurations
+    echo -e "${YELLOW}[●] Forcing clean atomic system rollback reset...${NC}"
     sudo rpm-ostree rollback 2>/dev/null || true
     sudo rpm-ostree cleanup -m 2>/dev/null || true
 
@@ -1119,8 +1124,7 @@ uninstall_blue_pill() {
     echo "The system tree has been completely cleaned and restored to stock."
     echo "Please reboot your system now: systemctl reboot"
     echo ""
-    #read -rp "Press [Enter] to return to the toolkit main menu..."
-    prompt_reboot
+    read -rp "Press [Enter] to return to the toolkit main menu..."
 }
 
 # Unified Wrapper handling the Intelligent Toggle Switch selection logic
@@ -1154,11 +1158,10 @@ install_blue_pill() {
 
 # Complete, Deep-Clean Removal Logic for the Red Pill
 uninstall_red_pill() {
-    echo -e "${YELLOW}[●] Killing active governor daemon in live memory...${NC}"
-    sudo systemctl disable --now cyan-skillfish-governor-smu 2>/dev/null || true
-    sudo systemctl disable --now cyan-skillfish-governor 2>/dev/null || true
-    sudo systemctl disable --now cyan-skillfish-governor-tt 2>/dev/null || true
-    sudo systemctl disable --now oberon-governor 2>/dev/null || true
+    echo -e "${YELLOW}[●] Forcibly stopping and masking all governor services...${NC}"
+    sudo systemctl stop cyan-skillfish-governor-smu cyan-skillfish-governor cyan-skillfish-governor-tt oberon-governor 2>/dev/null || true
+    sudo systemctl mask cyan-skillfish-governor-smu cyan-skillfish-governor cyan-skillfish-governor-tt oberon-governor 2>/dev/null || true
+    sudo systemctl disable cyan-skillfish-governor-smu cyan-skillfish-governor cyan-skillfish-governor-tt oberon-governor 2>/dev/null || true
 
     echo -e "${YELLOW}[●] Removing package layers & cleaning transaction maps...${NC}"
     sudo rpm-ostree remove cyan-skillfish-governor-smu lz4 2>/dev/null || true
@@ -1182,8 +1185,13 @@ uninstall_red_pill() {
     echo -e "${YELLOW}[●] Cleaning up system mount rules & sysctl configuration...${NC}"
     sudo sed -i '\/var\/swap\/swapfile/d' /etc/fstab 2>/dev/null || true
     sudo rm -f /etc/sysctl.d/99-swappiness.conf 2>/dev/null || true
+    
+    # Wipe leftover persistent systemd configurations or multi-user presets
+    sudo rm -rf /etc/systemd/system/cyan-skillfish-governor* 2>/dev/null || true
+    sudo rm -rf /etc/cyan-skillfish-governor-smu 2>/dev/null || true
+    sudo systemctl daemon-reload
 
-    echo -e "${YELLOW}[●] Forcing complete atomic tree rollback deployment...${NC}"
+    echo -e "${YELLOW}[●] Forcing clean atomic system rollback reset...${NC}"
     sudo rpm-ostree rollback 2>/dev/null || true
     sudo rpm-ostree cleanup -m 2>/dev/null || true
 
@@ -1191,8 +1199,7 @@ uninstall_red_pill() {
     echo "The system tree has been completely cleaned and restored to stock."
     echo "Please reboot your system now: systemctl reboot"
     echo ""
-    #read -rp "Press [Enter] to return to the toolkit main menu..."
-    prompt_reboot
+    read -rp "Press [Enter] to return to the toolkit main menu..."
 }
 
 # Unified Wrapper handling the Intelligent Toggle Switch selection logic
