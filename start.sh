@@ -1081,8 +1081,8 @@ prompt_reboot() {
 # Function to handle Blue Pill installation
 install_blue_pill() {
     echo -e "${B_BLUE}=== Executing Blue Pill (16GB Setup) ===${NC}"
-    mkdir -p /Overclock/Blue_Pill_16GB
-    cd /Overclock/Blue_Pill_16GB || return 1
+    mkdir -p ~/Blue_Pill_16GB
+    cd ~/Blue_Pill_16GB || return 1
     rm -f Setup-16GB.sh
     wget https://raw.githubusercontent.com/Forbidden-Darkness/Bazzite_Toolbox/main/Overclock/Setup-16GB.sh
     # wget https://raw.githubusercontent.com/NexGen-3D-Printing/SteamMachine/main/Setup-16GB.sh
@@ -1094,8 +1094,8 @@ install_blue_pill() {
 # Function to handle Red Pill installation
 install_red_pill() {
     echo -e "${B_RED}=== Executing Red Pill (32GB Setup) ===${NC}"
-    mkdir -p /Overclock/Red_Pill_32GB
-    cd /Overclock/Red_Pill_32GB || return 1
+    mkdir -p ~/Red_Pill_32GB
+    cd ~/Red_Pill_32GB || return 1
     rm -f Setup-32GB.sh
     wget https://raw.githubusercontent.com/Forbidden-Darkness/Bazzite_Toolbox/main/Overclock/Setup-32GB.sh
     # wget https://raw.githubusercontent.com/NexGen-3D-Printing/SteamMachine/main/Setup-32GB.sh
