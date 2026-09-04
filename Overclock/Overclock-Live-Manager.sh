@@ -247,7 +247,7 @@ launch_tuning_menu() {
         echo ""
         
         # Exit Routine
-        echo -e "    ${RED}8) Return to Main Menu${NC}         ${BIBlack}(Skip auto-tuning routine)${NC}"
+        echo -e "    ${RED}0) Return to Main Menu${NC}         ${BIBlack}(Skip auto-tuning routine)${NC}"
         echo -e "  ${BIBlack}─────────────────────────────────────────────────────────────────────${NC}"
         echo ""
 
@@ -328,7 +328,7 @@ launch_tuning_menu() {
                     finalize_settings
                 fi
                 ;;
-            8)
+            0)
                 read -p "Returning to Main Menu Press [Enter] to continue..."
                 sleep 1
                 return 0
@@ -585,7 +585,7 @@ while true; do
     echo -e "      ${BOLD}${MAGENTA}[↵]${RESET} Hit Enter to Secure Safe Exit Overclock-Live-Manager"
     echo ""
     
-    read -p "  Select an option [1a-3b, 0]: " choice
+    read -p "  Select an option [1a-3b, ↵]: " choice
 
     case "$choice" in
         1a) run_phase1 ;;
