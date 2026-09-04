@@ -565,7 +565,7 @@ while true; do
     echo -e "      ${DIM}[3b] Uninstall Compute Unit Live Manager Service Paths${RESET}"
     echo ""
     echo -e "  ${DIM}──────────────────────────────────────────────────────────────────────────────────${RESET}"
-    echo -e "      ${BOLD}${MAGENTA}[↵]${RESET}    ${DIM} Hit Enter to Secure Safe Exit Overclock-Live-Manager${RESET}""
+    echo -e "      ${BOLD}${MAGENTA}[↵]${RESET} Hit Enter to Secure Safe Exit Overclock-Live-Manager${RESET}"
     echo ""
     
     read -p "  Select an option [1a-3b, 0]: " choice
