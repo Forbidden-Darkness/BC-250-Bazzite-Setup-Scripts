@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ────────────────────────────────────────────────────────────────
-#  Setup-16GB (Bazzite) – NexGen3D v1.5 [Defensive Package Fix]
+#  Setup-16GB (Bazzite) – NexGen3D v1.5 [Atomic Fix]
 # ────────────────────────────────────────────────────────────────
 set -e
 
@@ -14,23 +14,24 @@ sudo copr enable filippor/bazzite -y
 sudo rpm-ostree cleanup -m 2>/dev/null || true
 sudo rpm-ostree refresh-md || true
 
-echo -e "\033[1;33m[●] Deploying Cyan Skillfish Governor Toolchain...\033[0m"
-# Safety Check: Only install if not already requested to prevent rpm-ostree fatal exit
+echo -e "\033[1;33m[●] Batched Core Deployment Layering (Avoids rpmdb conflicts)...\033[0m"
+# Check if package is layered; if missing, install it and configure kargs in one solid operation
 if ! rpm-ostree status | grep -q "cyan-skillfish-governor-smu"; then
-    sudo rpm-ostree install cyan-skillfish-governor-smu lz4
+    sudo rpm-ostree install cyan-skillfish-governor-smu lz4 \
+        --karg-append=mitigations=off \
+        --karg-append=zswap.enabled=1 \
+        --karg-append=zswap.max_pool_percent=25 \
+        --karg-append=zswap.compressor=lz4 \
+        --karg-append=systemd.zram=0
 else
-    echo -e "\033[1;32m[✓] cyan-skillfish-governor-smu already requested. Ensuring lz4 is present...\033[0m"
-    if ! rpm-ostree status | grep -q "lz4"; then
-        sudo rpm-ostree install lz4 || true
-    fi
+    echo -e "\033[1;32m[✓] Package already layered. Applying atomic kargs configurations safely...\033[0m"
+    sudo rpm-ostree kargs \
+        --append-if-missing=mitigations=off \
+        --append-if-missing=zswap.enabled=1 \
+        --append-if-missing=zswap.max_pool_percent=25 \
+        --append-if-missing=zswap.compressor=lz4 \
+        --append-if-missing=systemd.zram=0 || true
 fi
-
-echo -e "\033[1;33m[●] Adjusting atomic kernel parameters (Mitigations & ZSWAP)...\033[0m"
-sudo rpm-ostree kargs --append-if-missing=mitigations=off || true
-sudo rpm-ostree kargs --append-if-missing=zswap.enabled=1 || true
-sudo rpm-ostree kargs --append-if-missing=zswap.max_pool_percent=25 || true
-sudo rpm-ostree kargs --append-if-missing=zswap.compressor=lz4 || true
-sudo rpm-ostree kargs --append-if-missing=systemd.zram=0 || true
 
 echo -e "\033[1;33m[●] Provisioning BTRFS 16GB disk swapfile infrastructure...\033[0m"
 sudo swapoff /var/swap/swapfile 2>/dev/null || true
