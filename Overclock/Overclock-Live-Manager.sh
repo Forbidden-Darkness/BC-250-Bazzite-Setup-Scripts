@@ -328,11 +328,10 @@ launch_tuning_menu() {
                     finalize_settings
                 fi
                 ;;
-            ↵)
-                read -p "Returning to Main Menu Press [Enter] to continue..."
-                sleep 1
-                return 0
-                ;;
+            0|"")
+                echo "Exiting."
+                exit 0
+                ;;            
             *)
                 echo -e "${RED}Invalid option selected. Please enter [1-8].${NC}"
                 sleep 2
