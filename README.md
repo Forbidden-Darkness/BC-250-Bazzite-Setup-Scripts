@@ -32,7 +32,7 @@ cd Bazzite_Toolbox/ && sudo ./start.sh --remove-shortcut && systemctl reboot
 ------------------------------
 ## 📟 Technical Architecture Overview
 The toolbox acts as an intelligent abstraction layer over Bazzite's immutable, transaction-based rpm-ostree image structure. Rather than introducing transient or volatile overrides, it manipulates configurations using a twin-injection design layout, altering kernel parameters through native boot entries while concurrently staging modular configuration rules for hardware compilation trees.
-```
+```text
                 ┌──────────────────────────────────────┐
                 │       Bazzite Toolkit Terminal       │
                 └──────────────────┬───────────────────┘
@@ -82,13 +82,34 @@ The toolbox acts as an intelligent abstraction layer over Bazzite's immutable, t
 * Xone Driver Integration: Seamlessly triggers localized module layering pipelines to hook and mount the official Microsoft Xbox Wireless Adapter driver stack (xone and kmod-xone), instantly enabling native wireless accessory functionality.
 * Fan Control & ACPI Voltage Overrides: Interrogates firmware registers to mount low-level sensor drivers (nct6687), exposing full PWM fan controller access to background daemon controllers (CoolerControl). It handles software-level ACPI architecture injection targets seamlessly, loading custom tables via early boot initrd overrides to safely stabilize clock speeds.
 
+### 6. Dynamic SMU CPU Overclocking Engine
+
+* **Direct Frequency Manipulation:** Abstracted via `Overclock-Live-Manager.sh`, this engine bypasses standard kernel frequency governors to hook directly into the hardware System Management Unit (SMU). It handles safe x86 clock-speed targeting, scaling manual frequencies up to the board's precise thermal limits.
+* **Voltage Alignment:** Dictates core clock parameters alongside specialized ACPI P-State tables, unlocking maximum single-threaded performance bounds for heavy execution loads.
+
+### 7. Core Compute Unit Live Manager Matrix
+
+* **Register Configuration Cache:** Manages real-time physical Compute Unit data profiles by writing states straight to `/etc/bc250-cu-live-manager.conf`. This acts as a persistent parameter map across immutable reboots.
+* **Dynamic WGP Bitmasking:** Programmatically tracking active vs. masked Work Group Processors (WGPs). It lets non-Linux operators seamlessly evaluate custom core combinations (ranging from stock 24 CUs up to the 40 CU physical matrix cap) while preserving structural stability tables.
+
+### 8. Xbox Wireless Adapter Native Integration (Xone Driver Stack)
+
+* **Immutable Layer Interlock:** Automates the injection and mounting of the third-party `xone` and `kmod-xone` hardware driver packages directly into the transactional file tree.
+* **Automated Device Handshake:** For platforms running Bazzite 43/44, the toolkit bypasses local package conflicts by directly triggering Bazzite's native `ujust toggle-xone` framework, creating an immediate plug-and-play interface for official USB wireless dongles.
+
+### 9. Hardware Wake-on-LAN Port Orchestrator
+
+* **Network Card Profiling:** Interrogates active network interface ports via the native NetworkManager CLI engine (`nmcli`). It completely replaces complicated network configuration loops with a simple, safe choice menu.
+* **Magic Packet Authorization:** Pushes strict, automated instruction strings directly to the target network card firmware, ensuring magic packet wakeup parameters stay perfectly enabled and active even after sudden system re-deployments or updates.
+
 ------------------------------
 ## Special Thanks to the following:
 
-* Development of Blue/Red Pill Script for Bazzite: [@NexGen-3D](https://github.com/NexGen-3D-Printing)
-* Development of cyan-skillfish-governor: [@FilippoR](https://github.com/filippor)
-* Development of bc250-cu-live-manager: [@WinnieLV](https://github.com/WinnieLV)
-* Development of CPU Overclocking Tools for AMD BC-250: [@bc250-collective](https://github.com/bc25)
+* **Development of Blue/Red Pill Script for Bazzite:** [@NexGen-3D](https://github.com/NexGen-3D-Printing)
+* **Development of cyan-skillfish-governor:** [@FilippoR](https://github.com/filippor)
+* **Development of bc250-cu-live-manager:** [@WinnieLV](https://github.com/WinnieLV)
+* **Development of CPU Overclocking Tools for AMD BC-250:** [@bc250-collective](https://github.com/bc25)
+* **Development of bc250_memcfg (CMOS BIOS Utility):** [@fanoush](https://github.com/fanoush/bc250_memcfg)
 
 ------------------------------
 
@@ -185,3 +206,21 @@ Bazzite 43 and 44 migrated across distinct generational shifts of the Fedora bas
 | Compiler Toolchain Limits | Handled standard memory references and linker allocations via early C++ header formats. | Enforced strict compilation optimization checking that explicitly drops unbound C++ library includes. | POSIX C Offline Failback: Strips all C++ dependencies out of the script's local memory backup. Writes out a pure C engine (main.c) compiled cleanly by standard gcc. |
 
 ------------------------------
+## 📂 Repository File Tree Reference
+
+The toolbox utilizes a unified flat-directory footprint mapped straight out the repository base workspace layer:
+
+
+```text
+Bazzite_Toolbox/
+├── Overclock/
+│   ├── Overclock-Live-Manager.sh     <-- Dedicated SMU CPU Overclock script tool
+│   └── bc250-cu-live-manager.conf     <-- Compute Unit live manager data map
+├── Wake_on_LAN/
+│   ├── Wake-on-LAN-Manager.sh        <-- Wake-on-LAN port/adapter configuration
+│   └── Red-Pill-Blue-Pill.wav         <-- Permission-insulated PipeWire background audio
+├── LICENSE                            <-- GNU General Public License v3.0 text logs
+├── README.md                          <-- Primary master optimization reference manual
+├── index.html                         <-- Compute Unit map matrix HTML dashboard panel
+└── start.sh                           <-- Toolkit dashboard UI & main controller block
+```
