@@ -257,27 +257,27 @@ launch_tuning_menu() {
 
         case "$tune_choice" in
             1)
-                log "${GREEN}Launching 40CU profile optimization...${NC}"
+                log "${GREEN}Launching 40/40 CU profile optimization...${NC}"
                 bc250-detect --frequency 3500 --vid 1000 -t 85 --keep
                 finalize_settings
                 ;;
             2)
-                log "${GREEN}Launching 36/38CU profile optimization...${NC}"
+                log "${GREEN}Launching 36/40 38/40 CU profile optimization...${NC}"
                 bc250-detect --frequency 3500 --vid 980 -t 82 --keep
                 finalize_settings
                 ;;
             3)
-                log "${GREEN}Launching 36/38CU profile optimization...${NC}"
+                log "${GREEN}Launching 36/40 38/40 CU profile optimization...${NC}"
                 bc250-detect --frequency 3500 --vid 1015 -t 85 --keep
                 finalize_settings
                 ;;
             4)
-                log "${GREEN}Launching 36/38CU profile optimization...${NC}"
+                log "${GREEN}Launching 36/40 38/40 CU profile optimization...${NC}"
                 bc250-detect --frequency 3500 --vid 1020 -t 85 --keep
                 finalize_settings
                 ;;
             5)
-                log "${GREEN}Launching 36/38CU profile optimization...${NC}"
+                log "${GREEN}Launching 36/40 38/40 CU profile optimization...${NC}"
                 bc250-detect --frequency 3500 --vid 1050 -t 85 --keep
                 finalize_settings
                 ;;
