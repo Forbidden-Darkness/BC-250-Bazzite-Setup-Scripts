@@ -118,7 +118,7 @@ echo -e "    ${B_BLUE}1)${NC} Enable WoL (magic packet)       ${BIBlack}(Recomme
 echo ""
 echo -e "    ${B_RED}2)${NC} Disable WoL (ignore)            ${BIBlack}(Standard power-saving state)${NC}"
 echo ""
-echo -e "    ${YELLOW}[Enter]${NC} Continue to Main Menu"
+echo -e "    ${YELLOW}[Press Enter]${NC} To Return to Main Menu"
 echo -e "  ${BIBlack}─────────────────────────────────────────────────────────────────────${NC}"
 echo ""
 
