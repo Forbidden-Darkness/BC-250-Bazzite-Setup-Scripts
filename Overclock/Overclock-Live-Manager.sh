@@ -234,11 +234,11 @@ launch_tuning_menu() {
         echo -e "  ${BIBlack}─────────────────────────────────────────────────────────────────────${NC}"
         
         # Factory Templates Cluster
-        echo -e "    ${CYAN}1)${NC} 40CU Model       ${BIBlack}───${NC}  3500 MHz  @  1000 mV  ${BIBlack}│${NC}  Max 85°C"
-        echo -e "    ${CYAN}2)${NC} 36/38CU Model    ${BIBlack}───${NC}  3500 MHz  @   980 mV  ${BIBlack}│${NC}  Max 82°C"
-        echo -e "    ${CYAN}3)${NC} 36/38CU Model    ${BIBlack}───${NC}  3500 MHz  @  1015 mV  ${BIBlack}│${NC}  Max 85°C"
-        echo -e "    ${CYAN}4)${NC} 36/38CU Model    ${BIBlack}───${NC}  3500 MHz  @  1020 mV  ${BIBlack}│${NC}  Max 85°C"
-        echo -e "    ${CYAN}5)${NC} 36/38CU Model    ${BIBlack}───${NC}  3500 MHz  @  1050 mV  ${BIBlack}│${NC}  Max 85°C"
+        echo -e "    ${CYAN}1)${NC} 40/40 CU Model       ${BIBlack}───${NC}  3500 MHz  @  1000 mV  ${BIBlack}│${NC}  Max 85°C"
+        echo -e "    ${CYAN}2)${NC} 36/40 38/40 CU Model    ${BIBlack}───${NC}  3500 MHz  @   980 mV  ${BIBlack}│${NC}  Max 82°C"
+        echo -e "    ${CYAN}3)${NC} 36/40 38/40 CU Model    ${BIBlack}───${NC}  3500 MHz  @  1015 mV  ${BIBlack}│${NC}  Max 85°C"
+        echo -e "    ${CYAN}4)${NC} 36/40 38/40 CU Model    ${BIBlack}───${NC}  3500 MHz  @  1020 mV  ${BIBlack}│${NC}  Max 85°C"
+        echo -e "    ${CYAN}5)${NC} 36/40 38/40 CU Model    ${BIBlack}───${NC}  3500 MHz  @  1050 mV  ${BIBlack}│${NC}  Max 85°C"
         echo ""
         
         # Manual Profiles Cluster
