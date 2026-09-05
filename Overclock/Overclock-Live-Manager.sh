@@ -247,12 +247,12 @@ launch_tuning_menu() {
         echo ""
         
         # Exit Routine
-        echo -e "    ${RED}0) Return to Main Menu${NC}         ${BIBlack}(Skip auto-tuning routine)${NC}"
+        echo -e "    ${RED}↵) Return to Main Menu${NC}         ${BIBlack}(Skip auto-tuning routine)${NC}"
         echo -e "  ${BIBlack}─────────────────────────────────────────────────────────────────────${NC}"
         echo ""
 
         # Colorized Interactive Prompt
-        read -p "$(echo -e "  ${CYAN}Enter selection [1-7, 0]: ${NC}")" tune_choice
+        read -p "$(echo -e "  ${CYAN}Enter selection [1-7, ↵]: ${NC}")" tune_choice
 
 
         case "$tune_choice" in
@@ -328,7 +328,7 @@ launch_tuning_menu() {
                     finalize_settings
                 fi
                 ;;
-            0)
+            ↵)
                 read -p "Returning to Main Menu Press [Enter] to continue..."
                 sleep 1
                 return 0
