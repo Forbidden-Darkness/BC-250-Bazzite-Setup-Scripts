@@ -109,7 +109,7 @@ clear
 # 2. Ask user for Action (Enable or Disable)
 # Clean Geometric Heading Panel
 echo -e "  ${CYAN}╔═══════════════════════════════════════════════════════════════════╗${NC}"
-echo -e "  ${CYAN}║                  WAKE-ON-LAN CONFIGURATION MANAGER                ║${NC}"
+echo -e "  ${CYAN}║                  WAKE-on-LAN CONFIGURATION MANAGER                ║${NC}"
 echo -e "  ${CYAN}╚═══════════════════════════════════════════════════════════════════╝${NC}"
 echo ""
 echo -e "  ${YELLOW}Deployment Actions & Settings${NC}"
@@ -118,12 +118,12 @@ echo -e "    ${B_BLUE}1)${NC} Enable WoL (magic packet)       ${BIBlack}(Recomme
 echo ""
 echo -e "    ${B_RED}2)${NC} Disable WoL (ignore)            ${BIBlack}(Standard power-saving state)${NC}"
 echo ""
-echo -e "    ${YELLOW}0)${NC} Exit Wake-on-LAN"
+echo -e "    ${YELLOW}[Enter]${NC} Continue to Main Menu"
 echo -e "  ${BIBlack}─────────────────────────────────────────────────────────────────────${NC}"
 echo ""
 
 # Colorized Input Prompt
-read -rp "$(echo -e "  ${CYAN}Select an option [0-2]: ${NC}")" ACTION_CHOICE
+read -rp "$(echo -e "  ${CYAN}Select an option [1-2]: ${NC}")" ACTION_CHOICE
 
 if [ "$ACTION_CHOICE" = "1" ]; then
     WOL_SETTING="magic"
