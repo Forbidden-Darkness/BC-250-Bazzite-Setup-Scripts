@@ -64,7 +64,7 @@ ask_desktop_shortcut() {
     echo ""
     echo -e "    ${CYAN}2)${NC} No, skip shortcut creation"
     echo ""
-    echo -e "    ${RED}[Enter]${NC} Skip and continue to main manager"
+    echo -e "    ${YELLOW}[Press Enter]${NC} To continue to WAKE-on-LAN CONFIGURATION MANAGER"
     echo -e "  ${BIBlack}─────────────────────────────────────────────────────────────────────${NC}"
     echo ""
 
