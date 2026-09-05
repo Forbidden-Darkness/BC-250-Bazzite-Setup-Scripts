@@ -16,7 +16,9 @@ if [ -d "Bazzite_Toolbox" ]; then read -p "Bazzite_Toolbox already exists. Overw
 ```
 
 ------------------------------
-## 🛠️ Configuration Management## Add System Shortcut
+## 🛠️ Configuration Management
+
+## Add System Shortcut
 Integrate the Bazzite Toolbox shortcut into the System & Utilities directory of your desktop environment's application menu.
 
 ```bash
