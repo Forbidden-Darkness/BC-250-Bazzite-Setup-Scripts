@@ -140,13 +140,13 @@ ask_desktop_shortcut() {
     echo -e "${DIM}└──────────────────────────────────────────────────┘${RESET}"
     echo ""
     echo -e "  ${BOLD}${WHITE}Would you like to add a shortcut to your desktop?${RESET}"
-    echo -e "  ${DIM}──────────────────────────────────────────────────${RESET}"
+    echo -e "  ${DIM}──────────────────────────────────────────────────────────────${RESET}"
     echo ""
     echo -e "    ${CYAN}[1]${RESET} Yes, create desktop shortcut"
     echo -e "    ${CYAN}[2]${RESET} No, skip shortcut creation"
     echo ""
     echo -e "    ${DIM}[Press Enter]${NC} To continue to BC-250 TUNING & CONFIGURATION${RESET}"
-    echo -e "  ${DIM}──────────────────────────────────────────────────${RESET}"
+    echo -e "  ${DIM}──────────────────────────────────────────────────────────────${RESET}"
     echo ""
     read -rp "  Select an option [1-2]: " shortcut_choice
 
