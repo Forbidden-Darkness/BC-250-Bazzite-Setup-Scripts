@@ -252,7 +252,7 @@ launch_tuning_menu() {
         echo ""
 
         # Colorized Interactive Prompt
-        read -p "$(echo -e "  ${CYAN}Enter selection [1-8]: ${NC}")" tune_choice
+        read -p "$(echo -e "  ${CYAN}Enter selection [1-7, 0]: ${NC}")" tune_choice
 
 
         case "$tune_choice" in
