@@ -29,8 +29,8 @@ echo "[●] Step 3/8: Cleaning and refreshing rpm-ostree metadata tracking..." &
 (sudo rpm-ostree refresh-md 2>/dev/null || true) &>/dev/null &&
 
 echo "[●] Step 4/8: Staging Enhanced Cyan Skillfish Governor SMU layers (Takes ~25 mins total pipeline)..." &&
-# Determine if this execution loop is a reinstall by checking if logs or tracking folders ever existed
-local is_reinstall=false
+# 🧬 FIXED: Removed 'local' constraint so the variable parses safely in a standalone script file
+is_reinstall=false
 if [[ -d /usr/etc/cyan-skillfish-governor-smu || -f /var/log/bc250_oc_install.log ]]; then
     is_reinstall=true
 fi &&
