@@ -1,10 +1,5 @@
 #!/usr/bin/env bash
 
-# Color definitions
-RESET="\e[0m"
-BOLD="\e[1m"
-DIM="\e[2m"
-
 RED='\033[0;31m'
 B_RED='\033[1;31m'   # Bold Red for high-visibility Red Pill elements
 GREEN='\033[0;32m'
@@ -23,7 +18,13 @@ BICyan='\033[1;96m'
 BIWhite='\033[1;97m'
 MAGENTA="\033[1;95m"
 NC='\033[0m'
+RESET='\033[0m'
 BG_HEADER="\e[48;5;235m"
+
+# 🧬 FIXED: Maps standard ANSI escape token attributes to lock in faded text elements
+DIM='\033[38;2;110;110;110m'
+BOLD='\033[1m'
+
 # ==============================================================================
 # UPGRADED: INTEGRATED THE THEMATIC VISUAL TRANSITION ENGINES
 # ==============================================================================
@@ -193,62 +194,62 @@ trap stop_background_music EXIT
 # --- Main Runtime Initializer ---
 start_background_music
 
-# Draw Initial Greeting Panels
-clear
-echo -e "\033[38;2;0;255;0m  ╔═════════════════════════════════════════════════════════════════════════════════════════════╗\033[0m"
-echo -e "\033[38;2;0;255;0m  ║                                                                                             ║\033[0m"
-echo -e "\033[38;2;0;255;0m  ║                                █ █ █ █▀▀ █   █▀▀ █▀█ █▄█ █▀▀                                ║\033[0m"
-echo -e "\033[38;2;0;255;0m  ║                                ▀▄▀▄▀ ██▄ █▄▄ █▄▄ █▄█ █ █ ██▄                                ║\033[0m"
-echo -e "\033[38;2;0;255;0m  ║                                                                                             ║\033[0m"
-echo -e "\033[38;2;0;255;0m  ║    ${B_BLUE}[●] BLUE Pill\033[38;2;0;255;0m            🔑  System Architecture Unlocks  🔑            ${RED}RED Pill [●]\033[38;2;0;255;0m     ║\033[0m"
-echo -e "\033[38;2;0;255;0m  ║                                                                                             ║\033[0m"
-echo -e "\033[38;2;0;255;0m  ╚═════════════════════════════════════════════════════════════════════════════════════════════╝\033[0m"
-echo ""
+# ==============================================================================
+# 🧬 1. ENHANCED ANIMATION ENGINES (MUST BE DECLARED FIRST)
+# ==============================================================================
+SKIP_ANIMATION=false
 
-# FIX: Hardcoded to 24-bit True Color RGB inside the echo command so every typed letter is strictly absolute matrix green
 type_prompt() {
     local text="$1"
     local delay="${2:-0.03}"
+
     for (( i=0; i<${#text}; i++ )); do
-        # Injects the matrix green true color right behind every character block seamlessly
         echo -ne "\033[38;2;0;255;0m${text:$i:1}\033[0m"
-        sleep "$delay"
+
+        if [ "$SKIP_ANIMATION" = false ]; then
+            # 🧬 LOCK-JAW KEY CHECK: Instantly polls stdin terminal cache descriptor
+            if read -t 0.001 -n 1 2>/dev/null; then
+                SKIP_ANIMATION=true
+            fi
+            sleep "$delay"
+        fi
     done
 }
 
-# The text now types out in crisp, beautiful matrix green automatically without code bleed!
-type_prompt "  Establishing System Root Authorization.... " 0.03
-blink_cursor ""
-echo ""
-type_prompt "  exploiting system entry " 0.03
-blink_cursor ""
-
-type_prompt "  injecting exploit.... " 0.05
-blink_cursor ""
-
-type_prompt "  system has been pwned, root access has been granted.... " 0.03
-blink_cursor ""
-echo ""
-type_prompt "  mapping system block registers " 0.03
-blink_cursor ""
-
-
-# ... (Line 110: This is your existing blink utility)
 blink_cursor() {
     local prompt_text="$1"
     echo -ne "$prompt_text"
+
+    if [ "$SKIP_ANIMATION" = true ]; then
+        echo ""
+        return 0
+    fi
+
     for i in {1..3}; do
         echo -ne "\033[5m█\033[0m"
-        sleep 0.5
-        echo -ne "\b "
-        sleep 0.5
+
+        # Split wait cycles to remain instantly responsive to bypass keystrokes
+        for s in {1..5}; do
+            if read -t 0.1 -n 1 2>/dev/null; then
+                SKIP_ANIMATION=true
+                echo -ne "\b \b"
+                echo ""
+                return 0
+            fi
+        done
+        echo -ne "\b \b"
+
+        for s in {1..5}; do
+            if read -t 0.1 -n 1 2>/dev/null; then
+                SKIP_ANIMATION=true
+                echo ""
+                return 0
+            fi
+        done
     done
     echo ""
 }
 
-# ==============================================================================
-# 📥 PLACE YOUR PROGRESS BAR ENGINE RIGHT HERE (ABOVE DYNAMIC CALLS)
-# ==============================================================================
 draw_progress_bar() {
     local duration="$1"
     local width=40
@@ -266,18 +267,51 @@ draw_progress_bar() {
     echo -e "] Done!"
 }
 
-# ==============================================================================
-# 📥 PLACE YOUR MATRIX MELT CLEAR ENGINE RIGHT HERE:
-# ==============================================================================
 matrix_melt_clear() {
     local lines; lines=$(tput lines)
-    # Scroll the current screen text downward line-by-line out of view
     for ((i=0; i<lines; i++)); do
-        echo "" # Pushes the terminal buffer down
-        sleep 0.01
+        echo ""
+        if [ "$SKIP_ANIMATION" = false ]; then
+            if read -t 0.005 -n 1 2>/dev/null; then
+                SKIP_ANIMATION=true
+            fi
+            sleep 0.01
+        fi
     done
     clear
 }
+
+# ==============================================================================
+# 🧬 2. VISUAL DISPLAY & EXECUTION CALLS (DECLARED AT THE END)
+# ==============================================================================
+clear
+echo -e "\033[38;2;0;255;0m  ╔═════════════════════════════════════════════════════════════════════════════════════════════╗\033[0m"
+echo -e "\033[38;2;0;255;0m  ║                                                                                             ║\033[0m"
+echo -e "\033[38;2;0;255;0m  ║                                █ █ █ █▀▀ █   █▀▀ █▀█ █▄█ █▀▀                                ║\033[0m"
+echo -e "\033[38;2;0;255;0m  ║                                ▀▄▀▄▀ ██▄ █▄▄ █▄▄ █▄█ █ █ ██▄                                ║\033[0m"
+echo -e "\033[38;2;0;255;0m  ║                                                                                             ║\033[0m"
+echo -e "\033[38;2;0;255;0m  ║    ${B_BLUE}[●] BLUE Pill\033[38;2;0;255;0m            🔑  System Architecture Unlocks  🔑            ${RED}RED Pill [●]\033[38;2;0;255;0m     ║\033[0m"
+echo -e "\033[38;2;0;255;0m  ║                                                                                             ║\033[0m"
+echo -e "\033[38;2;0;255;0m  ╚═════════════════════════════════════════════════════════════════════════════════════════════╝\033[0m"
+echo -e "  ${DIM}→ Press ANY KEY to instantly bypass connection logs and initialization streams...${NC}\n"
+
+# Run text prompts cleanly now that functions are fully compiled into memory
+type_prompt "  Establishing System Root Authorization.... " 0.03
+blink_cursor ""
+echo ""
+type_prompt "  exploiting system entry " 0.03
+blink_cursor ""
+
+type_prompt "  injecting exploit.... " 0.05
+blink_cursor ""
+
+type_prompt "  system has been pwned, root access has been granted.... " 0.03
+blink_cursor ""
+
+type_prompt "  mapping system block registers " 0.03
+blink_cursor ""
+echo ""
+
 
 # ==============================================================================
 # Your script baseline targets continue below:
@@ -2336,7 +2370,7 @@ show_menu() {
         echo -e "${RESET}"
 
         # --- SECTION 1: STORAGE & INITIAL MEMORY CONFIG ---
-        echo -e "  ${BOLD}${MAGENTA}This is your last chance. After this, there is no turning back.${RESET}"
+        echo -e "  ${BOLD}${MAGENTA}WARNING: Final confirmation gate. Proceeding will lock in configuration changes.${RESET}"
         echo -e "  ${DIM}─────────────────────────────────────────────────────────────────────${RESET}"
         echo -e "    ${CYAN}[1]${RESET} ${B_BLUE}BLUE  ●${CYAN} 16GB Swapfile Mapping   ${DIM}(Recommended for smaller NVMe setups)${RESET}"
         echo -e "    ${CYAN}[2]${RESET} ${RED}RED   ●${CYAN} 32GB Swapfile Mapping   ${DIM}(Recommended for high-capacity NVMe)${RESET}"
@@ -2355,7 +2389,23 @@ show_menu() {
         echo -e "  ${DIM}─────────────────────────────────────────────────────────────────────${RESET}"
         echo ""
 
-        # --- SECTION 2: COMPONENT SWITCHES & TOOLS ---
+        # --- SECTION 2: GPU OVERCLOCK CONTROLS ---
+        echo -e "  ${BOLD}${BLUE}GPU Overclock Governor Settings${RESET}"
+        echo -e "  ${DIM}─────────────────────────────────────────────────────────────────────${RESET}"
+        echo -e "    ${CYAN}[a] Enable Governor Now${RESET}    ${DIM}(Until Next Reboot)${RESET}  ${YELLOW}[d] Disable Governor Now${RESET}   ${DIM}(Stop Immediately)${RESET}"
+        echo -e "    ${CYAN}[b] Enable Auto-Start${RESET}      ${DIM}(Turn On Every Boot)${RESET} ${YELLOW}[e] Disable Auto-Start${RESET}     ${DIM}(Keep Off on Boot)${RESET}"
+        echo -e "    ${BLUE}[c] Restart Governor${RESET}       ${DIM}(Refresh Tweaks)${RESET}     ${BLUE}[f] Monitor Live Logs${RESET}      ${DIM}(Press [Enter] to Exit)${RESET}"
+        echo -e "    ${MAGENTA}[g] Check Driver Version${RESET}                        ${MAGENTA}[s] View Current Toolkit Dashboard${RESET}"
+        echo ""
+        # --- CONFIG NOTICES ---
+        echo -e "  ${DIM}─────────────────────────────────────────────────────────────────────${RESET}"
+        echo -e "  ${CYAN}  ℹ  Configuration Path Notice:${RESET}"
+        echo -e "     Ensure adjustments are populated inside the config container path before launch:"
+        echo -e "     ${WHITE}\"/etc/cyan-skillfish-governor-smu/config.toml\"${RESET}"
+        echo -e "  ${DIM}─────────────────────────────────────────────────────────────────────${RESET}"
+        echo ""
+
+        # --- SECTION 3: COMPONENT SWITCHES & TOOLS ---
         echo -e "  ${BOLD}${BLUE}Hardware Unlocks & Core Optimizations${RESET}"
         echo -e "  ${DIM}─────────────────────────────────────────────────────────────────────${RESET}"
         echo -e "    ${CYAN}[3]${RESET} ACPI Table Fix  ${DIM}(Install/Uni)${RESET}    ${CYAN}[4]${RESET} RAM/VRAM Split  ${DIM}(Dynamic Split)${RESET}"
@@ -2364,27 +2414,14 @@ show_menu() {
         echo -e "    ${MAGENTA}[h] CU Map Matrix    ${DIM}(Harvest Map)${RESET}   ${MAGENTA}[o] HTML Dashboard ${DIM}(Web Browser)${RESET}"
         echo ""
 
-        # --- SECTION 3: SMU GOVERNOR LAYER CONTROLS ---
-        echo -e "  ${BOLD}${BLUE}Cyan Skillfish Governor Daemon Service Management${RESET}"
-        echo -e "  ${DIM}─────────────────────────────────────────────────────────────────────${RESET}"
-        echo -e "    ${CYAN}[a] Runtime Start${RESET}  ${DIM}(Temporary Session)${RESET}  ${YELLOW}[d] Runtime Stop${RESET}  ${DIM}(Kill Process)${RESET}"
-        echo -e "    ${CYAN}[b] Persistent Boot Enable${RESET} ${DIM}(--now)${RESET}      ${YELLOW}[e] Persistent Disable${RESET} ${DIM}(--now)${RESET}"
-        echo -e "    ${BLUE}[c] Soft Restart Service Layer${RESET}          ${BLUE}[f] Stream Live Status${RESET} ${DIM}(Ctrl+C to Exit)${RESET}"
-        echo -e "    ${MAGENTA}[g] Interrogate Active Driver Version${RESET}   ${MAGENTA}[s] Print Core System Status${RESET}"
-        echo ""
-
         # --- GLOBAL OPERATIONS ---
         echo -e "    ${CYAN}[r] Reload Menu Interface${RESET}"
         echo -e "    ${BOLD}${RED}[0] Secure Safe Exit${RESET}"
         echo ""
 
-        # --- INTEGRATED WARNING & CONFIG NOTICES ---
+        # --- INTEGRATED WARNING ---
         echo -e "  ${BOLD}${RED}  ${ICON_WARN}  WARNING: OVERCLOCKING AND UNDERVOLTING CAN DAMAGE SILICON TARGETS!${RESET}"
         echo -e "  ${RED}            PROCEED ENTIRELY AT YOUR OWN RISK AND VERIFY SYSTEM COOLING.${RESET}"
-        echo -e "  ${DIM}─────────────────────────────────────────────────────────────────────${RESET}"
-        echo -e "  ${CYAN}  ℹ  Configuration Path Notice:${RESET}"
-        echo -e "     Ensure adjustments are populated inside the config container path before launch:"
-        echo -e "     ${WHITE}\"/etc/cyan-skillfish-governor-smu/config.toml\"${RESET}"
         echo -e "  ${DIM}─────────────────────────────────────────────────────────────────────${RESET}"
 
         # Safe Prompt Parser (Instant Typing Response Keystroke Engine)
