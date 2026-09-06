@@ -11,10 +11,13 @@ DIM='\033[38;2;110;110;110m'
 NC='\033[0m'
 
 # 🧬 SUITE IDENTITY BRANDING NOTICES
+------------------------------
+echo ""
 echo -e "  ${B_BLUE}[●] BLUE Pill Suite Active Deployment Profile${NC}"
 echo -e "  ${YELLOW}[●] NOTICE: This deployment process takes approximately 25 minutes from start to finish.${NC}"
 echo -e "      ${DIM}Please hold steady and let the background transaction compiler finish completely.${NC}"
 echo ""
+------------------------------
 
 echo "[●] Step 1/8: Stopping obsolete governor daemon services..." &&
 (systemctl disable --now cyan-skillfish-governor 2>/dev/null || true) &>/dev/null &&
