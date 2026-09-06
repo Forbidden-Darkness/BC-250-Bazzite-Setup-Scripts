@@ -5,8 +5,14 @@
 #  Created By:  NexGen3D for the BC‑250
 # ────────────────────────────────────────────────────────────────
 
-echo "[●] NOTICE: This deployment process takes approximately 25 minutes from start to finish."
-echo "    Please hold steady and let the background transaction compiler finish completely."
+# Localized Color Matrix Matrix
+YELLOW='\033[1;33m'
+DIM='\033[38;2;110;110;110m'
+NC='\033[0m'
+
+# 🧬 HIGH-VISIBILITY WARNING INJECTION
+echo -e "  ${YELLOW}[●] NOTICE: This deployment process takes approximately 25 minutes from start to finish.${NC}"
+echo -e "      ${DIM}Please hold steady and let the background transaction compiler finish completely.${NC}"
 echo ""
 
 echo "[●] Step 1/8: Stopping obsolete governor daemon services..." &&
@@ -22,8 +28,6 @@ echo "[●] Step 3/8: Cleaning and refreshing rpm-ostree metadata tracking..." &
 (sudo rpm-ostree refresh-md 2>/dev/null || true) &>/dev/null &&
 
 echo "[●] Step 4/8: Staging Enhanced Cyan Skillfish Governor SMU layers (Takes ~25 mins total pipeline)..." &&
-# 🧬 INJECTED TRANSACTION LOCK BREAKER:
-# Clears out trailing uninstallation states so your stock config.toml always drops fresh!
 (sudo rpm-ostree cleanup -p 2>/dev/null || true) &>/dev/null &&
 (rpm-ostree install -y cyan-skillfish-governor-smu 2>/dev/null || true) &>/dev/null &&
 
