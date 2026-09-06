@@ -1189,19 +1189,19 @@ prompt_reboot() {
 # =====================================================================
 # Complete, Deep-Clean Removal Logic for the Blue Pill
 uninstall_blue_pill() {
-    echo -e "${YELLOW}[●] Forcibly stopping and disabling all governor services...${NC}"
-    sudo systemctl stop cyan-skillfish-governor-smu cyan-skillfish-governor cyan-skillfish-governor-tt oberon-governor 2>/dev/null || true
-    sudo systemctl disable cyan-skillfish-governor-smu cyan-skillfish-governor cyan-skillfish-governor-tt oberon-governor 2>/dev/null || true
+    echo -e "${YELLOW}[●] Step 1/7: Forcibly stopping and disabling all governor services...${NC}"
+    (sudo systemctl stop cyan-skillfish-governor-smu cyan-skillfish-governor cyan-skillfish-governor-tt oberon-governor 2>/dev/null || true) &>/dev/null
+    (sudo systemctl disable cyan-skillfish-governor-smu cyan-skillfish-governor cyan-skillfish-governor-tt oberon-governor 2>/dev/null || true) &>/dev/null
 
-    echo -e "${YELLOW}[●] Stripping away corrupted system initramfs flags...${NC}"
+    echo -e "${YELLOW}[●] Step 2/7: Stripping away system initramfs configuration locks...${NC}"
     # FIX: Disables the stuck manual initramfs flag inside the script to fix background transaction crashes
-    sudo rpm-ostree initramfs --disable 2>/dev/null || true
+    (sudo rpm-ostree initramfs --disable 2>/dev/null || true) &>/dev/null
 
-    echo -e "${YELLOW}[●] Unlayering package packages from the system tree...${NC}"
-    sudo rpm-ostree remove cyan-skillfish-governor-smu lz4 2>/dev/null || true
-    sudo copr disable filippor/bazzite -y 2>/dev/null || true
+    echo -e "${YELLOW}[●] Step 3/7: Unlayering package structures from the system tree (Takes ~2 mins)...${NC}"
+    (sudo rpm-ostree remove -y cyan-skillfish-governor-smu lz4 2>/dev/null || true) &>/dev/null
+    (sudo copr disable filippor/bazzite -y 2>/dev/null || true) &>/dev/null
 
-    echo -e "${YELLOW}[●] Step 1: Restoring factory kernel arguments (kargs)...${NC}"
+    echo -e "${YELLOW}[●] Step 4/7: Restoring factory kernel arguments (kargs)...${NC}"
     local kargs_remove=(
         --delete=mitigations=off
         --delete=zswap.enabled=1
@@ -1215,30 +1215,30 @@ uninstall_blue_pill() {
 
     # 🧬 TWIN-STEP SPLASH GUARD INTEGRATION:
     # Purges performance flags while concurrently re-enforcing visual loading markers
-    sudo rpm-ostree kargs "${kargs_remove[@]}" --append="quiet" --append="rhgb" >> /var/log/bc250_oc_install.log 2>&1 || true
+    (sudo rpm-ostree kargs "${kargs_remove[@]}" --append="quiet" --append="rhgb" >> /var/log/bc250_oc_install.log 2>&1 || true) &>/dev/null
 
     # Synchronize layout template configurations
-    sudo sed -i 's/GRUB_CMDLINE_LINUX="/GRUB_CMDLINE_LINUX="quiet rhgb /g' /etc/default/grub 2>/dev/null
+    (sudo sed -i 's/GRUB_CMDLINE_LINUX="/GRUB_CMDLINE_LINUX="quiet rhgb /g' /etc/default/grub 2>/dev/null) &>/dev/null
 
     # 🧬 GRUB ENVIRONMENT BLOCK FORCE-INJECTION
     # Directly writes to the environment registers to block ostree interpretation skips
-    echo -e "${GREEN}[+] Step 2: Hard-locking visual splash screen variables...${NC}"
-    sudo grub2-editenv - set kernelopts="quiet rhgb" 2>/dev/null
+    echo -e "${GREEN}[+] Step 5/7: Hard-locking visual splash screen variables...${NC}"
+    (sudo grub2-editenv - set kernelopts="quiet rhgb" 2>/dev/null) &>/dev/null
 
-    echo -e "${YELLOW}[●] Tearing down BTRFS disk swapfile subvolume...${NC}"
-    sudo swapoff /var/swap/swapfile 2>/dev/null || true
-    sudo rm -f /var/swap/swapfile 2>/dev/null || true
-    sudo btrfs subvolume delete /var/swap 2>/dev/null || true
+    echo -e "${YELLOW}[●] Step 6/7: Tearing down BTRFS disk swapfile subvolume...${NC}"
+    (sudo swapoff /var/swap/swapfile 2>/dev/null || true) &>/dev/null
+    (sudo rm -f /var/swap/swapfile 2>/dev/null || true) &>/dev/null
+    (sudo btrfs subvolume delete /var/swap 2>/dev/null || true) &>/dev/null
 
-    echo -e "${YELLOW}[●] Wiping configuration files, systemd symlinks, and caches...${NC}"
-    sudo sed -i '\/var\/swap\/swapfile/d' /etc/fstab 2>/dev/null || true
-    sudo rm -f /etc/sysctl.d/99-swappiness.conf 2>/dev/null || true
-    sudo rm -rf /etc/systemd/system/cyan-skillfish-governor* 2>/dev/null || true
-    sudo rm -rf /etc/cyan-skillfish-governor-smu 2>/dev/null || true
+    echo -e "${YELLOW}[●] Step 7/7: Wiping configuration files, systemd symlinks, and caches...${NC}"
+    (sudo sed -i '\/var\/swap\/swapfile/d' /etc/fstab 2>/dev/null || true) &>/dev/null
+    (sudo rm -f /etc/sysctl.d/99-swappiness.conf 2>/dev/null || true) &>/dev/null
+    (sudo rm -rf /etc/systemd/system/cyan-skillfish-governor* 2>/dev/null || true) &>/dev/null
+    (sudo rm -rf /etc/cyan-skillfish-governor-smu 2>/dev/null || true) &>/dev/null
 
-    sudo rpm-ostree cleanup -m 2>/dev/null || true
-    sudo systemctl daemon-reload
-    ujust regenerate-grub &>/dev/null || true
+    (sudo rpm-ostree cleanup -m 2>/dev/null || true) &>/dev/null
+    (sudo systemctl daemon-reload) &>/dev/null
+    (ujust regenerate-grub &>/dev/null || true) &>/dev/null
 
     echo -e "${GREEN}\n[✓] Safe Removal Scheduled Successfully!${NC}"
     echo -e "${BOLD}${YELLOW}CRITICAL STEP:${RESET} You must reboot your machine now to apply the clean system layer."
@@ -1248,7 +1248,7 @@ uninstall_blue_pill() {
 
 # Unified Wrapper handling the Intelligent Toggle Switch selection logic
 install_blue_pill() {
-    # Check for the dynamic tracker file in your workspace path
+    # 1. Primary Check: Is Blue Pill already active on this host?
     if [ -f "$HOME/Blue_Pill_16GB/.installed" ]; then
         echo -e "${YELLOW}[●] Active Blue Pill optimization suite detected on this machine.${NC}"
         echo -e "${BOLD}${MAGENTA}Would you like to completely uninstall the suite and restore defaults?${RESET}"
@@ -1263,8 +1263,35 @@ install_blue_pill() {
             sleep 1
         fi
     else
-        # 🧬 PRE-FLIGHT INSTALLATION CONFIRMATION GATE
-        # Safeguards non-Linux users from accidental executions by requiring a clear choice
+        # 🧬 2. CROSS-CONFLICT SHIELD GATE: Detects if the Red Pill suite is running on this machine
+        if [ -f "$HOME/Red_Pill_32GB/.installed" ]; then
+            clear
+            echo -e "\n  ${RED}╔═══════════════════════════════════════════════════════════════════╗${NC}"
+            echo -e "  ${RED}║                     SUITE CONFLICT SHIELD ACTIVE                  ║${NC}"
+            echo -e "  ${RED}║               CROSS-DEPLOYMENT COLLISION BLOCKED                  ║${NC}"
+            echo -e "  ${RED}╚═══════════════════════════════════════════════════════════════════╝${NC}"
+            echo ""
+            echo -e "  ${YELLOW}[⚠] NOTICE:${NC} The opposing ${RED}Red Pill (32GB Suite)${NC} is currently active on this system."
+            echo -e "      Deploying both concurrently will corrupt your BTRFS subvolumes."
+            echo ""
+            echo -e "      The toolbox can automatically execute a deep safe uninstallation of"
+            echo -e "      the Red Pill suite and reset system defaults before continuing."
+            echo ""
+
+            if confirm "Would you like to completely uninstall Red Pill first and proceed?"; then
+                echo -e "\n${YELLOW}[●] Initializing automated Red Pill rollback sequence...${NC}"
+                uninstall_red_pill
+                rm -f "$HOME/Red_Pill_32GB/.installed" 2>/dev/null || true
+                echo -e "${GREEN}[✓] Red Pill successfully uninstalled. Continuing to Blue Pill setup...${NC}"
+                sleep 2
+            else
+                echo -e "  ${CYAN}[-] Operation canceled. Returning safely to primary toolkit menu...${NC}"
+                sleep 1.5
+                return 0
+            fi
+        fi
+
+        # 🧬 3. PRE-FLIGHT INSTALLATION CONFIRMATION GATE
         echo -e "\n  ${B_BLUE}[●] Initialization Notice: You are about to deploy the Blue Pill Suite.${RESET}"
         echo -e "      This will alter your host swap partition layout and download performance binaries."
 
@@ -1291,19 +1318,19 @@ install_blue_pill() {
 
 # Complete, Deep-Clean Removal Logic for the Red Pill
 uninstall_red_pill() {
-    echo -e "${YELLOW}[●] Forcibly stopping and disabling all governor services...${NC}"
-    sudo systemctl stop cyan-skillfish-governor-smu cyan-skillfish-governor cyan-skillfish-governor-tt oberon-governor 2>/dev/null || true
-    sudo systemctl disable cyan-skillfish-governor-smu cyan-skillfish-governor cyan-skillfish-governor-tt oberon-governor 2>/dev/null || true
+    echo -e "${YELLOW}[●] Step 1/7: Forcibly stopping and disabling all governor services...${NC}"
+    (sudo systemctl stop cyan-skillfish-governor-smu cyan-skillfish-governor cyan-skillfish-governor-tt oberon-governor 2>/dev/null || true) &>/dev/null
+    (sudo systemctl disable cyan-skillfish-governor-smu cyan-skillfish-governor cyan-skillfish-governor-tt oberon-governor 2>/dev/null || true) &>/dev/null
 
-    echo -e "${YELLOW}[●] Stripping away corrupted system initramfs flags...${NC}"
+    echo -e "${YELLOW}[●] Step 2/7: Stripping away system initramfs configuration locks...${NC}"
     # FIX: Disables the stuck manual initramfs flag inside the script to fix background transaction crashes
-    sudo rpm-ostree initramfs --disable 2>/dev/null || true
+    (sudo rpm-ostree initramfs --disable 2>/dev/null || true) &>/dev/null
 
-    echo -e "${YELLOW}[●] Unlayering package packages from the system tree...${NC}"
-    sudo rpm-ostree remove cyan-skillfish-governor-smu lz4 2>/dev/null || true
-    sudo copr disable filippor/bazzite -y 2>/dev/null || true
+    echo -e "${YELLOW}[●] Step 3/7: Unlayering package structures from the system tree (Takes ~2 mins)...${NC}"
+    (sudo rpm-ostree remove -y cyan-skillfish-governor-smu lz4 2>/dev/null || true) &>/dev/null
+    (sudo copr disable filippor/bazzite -y 2>/dev/null || true) &>/dev/null
 
-    echo -e "${YELLOW}[●] Step 1: Restoring factory kernel arguments (kargs)...${NC}"
+    echo -e "${YELLOW}[●] Step 4/7: Restoring factory kernel arguments (kargs)...${NC}"
     local kargs_remove=(
         --delete=mitigations=off
         --delete=zswap.enabled=1
@@ -1314,30 +1341,30 @@ uninstall_red_pill() {
 
     # 🧬 TWIN-STEP SPLASH GUARD INTEGRATION:
     # Purges performance flags while concurrently re-enforcing visual loading markers
-    sudo rpm-ostree kargs "${kargs_remove[@]}" --append="quiet" --append="rhgb" >> /var/log/bc250_oc_install.log 2>&1 || true
+    (sudo rpm-ostree kargs "${kargs_remove[@]}" --append="quiet" --append="rhgb" >> /var/log/bc250_oc_install.log 2>&1 || true) &>/dev/null
 
     # Synchronize layout template configurations
-    sudo sed -i 's/GRUB_CMDLINE_LINUX="/GRUB_CMDLINE_LINUX="quiet rhgb /g' /etc/default/grub 2>/dev/null
+    (sudo sed -i 's/GRUB_CMDLINE_LINUX="/GRUB_CMDLINE_LINUX="quiet rhgb /g' /etc/default/grub 2>/dev/null) &>/dev/null
 
     # 🧬 GRUB ENVIRONMENT BLOCK FORCE-INJECTION
     # Directly writes to the environment registers to block ostree skips and hold the splash active
-    echo -e "${GREEN}[+] Step 2: Hard-locking visual splash screen variables...${NC}"
-    sudo grub2-editenv - set kernelopts="quiet rhgb" 2>/dev/null
+    echo -e "${GREEN}[+] Step 5/7: Hard-locking visual splash screen variables...${NC}"
+    (sudo grub2-editenv - set kernelopts="quiet rhgb" 2>/dev/null) &>/dev/null
 
-    echo -e "${YELLOW}[●] Tearing down BTRFS disk swapfile infrastructure...${NC}"
-    sudo swapoff /var/swap/swapfile 2>/dev/null || true
-    sudo rm -f /var/swap/swapfile 2>/dev/null || true
-    sudo btrfs subvolume delete /var/swap 2>/dev/null || true
+    echo -e "${YELLOW}[●] Step 6/7: Tearing down BTRFS disk swapfile infrastructure...${NC}"
+    (sudo swapoff /var/swap/swapfile 2>/dev/null || true) &>/dev/null
+    (sudo rm -f /var/swap/swapfile 2>/dev/null || true) &>/dev/null
+    (sudo btrfs subvolume delete /var/swap 2>/dev/null || true) &>/dev/null
 
-    echo -e "${YELLOW}[●] Wiping configuration files, systemd symlinks, and caches...${NC}"
-    sudo sed -i '\/var\/swap\/swapfile/d' /etc/fstab 2>/dev/null || true
-    sudo rm -f /etc/sysctl.d/99-swappiness.conf 2>/dev/null || true
-    sudo rm -rf /etc/systemd/system/cyan-skillfish-governor* 2>/dev/null || true
-    sudo rm -rf /etc/cyan-skillfish-governor-smu 2>/dev/null || true
+    echo -e "${YELLOW}[●] Step 7/7: Wiping configuration files, systemd symlinks, and caches...${NC}"
+    (sudo sed -i '\/var\/swap\/swapfile/d' /etc/fstab 2>/dev/null || true) &>/dev/null
+    (sudo rm -f /etc/sysctl.d/99-swappiness.conf 2>/dev/null || true) &>/dev/null
+    (sudo rm -rf /etc/systemd/system/cyan-skillfish-governor* 2>/dev/null || true) &>/dev/null
+    (sudo rm -rf /etc/cyan-skillfish-governor-smu 2>/dev/null || true) &>/dev/null
 
-    sudo rpm-ostree cleanup -m 2>/dev/null || true
-    sudo systemctl daemon-reload
-    ujust regenerate-grub &>/dev/null || true
+    (sudo rpm-ostree cleanup -m 2>/dev/null || true) &>/dev/null
+    (sudo systemctl daemon-reload) &>/dev/null
+    (ujust regenerate-grub &>/dev/null || true) &>/dev/null
 
     echo -e "${GREEN}\n[✓] Safe Removal Scheduled Successfully!${NC}"
     echo -e "${BOLD}${YELLOW}CRITICAL STEP:${RESET} You must reboot your machine now to apply the clean system layer."
@@ -1347,7 +1374,7 @@ uninstall_red_pill() {
 
 # Unified Wrapper handling the Intelligent Toggle Switch selection logic
 install_red_pill() {
-    # Check for the dynamic tracker file in your workspace path
+    # 1. Primary Check: Is Red Pill already active on this host?
     if [ -f "$HOME/Red_Pill_32GB/.installed" ]; then
         echo -e "${YELLOW}[●] Active Red Pill optimization suite detected on this machine.${NC}"
         echo -e "${BOLD}${MAGENTA}Would you like to completely uninstall the suite and restore defaults?${RESET}"
@@ -1362,7 +1389,35 @@ install_red_pill() {
             sleep 1
         fi
     else
-        # 🧬 PRE-FLIGHT INSTALLATION CONFIRMATION GATE
+        # 🧬 2. CROSS-CONFLICT SHIELD GATE: Detects if the Blue Pill suite is running on this machine
+        if [ -f "$HOME/Blue_Pill_16GB/.installed" ]; then
+            clear
+            echo -e "\n  ${RED}╔═══════════════════════════════════════════════════════════════════╗${NC}"
+            echo -e "  ${RED}║                     SUITE CONFLICT SHIELD ACTIVE                  ║${NC}"
+            echo -e "  ${RED}║               CROSS-DEPLOYMENT COLLISION BLOCKED                  ║${NC}"
+            echo -e "  ${RED}╚═══════════════════════════════════════════════════════════════════╝${NC}"
+            echo ""
+            echo -e "  ${YELLOW}[⚠] NOTICE:${NC} The opposing ${B_BLUE}Blue Pill (16GB Suite)${NC} is currently active on this system."
+            echo -e "      Deploying both concurrently will corrupt your BTRFS subvolumes."
+            echo ""
+            echo -e "      The toolbox can automatically execute a deep safe uninstallation of"
+            echo -e "      the Blue Pill suite and reset system defaults before continuing."
+            echo ""
+
+            if confirm "Would you like to completely uninstall Blue Pill first and proceed?"; then
+                echo -e "\n${YELLOW}[●] Initializing automated Blue Pill rollback sequence...${NC}"
+                uninstall_blue_pill
+                rm -f "$HOME/Blue_Pill_16GB/.installed" 2>/dev/null || true
+                echo -e "${GREEN}[✓] Blue Pill successfully uninstalled. Continuing to Red Pill setup...${NC}"
+                sleep 2
+            else
+                echo -e "  ${CYAN}[-] Operation canceled. Returning safely to primary toolkit menu...${NC}"
+                sleep 1.5
+                return 0
+            fi
+        fi
+
+        # 🧬 3. PRE-FLIGHT INSTALLATION CONFIRMATION GATE
         # Safeguards non-Linux users from accidental executions by requiring a clear choice
         echo -e "\n  ${RED}[●] Initialization Notice: You are about to deploy the Red Pill Suite.${RESET}"
         echo -e "      This will alter your host swap partition layout and download performance binaries."
