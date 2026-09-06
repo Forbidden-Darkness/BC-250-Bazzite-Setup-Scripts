@@ -199,17 +199,6 @@ The Linux Translation Table Manager (`ttm`) tracks memory ceilings explicitly us
 
 ------------------------------
 
-## 🗺️ Bazzite 43 vs. Bazzite 44 Core Divergence Pathing Matrix
-Bazzite 43 and 44 migrated across distinct generational shifts of the Fedora base layer. This toolbox accounts for these underlying changes automatically to protect system operations from breaking:
-
-| Architectural System Component | Bazzite 43 Environment Blueprint (Fedora 40 Base Layer) | Bazzite 44 Deck Environment Blueprint (Fedora 41 Base Layer) | Toolbox Native Resolution Method |
-|---|---|---|---|
-| Boot Loader Entry Storage | Maintained static file blocks via /boot/efi/EFI/fedora/grub.cfg. | Migrated to the modernized Boot Loader Specification layout inside /boot/loader/entries/. | Unified System Call: Interrogates target environments and safely wraps commands with a dual fallback call: ujust regenerate-grub || sudo grub2-mkconfig. |
-| Power Daemon Package Target | Packaged and cataloged system level clock utilities via kernel-tools. | Segregated core power controllers into a specialized, standalone cpupower package file structure. | Silent Search Interlock: Evaluates localized package indexes using rpm-ostree search before forcing installs, blocking missing package layer breaks. |
-| Compiler Toolchain Limits | Handled standard memory references and linker allocations via early C++ header formats. | Enforced strict compilation optimization checking that explicitly drops unbound C++ library includes. | POSIX C Offline Failback: Strips all C++ dependencies out of the script's local memory backup. Writes out a pure C engine (main.c) compiled cleanly by standard gcc. |
-
-------------------------------
-
 ### 📊 RAM/VRAM Allocation Performance Matrix
 
 | Allocation Profile Index | Hardware Profile Mapping | Gaming Suitability | Targeted Use Case Performance |
@@ -220,6 +209,17 @@ Bazzite 43 and 44 migrated across distinct generational shifts of the Fedora bas
 | **4) Balanced Allocation** | ~10GB System RAM / ~6GB VRAM | **🥇 Highly Recommended** | Fixes GameScope framebuffer rendering crashes. Gives the OS plenty of breathing room. |
 | **5) Entry Split** | ~12GB System RAM / ~4GB VRAM | **Excellent** | Perfect baseline profile for standard computing workloads and regular 1080p gaming titles. |
 | **6) Native 512MB Split** | Max System RAM / ~512MB VRAM | **❌ Not Recommended** | Specifically configured for local AI inference model parsing and heavy development sets. |
+
+------------------------------
+
+## 🗺️ Bazzite 43 vs. Bazzite 44 Core Divergence Pathing Matrix
+Bazzite 43 and 44 migrated across distinct generational shifts of the Fedora base layer. This toolbox accounts for these underlying changes automatically to protect system operations from breaking:
+
+| Architectural System Component | Bazzite 43 Environment Blueprint (Fedora 40 Base Layer) | Bazzite 44 Deck Environment Blueprint (Fedora 41 Base Layer) | Toolbox Native Resolution Method |
+|---|---|---|---|
+| Boot Loader Entry Storage | Maintained static file blocks via /boot/efi/EFI/fedora/grub.cfg. | Migrated to the modernized Boot Loader Specification layout inside /boot/loader/entries/. | Unified System Call: Interrogates target environments and safely wraps commands with a dual fallback call: ujust regenerate-grub || sudo grub2-mkconfig. |
+| Power Daemon Package Target | Packaged and cataloged system level clock utilities via kernel-tools. | Segregated core power controllers into a specialized, standalone cpupower package file structure. | Silent Search Interlock: Evaluates localized package indexes using rpm-ostree search before forcing installs, blocking missing package layer breaks. |
+| Compiler Toolchain Limits | Handled standard memory references and linker allocations via early C++ header formats. | Enforced strict compilation optimization checking that explicitly drops unbound C++ library includes. | POSIX C Offline Failback: Strips all C++ dependencies out of the script's local memory backup. Writes out a pure C engine (main.c) compiled cleanly by standard gcc. |
 
 ------------------------------
 
