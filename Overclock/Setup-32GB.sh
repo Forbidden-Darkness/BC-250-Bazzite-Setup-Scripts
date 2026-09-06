@@ -5,6 +5,10 @@
 #  Created By:  NexGen3D for the BC‑250
 # ────────────────────────────────────────────────────────────────
 
+echo "[●] NOTICE: This deployment process takes approximately 25 minutes from start to finish."
+echo "    Please hold steady and let the background transaction compiler finish completely."
+echo ""
+
 echo "[●] Step 1/8: Stopping obsolete governor daemon services..." &&
 (systemctl disable --now cyan-skillfish-governor 2>/dev/null || true) &>/dev/null &&
 (systemctl disable --now cyan-skillfish-governor-tt 2>/dev/null || true) &>/dev/null &&
@@ -17,7 +21,10 @@ echo "[●] Step 3/8: Cleaning and refreshing rpm-ostree metadata tracking..." &
 (sudo rpm-ostree cleanup -m 2>/dev/null || true) &>/dev/null &&
 (sudo rpm-ostree refresh-md 2>/dev/null || true) &>/dev/null &&
 
-echo "[●] Step 4/8: Staging Enhanced Cyan Skillfish Governor SMU layers (This may take a minute)..." &&
+echo "[●] Step 4/8: Staging Enhanced Cyan Skillfish Governor SMU layers (Takes ~25 mins total pipeline)..." &&
+# 🧬 INJECTED TRANSACTION LOCK BREAKER:
+# Clears out trailing uninstallation states so your stock config.toml always drops fresh!
+(sudo rpm-ostree cleanup -p 2>/dev/null || true) &>/dev/null &&
 (rpm-ostree install -y cyan-skillfish-governor-smu 2>/dev/null || true) &>/dev/null &&
 
 echo "[●] Step 5/8: Injecting performance flags into atomic kernel args (kargs)..." &&
