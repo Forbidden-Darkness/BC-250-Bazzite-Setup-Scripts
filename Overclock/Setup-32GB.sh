@@ -1,16 +1,17 @@
 #!/usr/bin/env bash
 # ────────────────────────────────────────────────────────────────
-#  Setup-32GB (Bazzite) – NexGen3D v1.5
-#
-#  Created By:  NexGen3D for the BC‑250
+#  Setup-32GB (Bazzite) – NexGen3D v1.5 (RED Pill Profile)
 # ────────────────────────────────────────────────────────────────
 
 # Localized Color Matrix Matrix
 YELLOW='\033[1;33m'
+B_BLUE='\033[1;34m'
+RED='\033[0;31m'
 DIM='\033[38;2;110;110;110m'
 NC='\033[0m'
 
-# 🧬 HIGH-VISIBILITY WARNING INJECTION
+# 🧬 SUITE IDENTITY BRANDING NOTICES
+echo -e "  ${RED}RED Pill Suite Active Deployment Profile [●]${NC}"
 echo -e "  ${YELLOW}[●] NOTICE: This deployment process takes approximately 25 minutes from start to finish.${NC}"
 echo -e "      ${DIM}Please hold steady and let the background transaction compiler finish completely.${NC}"
 echo ""
@@ -28,8 +29,36 @@ echo "[●] Step 3/8: Cleaning and refreshing rpm-ostree metadata tracking..." &
 (sudo rpm-ostree refresh-md 2>/dev/null || true) &>/dev/null &&
 
 echo "[●] Step 4/8: Staging Enhanced Cyan Skillfish Governor SMU layers (Takes ~25 mins total pipeline)..." &&
+# Determine if this execution loop is a reinstall by checking if logs or tracking folders ever existed
+local is_reinstall=false
+if [[ -d /usr/etc/cyan-skillfish-governor-smu || -f /var/log/bc250_oc_install.log ]]; then
+    is_reinstall=true
+fi &&
+
 (sudo rpm-ostree cleanup -p 2>/dev/null || true) &>/dev/null &&
 (rpm-ostree install -y cyan-skillfish-governor-smu 2>/dev/null || true) &>/dev/null &&
+
+# 🧬 POST-REBOOT SYNC GHOST HOOK
+if [ "$is_reinstall" = true ]; then
+    (sudo bash -c 'cat << "EOF" > /etc/systemd/system/gln-reinstall-sync.service
+[Unit]
+Description=Post-Reboot Governor Directory Self-Healing Sync
+Before=cyan-skillfish-governor-smu.service
+ConditionPathExists=!/etc/cyan-skillfish-governor-smu/config.toml
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/mkdir -p /etc/cyan-skillfish-governor-smu
+ExecStart=/usr/bin/cp -n /usr/etc/cyan-skillfish-governor-smu/config.toml /etc/cyan-skillfish-governor-smu/config.toml
+ExecStart=/usr/bin/systemctl disable gln-reinstall-sync.service
+ExecStart=/usr/bin/rm -f /etc/systemd/system/gln-reinstall-sync.service
+
+[Install]
+WantedBy=multi-user.target
+EOF' 2>/dev/null || true) &>/dev/null &&
+    (sudo systemctl daemon-reload 2>/dev/null || true) &>/dev/null &&
+    (sudo systemctl enable gln-reinstall-sync.service 2>/dev/null || true) &>/dev/null
+fi &&
 
 echo "[●] Step 5/8: Injecting performance flags into atomic kernel args (kargs)..." &&
 (rpm-ostree kargs --append-if-missing=mitigations=off 2>/dev/null || true) &>/dev/null &&
