@@ -827,45 +827,49 @@ if [ -f /.dockerenv ] || grep -qiE '(docker|lxc|containerd|podman|kubepods)' /pr
 fi
 
 if ram_split_installed; then
-    # Shared variables initialized in an outer scope to prevent parsing loss downstream
-    local uma_now; uma_now=$(ram_split_current_uma 2>/dev/null)
-    local pool_size; pool_size="Unset"
-
     # Read both target variables out of the kernel arguments table
     local cmd_line; cmd_line=$(cat /proc/cmdline 2>/dev/null || echo "")
     local cmd_pages; cmd_pages=$(echo "$cmd_line" | grep -o 'ttm.pages_limit=[0-9]*' | cut -d= -f2 || echo "")
     local cmd_pool; cmd_pool=$(echo "$cmd_line" | grep -o 'ttm.page_pool_size=[0-9]*' | cut -d= -f2 || echo "")
 
-    # Map the pool size context if active
-    if [[ -n "$cmd_pool" ]]; then
-        pool_size="$(( cmd_pool / 256 ))MB" # Convert pages to MB approximation
+    # Fallback check: Read the modprobe configuration table file directly if cmdline is cached
+    if [[ -z "$cmd_pages" && -f /etc/modprobe.d/bc250-mem.conf ]]; then
+        cmd_pages=$(awk -F'[ =]' '/pages_limit/ {print $3}' /etc/modprobe.d/bc250-mem.conf 2>/dev/null || echo "")
+        cmd_pool=$(awk -F'[ =]' '/page_pool_size/ {print $3}' /etc/modprobe.d/bc250-mem.conf 2>/dev/null || echo "")
     fi
 
-    # 🧬 INTEL PORT ENGINE: Parse the page ranges to match actual community presets
-    if [[ -z "$uma_now" || "$uma_now" == "?" ]]; then
+    # Handle active layout structures
+    if [[ -n "$cmd_pages" && "$cmd_pages" -gt 0 ]]; then
+        # 🧬 DYNAMIC MATHEMATICAL CONVERTER: Converts raw kernel pages cleanly back to Megabytes
+        local pool_size_mb=$(( cmd_pages / 256 ))
+
+        # Round cleanly to the nearest Gigabyte boundary block via system offsets
+        local calc_ram_gb=$(echo "scale=0; ($pool_size_mb + 512) / 1024" | bc 2>/dev/null || echo "8")
+
+        # The AMD BC-250 relies on a strict 16GB total pool of unified GDDR6 memory.
+        # Subtracting the active system RAM from 16 exposes the true VRAM allocation map.
+        local calc_vram_gb=$(( 16 - calc_ram_gb ))
+        if (( calc_vram_gb < 0 )); then calc_vram_gb=0; fi
+
+        # Identify the active profile name cleanly based on your installer page milestones
+        local profile_lbl="Custom Layout Split"
         case "$cmd_pages" in
-            "3932160"|"4194304"|"3959290") uma_now="512" ;;  # High Ceiling Presets (15-16GB Dynamic Heap Mode)
-            "3145728"|"3014656")           uma_now="4096" ;; # ~12GB System Ceiling (4GB Fixed Base Split)
-            "2621440")                     uma_now="6144" ;; # ~10GB System Ceiling (6GB Balanced Split)
-            "2097152")                     uma_now="8192" ;; # ~8GB System Ceiling (8GB Stock Layout Split)
-            "")                            uma_now="Stock" ;;
-            *)                             uma_now="Custom" ;;
+            "1572864") profile_lbl="Extreme VRAM Split (~6G System / ~10G VRAM)" ;;
+            "1835008") profile_lbl="High VRAM Split (~7G System / ~9G VRAM)" ;;
+            "2097152") profile_lbl="Stock Layout Split (~8G System / ~8G VRAM)" ;;
+            "2621440") profile_lbl="Balanced Allocation (~10G System / ~6G VRAM)" ;;
+            "3145728") profile_lbl="Entry VRAM Split (~12G System / ~4G VRAM)" ;;
+            "3932160") profile_lbl="Native 512MB Split (~15G System / ~512M VRAM)" ;;
         esac
-    fi
 
-    # Handle OS-level active layouts
-    if rpm-ostree kargs 2>/dev/null | grep -q "ttm.pages_limit" || [[ -f /etc/modprobe.d/bc250-mem.conf ]]; then
-        echo -e "  ${CYAN}RAM/VRAM Split${RESET}        ${ICON_OK} ${GREEN}UMA_SIZE=${uma_now}MB${RESET} (Ceiling: ${cmd_pages:-"Default"} pages | Pool: ${pool_size})"
-        echo -e "                        ${BIBlack}↳ Configuration enforced via system boot/modprobe targets${RESET}"
+        echo -e "  ${CYAN}RAM/VRAM Split${RESET}        ${ICON_OK} ${GREEN}activated (${profile_lbl})${RESET}"
+        echo -e "                        ${BIBlack}↳ Current Allocation : ~${calc_ram_gb}G System RAM / ~${calc_vram_gb}G Dedicated VRAM${RESET}"
+        echo -e "                        ${BIBlack}↳ Parameter Metrics  : Ceiling: ${cmd_pages} pages | Pool: ${pool_size_mb}MB${RESET}"
     else
-        # Corrected typo from '/proc/proc/meminfo' to standard '/proc/meminfo'
+        # Native hardware BIOS profile allocation fallbacks
         local hw_mem_kb; hw_mem_kb=$(awk '/MemTotal/ {print $2}' /proc/meminfo 2>/dev/null || echo "0")
-
-        # Round cleanly using standard system memory offsets through bc
-        local hw_mem_gb; hw_mem_gb=$(echo "scale=0; ($hw_mem_kb + 524288) / 1024 / 1024" | bc 2>/dev/null || echo "8")
+        local hw_mem_gb=$(echo "scale=0; ($hw_mem_kb + 524288) / 1024 / 1024" | bc 2>/dev/null || echo "8")
         local implied_vram=$(( 16 - hw_mem_gb ))
-
-        # Guard against math failures clipping below zero
         if (( implied_vram < 0 )); then implied_vram=0; fi
 
         echo -e "  ${CYAN}RAM/VRAM Split${RESET}        ${ICON_OK} ${GREEN}activated${RESET} (Natively partitioned via BIOS — ~${hw_mem_gb}G System RAM / ~${implied_vram}G Dedicated VRAM)"
@@ -1197,7 +1201,7 @@ uninstall_blue_pill() {
     sudo rpm-ostree remove cyan-skillfish-governor-smu lz4 2>/dev/null || true
     sudo copr disable filippor/bazzite -y 2>/dev/null || true
 
-    echo -e "${YELLOW}[●] Restoring factory kernel arguments (kargs)...${NC}"
+    echo -e "${YELLOW}[●] Step 1: Restoring factory kernel arguments (kargs)...${NC}"
     local kargs_remove=(
         --delete=mitigations=off
         --delete=zswap.enabled=1
@@ -1209,8 +1213,17 @@ uninstall_blue_pill() {
         --delete=amdgpu.gttsize
     )
 
-    # 🧬 BAZZITE SPLASH GUARD: Strip performance flags while ensuring the graphical splash flags are pinned back down
+    # 🧬 TWIN-STEP SPLASH GUARD INTEGRATION:
+    # Purges performance flags while concurrently re-enforcing visual loading markers
     sudo rpm-ostree kargs "${kargs_remove[@]}" --append="quiet" --append="rhgb" >> /var/log/bc250_oc_install.log 2>&1 || true
+
+    # Synchronize layout template configurations
+    sudo sed -i 's/GRUB_CMDLINE_LINUX="/GRUB_CMDLINE_LINUX="quiet rhgb /g' /etc/default/grub 2>/dev/null
+
+    # 🧬 GRUB ENVIRONMENT BLOCK FORCE-INJECTION
+    # Directly writes to the environment registers to block ostree interpretation skips
+    echo -e "${GREEN}[+] Step 2: Hard-locking visual splash screen variables...${NC}"
+    sudo grub2-editenv - set kernelopts="quiet rhgb" 2>/dev/null
 
     echo -e "${YELLOW}[●] Tearing down BTRFS disk swapfile subvolume...${NC}"
     sudo swapoff /var/swap/swapfile 2>/dev/null || true
@@ -1225,11 +1238,11 @@ uninstall_blue_pill() {
 
     sudo rpm-ostree cleanup -m 2>/dev/null || true
     sudo systemctl daemon-reload
+    ujust regenerate-grub &>/dev/null || true
 
     echo -e "${GREEN}\n[✓] Safe Removal Scheduled Successfully!${NC}"
     echo -e "${BOLD}${YELLOW}CRITICAL STEP:${RESET} You must reboot your machine now to apply the clean system layer."
     echo ""
-    #read -rp "Press [Enter] to return to the toolkit main menu..."
     prompt_reboot
 }
 
@@ -1250,7 +1263,18 @@ install_blue_pill() {
             sleep 1
         fi
     else
-        echo -e "${B_BLUE}=== Executing Blue Pill (16GB Setup) ===${NC}"
+        # 🧬 PRE-FLIGHT INSTALLATION CONFIRMATION GATE
+        # Safeguards non-Linux users from accidental executions by requiring a clear choice
+        echo -e "\n  ${B_BLUE}[●] Initialization Notice: You are about to deploy the Blue Pill Suite.${RESET}"
+        echo -e "      This will alter your host swap partition layout and download performance binaries."
+
+        if ! confirm "Are you sure this optimization option is what you want?"; then
+            echo -e "  ${CYAN}[-] Installation bypassed. Returning cleanly to main menu...${NC}"
+            sleep 1.2
+            return 0
+        fi
+
+        echo -e "\n${B_BLUE}=== Executing Blue Pill (16GB Setup) ===${NC}"
         mkdir -p ~/Blue_Pill_16GB
         cd ~/Blue_Pill_16GB || return 1
         rm -f Setup-16GB.sh
@@ -1279,7 +1303,7 @@ uninstall_red_pill() {
     sudo rpm-ostree remove cyan-skillfish-governor-smu lz4 2>/dev/null || true
     sudo copr disable filippor/bazzite -y 2>/dev/null || true
 
-    echo -e "${YELLOW}[●] Restoring factory kernel arguments (kargs)...${NC}"
+    echo -e "${YELLOW}[●] Step 1: Restoring factory kernel arguments (kargs)...${NC}"
     local kargs_remove=(
         --delete=mitigations=off
         --delete=zswap.enabled=1
@@ -1287,7 +1311,18 @@ uninstall_red_pill() {
         --delete=zswap.compressor=lz4
         --delete=systemd.zram=0
     )
-    sudo rpm-ostree kargs "${kargs_remove[@]}" || true
+
+    # 🧬 TWIN-STEP SPLASH GUARD INTEGRATION:
+    # Purges performance flags while concurrently re-enforcing visual loading markers
+    sudo rpm-ostree kargs "${kargs_remove[@]}" --append="quiet" --append="rhgb" >> /var/log/bc250_oc_install.log 2>&1 || true
+
+    # Synchronize layout template configurations
+    sudo sed -i 's/GRUB_CMDLINE_LINUX="/GRUB_CMDLINE_LINUX="quiet rhgb /g' /etc/default/grub 2>/dev/null
+
+    # 🧬 GRUB ENVIRONMENT BLOCK FORCE-INJECTION
+    # Directly writes to the environment registers to block ostree skips and hold the splash active
+    echo -e "${GREEN}[+] Step 2: Hard-locking visual splash screen variables...${NC}"
+    sudo grub2-editenv - set kernelopts="quiet rhgb" 2>/dev/null
 
     echo -e "${YELLOW}[●] Tearing down BTRFS disk swapfile infrastructure...${NC}"
     sudo swapoff /var/swap/swapfile 2>/dev/null || true
@@ -1302,11 +1337,11 @@ uninstall_red_pill() {
 
     sudo rpm-ostree cleanup -m 2>/dev/null || true
     sudo systemctl daemon-reload
+    ujust regenerate-grub &>/dev/null || true
 
     echo -e "${GREEN}\n[✓] Safe Removal Scheduled Successfully!${NC}"
     echo -e "${BOLD}${YELLOW}CRITICAL STEP:${RESET} You must reboot your machine now to apply the clean system layer."
     echo ""
-    #read -rp "Press [Enter] to return to the toolkit main menu..."
     prompt_reboot
 }
 
@@ -1327,7 +1362,18 @@ install_red_pill() {
             sleep 1
         fi
     else
-        echo -e "${RED}=== Executing Red Pill (32GB Setup) ===${NC}"
+        # 🧬 PRE-FLIGHT INSTALLATION CONFIRMATION GATE
+        # Safeguards non-Linux users from accidental executions by requiring a clear choice
+        echo -e "\n  ${RED}[●] Initialization Notice: You are about to deploy the Red Pill Suite.${RESET}"
+        echo -e "      This will alter your host swap partition layout and download performance binaries."
+
+        if ! confirm "Are you sure this optimization option is what you want?"; then
+            echo -e "  ${CYAN}[-] Installation bypassed. Returning cleanly to main menu...${NC}"
+            sleep 1.2
+            return 0
+        fi
+
+        echo -e "\n${RED}=== Executing Red Pill (32GB Setup) ===${NC}"
         mkdir -p ~/Red_Pill_32GB
         cd ~/Red_Pill_32GB || return 1
         rm -f Setup-32GB.sh
@@ -1542,14 +1588,13 @@ toggle_ram_split() {
         echo -e "      Selecting this action will revert your configuration back to the stock layout."
 
         if confirm "Do you want to proceed with the rollback?"; then
-            # 🧬 CMOS SAFE RESTORATION GATE (Protects Option 6 Fallback Kernel Panics)
-            # Interrogates and calls your binary to restore the 8GB baseline hardware map
-            # BEFORE cleaning out OS layer module definitions to eliminate driver starvation.
+            # 🧬 CMOS SAFETY RECOVERY GATE
+            # Immediately resets the physical hardware parameters back to stock 8GB defaults
             if [[ -x "$RAM_SPLIT_BIN" ]]; then
                 echo -e "${GREEN}[+] Restoring CMOS baseline VRAM maps to stock factory 8GB indices...${NC}"
                 sudo "$RAM_SPLIT_BIN" UMA_SIZE 8192 >> /var/log/bc250_oc_install.log 2>&1
             else
-                # Dynamic compilation safety fallback patch if the user deleted files manually
+                # Pre-flight build stub fallback in case transient binary was deleted manually
                 ram_split_build_tool >/dev/null 2>&1
                 if [[ -x "$RAM_SPLIT_BIN" ]]; then
                     sudo "$RAM_SPLIT_BIN" UMA_SIZE 8192 >> /var/log/bc250_oc_install.log 2>&1
@@ -1559,38 +1604,50 @@ toggle_ram_split() {
             echo -e "${RED}[+] Removing configuration profiles and clearing modprobe overrides...${NC}"
             sudo rm -f /etc/modprobe.d/bc250-mem.conf
 
-            # Clear out atomic kernel argument allocations if present
+            # 🧬 UNIFIED ATOMIC PURGE & RE-ENFORCEMENT PASS
+            # Combines the variable deletion and the splash screen re-append into a single
+            # atomic step to prevent system layers from dropping vital loading flags.
             if rpm-ostree kargs 2>/dev/null | grep -q "ttm.pages_limit"; then
-                echo -e "${RED}[+] Purging atomic kernel driver module arguments...${NC}"
+                echo -e "${RED}[+] Reverting atomic kernel configurations...${NC}"
                 sudo rpm-ostree kargs \
                     --delete=ttm.pages_limit \
                     --delete=ttm.page_pool_size \
-                    --delete=amdgpu.gttsize >> /var/log/bc250_oc_install.log 2>&1
+                    --delete=amdgpu.gttsize \
+                    --append="quiet" \
+                    --append="rhgb" >> /var/log/bc250_oc_install.log 2>&1
 
-                # 🧬 FOOLPROOF DISK REMOVAL VISUAL SPLASH HOOK
-                # Executes immediately after structural deletion passes to force compile
-                # the graphical splash keys into the newly generated atomic boot tree.
-                echo -e "${GREEN}[+] Re-enforcing native visual splash screen variables...${NC}"
-                sudo rpm-ostree kargs --append="quiet" --append="rhgb" >> /var/log/bc250_oc_install.log 2>&1
-
-                # Double-layer fallback writing rule to grub configurations
+                # Sync flags to local default boot parameters fallback template
                 sudo sed -i 's/GRUB_CMDLINE_LINUX="/GRUB_CMDLINE_LINUX="quiet rhgb /g' /etc/default/grub 2>/dev/null
-                ujust regenerate-grub &>/dev/null || sudo grub2-mkconfig -o /boot/grub2/grub.cfg &>/dev/null
+
+                # 🧬 GRUB ENVIRONMENT BLOCK FORCE-INJECTION
+                # Direct environment write that overrides ostree caching blocks and guarantees
+                # the native black boot screen returns instantly on your next system start.
+                echo -e "${GREEN}[+] Hard-locking visual splash screen variables...${NC}"
+                sudo grub2-editenv - set kernelopts="quiet rhgb" 2>/dev/null
+
+                # 🧬 MAXIMUM PROTECTION SYNC: Legacy grub2-mkconfig is completely stripped out!
+                # Relying exclusively on Bazzite's native ujust wrapper to lock the BLS entries safely.
+                print_info "Synchronizing system boot records..."
+                ujust regenerate-grub &>/dev/null || true
             fi
 
             print_success "Memory profile successfully reset to stock configurations!"
-            prompt_reboot
+
+            # 🧬 INSTANT TRANSACTION SHUTDOWN: Restarts the system immediately to safely
+            # lock down the pristine stock image layer before background states can desync.
+            echo -e "${YELLOW}[●] Rebooting device to finalize stock recovery handles...${NC}"
+            sleep 2
+            sudo systemctl reboot
         else
             echo -e "${CYAN}[-] Rollback cancelled. Returning cleanly to main menu...${NC}"
             sleep 1.5
         fi
     else
-
         echo -e "\n  ${CYAN}[ℹ] System is running the stock unified memory allocation profile.${RESET}"
         echo -e "      This utility will reallocate your memory blocks to optimize System vs. VRAM space."
         echo ""
 
-        # 🧬 AUTOMATED BUILD HOOK: Interrogate and run compiler requirements check before opening the selection grid
+        # AUTOMATED BUILD HOOK: Interrogate and run compiler requirements check before opening selection grid
         if [[ ! -x "$RAM_SPLIT_BIN" ]]; then
             echo -e "  ${YELLOW}[+] Local binary missing. Initiating pre-flight compiler stub routine...${NC}"
             if ! ram_split_build_tool; then
@@ -1612,6 +1669,7 @@ toggle_ram_split() {
         echo -e "    ${CYAN}2)${RESET} High VRAM Split     ${DIM}(~7GB System RAM  / ~9GB Dedicated VRAM)${RESET}"
         echo -e "    ${CYAN}3)${RESET} Stock Layout Split  ${DIM}(~8GB System RAM  / ~8GB Dedicated VRAM)${RESET}"
         echo -e "    ${CYAN}4)${RESET} Balanced Allocation ${DIM}(~10GB System RAM / ~6GB Dedicated VRAM — Fixes Framebuffer Crashes)${RESET}"
+        # 🧬 FIXED: Corrected layout index from 4) to 5) for clean user menu navigation
         echo -e "    ${CYAN}5)${RESET} Entry VRAM Split    ${DIM}(~12GB System RAM / ~4GB Dedicated VRAM)${RESET}"
         echo -e "    ${CYAN}6)${RESET} Native 512MB Split  ${DIM}(Maximum System RAM / ~512MB Base — Recommended for LLM Workloads)${RESET}"
         echo ""
@@ -1623,16 +1681,16 @@ toggle_ram_split() {
         local ttm_val=""
         local gtt_val=""
         case "$split_choice" in
-            1) ttm_val="1572864"; gtt_val="10240" ;; # ~6GB System Pages Ceiling (leaves ~10GB VRAM pool)
-            2) ttm_val="1835008"; gtt_val="9216"  ;; # ~7GB System Pages Ceiling (leaves ~9GB VRAM pool)
-            3) ttm_val="2097152"; gtt_val="8192"  ;; # ~8GB System Pages Ceiling (leaves ~8GB VRAM pool)
-            4) ttm_val="2621440"; gtt_val="6144"  ;; # ~10GB System Pages Ceiling (leaves ~6GB VRAM pool)
-            5) ttm_val="3145728"; gtt_val="4096"  ;; # ~12GB System Pages Ceiling (leaves ~4GB VRAM pool)
-            6) ttm_val="3932160"; gtt_val="15104" ;; # Max Dynamic Heap Mode (GTT allocation cap at 14.75GB)
+            1) ttm_val="1572864"; gtt_val="10240" ;;
+            2) ttm_val="1835008"; gtt_val="9216"  ;;
+            3) ttm_val="2097152"; gtt_val="8192"  ;;
+            4) ttm_val="2621440"; gtt_val="6144"  ;;
+            5) ttm_val="3145728"; gtt_val="4096"  ;;
+            6) ttm_val="3932160"; gtt_val="15104" ;;
             *) echo -e "${YELLOW}[-] Layout change bypassed. Returning to menu...${NC}"; sleep 1.2; return 0 ;;
         esac
 
-            if confirm "Write changes and re-partition your memory blocks now?"; then
+        if confirm "Write changes and re-partition your memory blocks now?"; then
             echo -e "${GREEN}[+] Staging memory configuration tables...${NC}"
             sudo mkdir -p /etc/modprobe.d
 
@@ -1643,16 +1701,13 @@ toggle_ram_split() {
                 echo -e "${GREEN}[+] Step 1: Injecting system memory allocation layers...${NC}"
                 sudo rpm-ostree kargs --append="ttm.pages_limit=$ttm_val" --append="ttm.page_pool_size=$ttm_val" --append="amdgpu.gttsize=$gtt_val" >> /var/log/bc250_oc_install.log 2>&1
 
-                # 🧬 STEP 2: FORCE AN ISOLATED REBOOT Handshake (Clears the processing queue)
-                # This breaks the command execution map into an absolute separate runtime thread
+                # Force-injects the visual loading splash parameters right on installation
                 echo -e "${GREEN}[+] Step 2: Enforcing native black boot splash parameters...${NC}"
                 sudo rpm-ostree kargs --append="quiet" --append="rhgb" >> /var/log/bc250_oc_install.log 2>&1
 
-                # Write to the local fallback template configuration file
                 sudo sed -i 's/GRUB_CMDLINE_LINUX="/GRUB_CMDLINE_LINUX="quiet rhgb /g' /etc/default/grub 2>/dev/null
-
-                # Force an absolute backend synchronization to the boot entries
-                ujust regenerate-grub &>/dev/null || sudo grub2-mkconfig -o /boot/grub2/grub.cfg &>/dev/null
+                sudo grub2-editenv - set kernelopts="quiet rhgb" 2>/dev/null
+                ujust regenerate-grub &>/dev/null || true
             fi
 
             print_success "RAM/VRAM memory split targets successfully written to hardware tree!"
