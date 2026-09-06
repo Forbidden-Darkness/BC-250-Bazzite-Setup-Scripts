@@ -209,6 +209,20 @@ Bazzite 43 and 44 migrated across distinct generational shifts of the Fedora bas
 | Compiler Toolchain Limits | Handled standard memory references and linker allocations via early C++ header formats. | Enforced strict compilation optimization checking that explicitly drops unbound C++ library includes. | POSIX C Offline Failback: Strips all C++ dependencies out of the script's local memory backup. Writes out a pure C engine (main.c) compiled cleanly by standard gcc. |
 
 ------------------------------
+
+### 📊 RAM/VRAM Allocation Performance Matrix
+
+| Allocation Profile Index | Hardware Profile Mapping | Gaming Suitability | Targeted Use Case Performance |
+| :--- | :--- | :--- | :--- |
+| **1) Extreme Split** | ~6GB System RAM / ~10GB VRAM | **Specialized** | Best for running VRAM-heavy emulator setups or heavy game textures, but leaves system memory very tight. |
+| **2) High Split** | ~7GB System RAM / ~9GB VRAM | **Good** | Provides a solid hardware balance mimicking modern console processing architectures. |
+| **3) Stock Split** | ~8GB System RAM / ~8GB VRAM | **Stable Baseline** | The default factory standard. Reliable across general workflows but lacks a performance edge. |
+| **4) Balanced Allocation** | ~10GB System RAM / ~6GB VRAM | **🥇 Highly Recommended** | Fixes GameScope framebuffer rendering crashes. Gives the OS plenty of breathing room. |
+| **5) Entry Split** | ~12GB System RAM / ~4GB VRAM | **Excellent** | Perfect baseline profile for standard computing workloads and regular 1080p gaming titles. |
+| **6) Native 512MB Split** | Max System RAM / ~512MB VRAM | **❌ Not Recommended** | Specifically configured for local AI inference model parsing and heavy development sets. |
+
+------------------------------
+
 ## 📂 Repository File Tree Reference
 
 The toolbox utilizes a unified flat-directory footprint mapped straight out the repository base workspace layer:
