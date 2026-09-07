@@ -444,6 +444,7 @@ ask_desktop_shortcut
 # 🚀 CLEAN CONGESTION-FREE MASTER MENU LOOP (NO REFLECTION DELAYS)
 # ==============================================================================
 while true; do
+clear
     TEXT_STR="            BC-250 CPU OVERCLOCK & Compute Unit Live Manager Setup Tool             "
     echo -e "${DIM}┌────────────────────────────────────────────────────────────────────────────────────┐${RESET}"
     echo -e "${DIM}│${RESET}${BOLD}${MAGENTA}${TEXT_STR}${RESET}${DIM}│${RESET}"
