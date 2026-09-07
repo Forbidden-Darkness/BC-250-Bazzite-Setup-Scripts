@@ -437,9 +437,13 @@ case "$1" in
     --uninstall-cu) uninstall_cu_live_manager; exit 0 ;;
 esac
 
+    # 🧬 FIXED: Pre-flight shortcut configurations execute ONLY ONCE upon initial script boot!
+ask_desktop_shortcut
+
+# ==============================================================================
+# 🚀 CLEAN CONGESTION-FREE MASTER MENU LOOP (NO REFLECTION DELAYS)
+# ==============================================================================
 while true; do
-    ask_desktop_shortcut
-    clear
     TEXT_STR="            BC-250 CPU OVERCLOCK & Compute Unit Live Manager Setup Tool             "
     echo -e "${DIM}┌────────────────────────────────────────────────────────────────────────────────────┐${RESET}"
     echo -e "${DIM}│${RESET}${BOLD}${MAGENTA}${TEXT_STR}${RESET}${DIM}│${RESET}"
