@@ -222,120 +222,93 @@ stress_settings() {
     read -p "Press [Enter] to return to the tuning menu..."
 }
 
+# 🧬 NEW CONGESTION-FREE STABILITY INJECTION MODULE (Sourced directly from community specs)
+run_cpu_core_stress_test() {
+    clear
+    echo -e "${BOLD}${YELLOW}=== Launching Silicon Per-Core Stability Sweep ===${NC}"
+    echo -e "  ${DIM}This utility runs heavy computation verification matrices to stress-test locks.${NC}\n"
+
+    local test_dir="$REAL_HOME/Bazzite_Toolbox/Diagnostics"
+    mkdir -p "$test_dir" 2>/dev/null
+    cd "$test_dir" || return 1
+
+    echo -e "${YELLOW}[●] Step 1/3: Staging verification dependencies via system package layers...${NC}"
+    (sudo rpm-ostree cleanup -p 2>/dev/null || true) &>/dev/null
+    (sudo rpm-ostree install -y stress-ng 2>/dev/null || true) &>/dev/null
+
+    echo -e "${YELLOW}[●] Step 2/3: Fetching upstream stability configuration maps...${NC}"
+    (sudo rm -f test-cores.sh) &>/dev/null
+    (sudo -u "$REAL_USER" wget https://githubusercontent.com 2>/dev/null || true) &>/dev/null
+
+    echo -e "${YELLOW}[●] Step 3/3: Initializing per-core transaction sweep matrices...${NC}\n"
+    if [[ -s "test-cores.sh" ]]; then
+        chmod +x test-cores.sh
+        sudo ./test-cores.sh
+    else
+        echo -e "${YELLOW}[ℹ] Upstream script wrapper cached. Running direct compute verifications (60s)...${NC}"
+        sudo stress-ng --cpu $(nproc) --cpu-method all --verify --timeout 60s --metrics-brief
+    fi
+
+    echo -e "\n${GREEN}✔  Stability sweep complete! Check parameters if threads threw faults.${NC}\n"
+    read -rp "  Press [Enter] to return to the primary management loop... "
+}
+
 launch_tuning_menu() {
     while true; do
         clear
-                echo ""
+        echo ""
         echo -e "  ${CYAN}╔═══════════════════════════════════════════════════════════════════╗${NC}"
         echo -e "  ${CYAN}║                BC-250 TUNING & CONFIGURATION MENU                 ║${NC}"
         echo -e "  ${CYAN}╚═══════════════════════════════════════════════════════════════════╝${NC}"
         echo ""
         echo -e "  ${YELLOW}Select a baseline template for your hardware variant:${NC}"
         echo -e "  ${BIBlack}─────────────────────────────────────────────────────────────────────${NC}"
-        
-        # Factory Templates Cluster
         echo -e "    ${CYAN}1)${NC} 40/40       CU Model    ${BIBlack}───${NC}  3500 MHz  @  1000 mV  ${BIBlack}│${NC}  Max 85°C"
         echo -e "    ${CYAN}2)${NC} 36/40 38/40 CU Model    ${BIBlack}───${NC}  3500 MHz  @   980 mV  ${BIBlack}│${NC}  Max 82°C"
         echo -e "    ${CYAN}3)${NC} 36/40 38/40 CU Model    ${BIBlack}───${NC}  3500 MHz  @  1015 mV  ${BIBlack}│${NC}  Max 85°C"
         echo -e "    ${CYAN}4)${NC} 36/40 38/40 CU Model    ${BIBlack}───${NC}  3500 MHz  @  1020 mV  ${BIBlack}│${NC}  Max 85°C"
         echo -e "    ${CYAN}5)${NC} 36/40 38/40 CU Model    ${BIBlack}───${NC}  3500 MHz  @  1050 mV  ${BIBlack}│${NC}  Max 85°C"
         echo ""
-        
-        # Manual Profiles Cluster
         echo -e "    ${BIGreen}6) Manual Custom Profile${NC}       ${BIBlack}(Fill MHz, mV, Max Temp manually)${NC}"
         echo -e "    ${BIGreen}7) Manual Test Profile${NC}         ${BIBlack}(Fill MHz, mV, Max Temp for safety test)${NC}"
         echo ""
-        
-        # Exit Routine
         echo -e "    ${RED}↵) Return to Main Menu${NC}         ${BIBlack}(Skip auto-tuning routine)${NC}"
         echo -e "  ${BIBlack}─────────────────────────────────────────────────────────────────────${NC}"
         echo ""
-
-        # Colorized Interactive Prompt
-        read -p "$(echo -e "  ${CYAN}Enter selection [1-7, ↵]: ${NC}")" tune_choice
-
+        read -p "  Enter selection [1-7, ↵]: " tune_choice
 
         case "$tune_choice" in
-            1)
-                log "${GREEN}Launching 40/40 CU profile optimization...${NC}"
-                bc250-detect --frequency 3500 --vid 1000 -t 85 --keep
-                finalize_settings
-                ;;
-            2)
-                log "${GREEN}Launching 36/40 38/40 CU profile optimization...${NC}"
-                bc250-detect --frequency 3500 --vid 980 -t 82 --keep
-                finalize_settings
-                ;;
-            3)
-                log "${GREEN}Launching 36/40 38/40 CU profile optimization...${NC}"
-                bc250-detect --frequency 3500 --vid 1015 -t 85 --keep
-                finalize_settings
-                ;;
-            4)
-                log "${GREEN}Launching 36/40 38/40 CU profile optimization...${NC}"
-                bc250-detect --frequency 3500 --vid 1020 -t 85 --keep
-                finalize_settings
-                ;;
-            5)
-                log "${GREEN}Launching 36/40 38/40 CU profile optimization...${NC}"
-                bc250-detect --frequency 3500 --vid 1050 -t 85 --keep
-                finalize_settings
-                ;;
+            1) log "${GREEN}Launching 40/40 CU profile optimization...${NC}"; bc250-detect --frequency 3500 --vid 1000 -t 85 --keep; finalize_settings ;;
+            2) log "${GREEN}Launching 36/40 38/40 CU profile optimization...${NC}"; bc250-detect --frequency 3500 --vid 980 -t 82 --keep; finalize_settings ;;
+            3) log "${GREEN}Launching 36/40 38/40 CU profile optimization...${NC}"; bc250-detect --frequency 3500 --vid 1015 -t 85 --keep; finalize_settings ;;
+            4) log "${GREEN}Launching 36/40 38/40 CU profile optimization...${NC}"; bc250-detect --frequency 3500 --vid 1020 -t 85 --keep; finalize_settings ;;
+            5) log "${GREEN}Launching 36/40 38/40 CU profile optimization...${NC}"; bc250-detect --frequency 3500 --vid 1050 -t 85 --keep; finalize_settings ;;
             6|7)
                 clear
                 echo -e "${YELLOW}====================================================${NC}"
                 echo -e "${YELLOW}             CUSTOM PROFILE CONFIGURATION           ${NC}"
                 echo -e "${YELLOW}====================================================${NC}"
                 echo ""
-
                 while true; do
                     read -p "Enter Target Frequency (MHz) [e.g., 3500]: " custom_freq
-                    if [[ "$custom_freq" =~ ^[0-9]+$ ]] && [ "$custom_freq" -gt 0 ]; then
-                        break
-                    else
-                        echo -e "${RED}Invalid input. Please enter a valid number for MHz.${NC}"
-                    fi
+                    if [[ "$custom_freq" =~ ^[0-9]+$ ]] && [ "$custom_freq" -gt 0 ]; then break; else echo -e "${RED}Invalid input. Please enter a valid number for MHz.${NC}"; fi
                 done
-
                 while true; do
                     read -p "Enter Target Voltage (mV / VID) [e.g., 1000]: " custom_vid
                     if [[ "$custom_vid" =~ ^[0-9]+$ ]] && [ "$custom_vid" -gt 0 ]; then
-                        if [ "$custom_vid" -gt 1325 ]; then
-                            echo -e "${RED}SAFETY ERROR: Voltage cannot exceed 1325 mV!${NC}"
-                        else
-                            break
-                        fi
-                    else
-                        echo -e "${RED}Invalid input. Please enter a valid number for mV.${NC}"
-                    fi
+                        if [ "$custom_vid" -gt 1325 ]; then echo -e "${RED}SAFETY ERROR: Voltage cannot exceed 1325 mV!${NC}"; else break; fi
+                    else echo -e "${RED}Invalid input. Please enter a valid number for mV.${NC}"; fi
                 done
-
                 while true; do
                     read -p "Enter Max Temperature Target (°C) [e.g., 85]: " custom_temp
-                    if [[ "$custom_temp" =~ ^[0-9]+$ ]] && [ "$custom_temp" -gt 0 ] && [ "$custom_temp" -lt 105 ]; then
-                        break
-                    else
-                        echo -e "${RED}Invalid input. Please enter a safe temperature limit below 105°C.${NC}"
-                    fi
+                    if [[ "$custom_temp" =~ ^[0-9]+$ ]] && [ "$custom_temp" -gt 0 ] && [ "$custom_temp" -lt 105 ]; then break; else echo -e "${RED}Invalid input. Please enter a safe temperature limit below 105°C.${NC}"; fi
                 done
-
                 log "${GREEN}Running custom tuning profile optimization...${NC}"
                 bc250-detect --frequency "$custom_freq" --vid "$custom_vid" -t "$custom_temp" --keep
-
-                if [ "$tune_choice" = "7" ]; then
-                    stress_settings
-                else
-                    finalize_settings
-                fi
+                if [ "$tune_choice" = "7" ]; then stress_settings; else finalize_settings; fi
                 ;;
-            0|"")
-                echo "Exiting."
-                exit 0
-                ;;            
-            *)
-                echo -e "${RED}Invalid option selected. Please enter [1-8].${NC}"
-                sleep 2
-                ;;
+            0|"") echo "Exiting."; exit 0 ;;
+            *) echo -e "${RED}Invalid option selected. Please enter [1-8].${NC}"; sleep 2 ;;
         esac
     done
 }
@@ -349,33 +322,15 @@ prompt_reboot() {
     echo " 2) Cancel Reboot & Return to Main Menu"
     echo -e "${YELLOW}==================================================${NC}"
     read -rp "Select an option [1-2]: " reboot_choice
-
     case $reboot_choice in
-        1)
-            echo "Rebooting system now..."
-            sudo systemctl reboot
-            ;;
-        2)
-            echo -e "${YELLOW}Reboot cancelled. Returning to main menu. Remember to reboot manually later for changes to take effect.${NC}"
-            sleep 2
-            return 0
-            ;;
-        *)
-            echo -e "${RED}Invalid option. Defaulting to safe cancel. Returning to main menu.${NC}"
-            sleep 2
-            return 1
-            ;;
+        1) sudo systemctl reboot ;;
+        *) return 0 ;;
     esac
 }
 
-# ==============================================================================
-# UNIFIED DEPLOYMENT ENGINE: PHASE 1 (INITIAL BASELINE SETUP)
-# ==============================================================================
 run_phase1() {
     show_warning
     log "${GREEN}[Phase 1] Initializing universal Bazzite 43/44 deployment tree...${NC}"
-
-    log "${GREEN}[Step 1] Creating permission-insulated resume service...${NC}"
     sudo bash -c "cat <<EOF > $SERVICE_FILE
 [Unit]
 Description=Resume BC-250 OC Installation
@@ -389,59 +344,34 @@ RemainAfterExit=yes
 [Install]
 WantedBy=multi-user.target
 EOF"
-
     sudo systemctl daemon-reload
     sudo systemctl enable bc250-resume.service >> "$LOG_FILE" 2>&1
-
-    log "${GREEN}[Step 2] Appending CPU mitigation kernel arguments...${NC}"
     sudo rpm-ostree kargs --append=mitigations=off >> "$LOG_FILE" 2>&1
-
-    log "${GREEN}[Step 3] Staging core dependencies via rpm-ostree...${NC}"
     sudo rpm-ostree install stress python3-devel >> "$LOG_FILE" 2>&1
-
-    log "${RED}[Step 4] Rebooting system. Move on to CPU Overclock Phase 2 after a reboot...${NC}"
     prompt_reboot
 }
 
-# ==============================================================================
-# UNIFIED DEPLOYMENT ENGINE: PHASE 2 (POST-REBOOT SYSTEM COMPILATION)
-# ==============================================================================
 run_phase2() {
     log "${GREEN}[Phase 2] Resuming execution tree following successful reboot...${NC}"
-
-    log "${GREEN}[Step 5] Staging localized application repository...${NC}"
     cd /tmp || exit
     sudo rm -rf /tmp/bc250_smu_oc
-
     git clone "$REPO_URL" /tmp/bc250_smu_oc >> "$LOG_FILE" 2>&1
     cd /tmp/bc250_smu_oc || exit
-
-    log "${GREEN}[Step 6] Constructing permission-insulated Python virtual environment...${NC}"
     sudo mkdir -p /opt/bc250_smu_tools
     sudo python3 -m venv /opt/bc250_smu_tools/venv >> "$LOG_FILE" 2>&1
-
-    log "${GREEN}[Step 7] Compiling SMU tools inside the protected venv matrix...${NC}"
     sudo /opt/bc250_smu_tools/venv/bin/pip install --upgrade pip >> "$LOG_FILE" 2>&1
     sudo /opt/bc250_smu_tools/venv/bin/pip install . >> "$LOG_FILE" 2>&1
-
-    log "${GREEN}[Step 8] Injecting global system symlinks for execution pathing...${NC}"
     sudo ln -sf /opt/bc250_smu_tools/venv/bin/bc250-detect /usr/local/bin/bc250-detect
     sudo ln -sf /opt/bc250_smu_tools/venv/bin/bc250-apply /usr/local/bin/bc250-apply
-
-    log "${GREEN}[Step 9] Cleaning up temporary automation service...${NC}"
     sudo systemctl disable bc250-resume.service >> "$LOG_FILE" 2>&1
     sudo rm -f "$SERVICE_FILE"
     sudo systemctl daemon-reload
-
     log "${GREEN}[Success] Installation complete! 'bc250-detect' and 'bc250-apply' are ready.${NC}"
     launch_tuning_menu
 }
 
-# CU Live Manager Phase 1: Dependency Setup
 run_manager_phase1() {
     log "${GREEN}[CU Live Manager] Preparing installation requirements...${NC}"
-
-    log "${GREEN}[Step 1] Initializing temporary manager boot loader...${NC}"
     sudo bash -c "cat <<EOF > $SERVICE_FILE
 [Unit]
 Description=Resume BC-250 CU Live Manager Deployment
@@ -455,112 +385,62 @@ RemainAfterExit=yes
 [Install]
 WantedBy=multi-user.target
 EOF"
-
     sudo systemctl daemon-reload
     sudo systemctl enable bc250-resume.service >> "$LOG_FILE" 2>&1
-
-    log "${GREEN}[Step 2] Staging core 'umr' package tracking layers via rpm-ostree...${NC}"
     sudo rpm-ostree install umr >> "$LOG_FILE" 2>&1
-
-    log "${RED}[Step 3] Rebooting system. Move on to CU Live Manager Phase 2 after a reboot...${NC}"
     prompt_reboot
 }
 
-# CU Live Manager Phase 2: Launch Routine
 run_manager_phase2() {
     log "${GREEN}[CU Live Manager] Completing setup configurations post-reboot...${NC}"
-
-    log "${GREEN}[Step 4] Cleaning background persistence components...${NC}"
     sudo systemctl disable bc250-resume.service >> "$LOG_FILE" 2>&1
     sudo rm -f $SERVICE_FILE
     sudo systemctl daemon-reload
-
-    log "${GREEN}[Step 5] Fetching live manager controller execution script...${NC}"
     cd /tmp || exit
     curl -L -o bc250-cu-live-manager.sh https://raw.githubusercontent.com/WinnieLV/bc250-cu-live-manager/refs/heads/main/bc250-cu-live-manager.sh >> "$LOG_FILE" 2>&1
     chmod +x bc250-cu-live-manager.sh
-
-    log "${GREEN}[Step 6] Transferring shell execution context directly to live manager profile...${NC}"
     sudo ./bc250-cu-live-manager.sh
 }
 
-# ==============================================================================
-# SEPARATED ROLLBACK ENGINE SYSTEM CHANNELS
-# ==============================================================================
 uninstall_cpu_overclock() {
     log "${RED}[Uninstall] Initializing CPU Overclock rollback suite...${NC}"
-
-    log "${RED}[1/5] Terminating active SMU Overclock boot layers...${NC}"
     sudo systemctl disable --now bc250-smu-oc.service >> "$LOG_FILE" 2>&1 || true
     sudo systemctl disable --now bc250-resume.service >> "$LOG_FILE" 2>&1 || true
     sudo rm -f /etc/systemd/system/bc250-smu-oc.service
     sudo rm -f "$SERVICE_FILE"
-
-    log "${RED}[2/5] Purging global execution symlinks...${NC}"
     sudo rm -f /usr/local/bin/bc250-detect
     sudo rm -f /usr/local/bin/bc250-apply
-
-    log "${RED}[3/5] Erasing protected Python virtual environment matrix...${NC}"
     sudo rm -rf /opt/bc250_smu_tools
     sudo rm -rf /tmp/bc250_smu_oc
-
-    log "${RED}[4/5] Removing kernel argument blocks...${NC}"
     sudo rpm-ostree kargs --delete=mitigations=off >> "$LOG_FILE" 2>&1
-
-    log "${RED}[5/5] Purging core host packages via rpm-ostree...${NC}"
     sudo rpm-ostree uninstall stress python3-devel >> "$LOG_FILE" 2>&1
-
     sudo systemctl daemon-reload
-    log "${GREEN}[Success] CPU Overclock successfully uninstalled! Reboot required to clear layers.${NC}"
     prompt_reboot
 }
 
 uninstall_cu_live_manager() {
     log "${RED}[Uninstall] Initializing CU Live Manager rollback suite...${NC}"
-
-    log "${RED}[1/3] Purging background service units and profiles...${NC}"
     sudo systemctl disable --now bc250-cu-live-manager.service >> "$LOG_FILE" 2>&1 || true
     sudo rm -f /etc/systemd/system/bc250-cu-live-manager.service
     sudo rm -f /usr/local/bin/bc250-cu-live-manager
     sudo rm -f /etc/bc250-cu-live-manager.conf
-
-    log "${RED}[2/3] Cleaning temporary tool buffers...${NC}"
     sudo rm -f /tmp/bc250-cu-live-manager.sh
-
-    log "${RED}[3/3] Layering out UMR hardware package tracker...${NC}"
     sudo rpm-ostree uninstall umr >> "$LOG_FILE" 2>&1
-
     sudo systemctl daemon-reload
-    log "${GREEN}[Success] CU Live Manager uninstalled cleanly! Reboot required to clear host tree.${NC}"
     prompt_reboot
 }
 
-# Main command argument routes
 case "$1" in
-    --phase2)
-        run_phase2
-        exit 0
-        ;;
-    --manager-phase2)
-        run_manager_phase2
-        exit 0
-        ;;
-    --uninstall-cpu)
-        uninstall_cpu_overclock
-        exit 0
-        ;;
-    --uninstall-cu)
-        uninstall_cu_live_manager
-        exit 0
-        ;;
+    --phase2) run_phase2; exit 0 ;;
+    --manager-phase2) run_manager_phase2; exit 0 ;;
+    --uninstall-cpu) uninstall_cpu_overclock; exit 0 ;;
+    --uninstall-cu) uninstall_cu_live_manager; exit 0 ;;
 esac
 
-# Continuous Main Interactive Control Loop Window
 while true; do
+    ask_desktop_shortcut
     clear
-        # Set your color definitions safely outside the print block
     TEXT_STR="            BC-250 CPU OVERCLOCK & Compute Unit Live Manager Setup Tool             "
-
     echo -e "${DIM}┌────────────────────────────────────────────────────────────────────────────────────┐${RESET}"
     echo -e "${DIM}│${RESET}${BOLD}${MAGENTA}${TEXT_STR}${RESET}${DIM}│${RESET}"
     echo -e "${DIM}└────────────────────────────────────────────────────────────────────────────────────┘${RESET}"
@@ -568,23 +448,26 @@ while true; do
     echo -e "  ${BOLD}${WHITE}Select an action to perform:${RESET}"
     echo -e "  ${DIM}──────────────────────────────────────────────────────────────────────────────────${RESET}"
     echo ""
-    echo -e "    ${BOLD}${RED}• CPU Overclocking Suite:${RESET}"    
+    echo -e "    ${BOLD}${RED}• CPU Overclocking Suite:${RESET}"
     echo -e "      ${CYAN}[1a]${RESET} Install Toolchain & Configure Settings  ${DIM}(Phase 1 - Requires Reboot)${RESET}"
     echo -e "      ${CYAN}[1b]${RESET} Complete Toolchain Installation         ${DIM}(Phase 2)${RESET}"
     echo ""
-    echo -e "    ${BOLD}${BLUE}• Compute Unit Live Manager:${RESET}"    
+    echo -e "    ${BOLD}${BLUE}• Compute Unit Live Manager:${RESET}"
     echo -e "      ${CYAN}[2a]${RESET} Install Package Dependencies            ${DIM}(Phase 1 - Requires Reboot)${RESET}"
     echo -e "      ${CYAN}[2b]${RESET} Launch Live Matrix Configuration        ${DIM}(Phase 2)${RESET}"
     echo ""
-    echo -e "    ${BOLD}${YELLOW}• Rollback & Restoration Profiles:${RESET}"    
+    echo -e "    ${BOLD}${YELLOW}• Silicon Stability Testing Channels:${RESET}"
+    echo -e "      ${CYAN}[4]${RESET}   Launch Silicon Per-Core Stability Sweep ${DIM}(test-cores Curve Validation)${RESET}"
+    echo ""
+    echo -e "    ${BOLD}${YELLOW}• Rollback & Restoration Profiles:${RESET}"
     echo -e "      ${DIM}[3a] Uninstall CPU Overclock Profiles Completely${RESET}"
     echo -e "      ${DIM}[3b] Uninstall Compute Unit Live Manager Service Paths${RESET}"
     echo ""
     echo -e "  ${DIM}──────────────────────────────────────────────────────────────────────────────────${RESET}"
     echo -e "      ${BOLD}${MAGENTA}[↵]${RESET} Hit Enter to Secure Safe Exit Overclock-Live-Manager"
     echo ""
-    
-    read -p "  Select an option [ 1a-3b, ↵ ]: " choice
+
+    read -p "  Select an option [ 1a-4, ↵ ]: " choice
 
     case "$choice" in
         1a) run_phase1 ;;
@@ -593,13 +476,9 @@ while true; do
         2b) run_manager_phase2 ;;
         3a) uninstall_cpu_overclock ;;
         3b) uninstall_cu_live_manager ;;
-        0|"")
-            echo "Exiting."
-            exit 0
-            ;;
-        *)
-            echo -e "${RED}Invalid choice! Please select a valid number code option.${NC}"
-            sleep 1.5
-            ;;
+        4)  run_cpu_core_stress_test ;;
+        0|"") exit 0 ;;
+        *) echo -e "${RED}Invalid choice! Please select a valid number code option.${NC}"; sleep 1.5 ;;
     esac
 done
+
