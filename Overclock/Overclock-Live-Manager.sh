@@ -438,7 +438,7 @@ case "$1" in
 esac
 
     # 🧬 FIXED: Pre-flight shortcut configurations execute ONLY ONCE upon initial script boot!
-ask_desktop_shortcut
+#ask_desktop_shortcut
 
 # ==============================================================================
 # 🚀 CLEAN CONGESTION-FREE MASTER MENU LOOP (NO REFLECTION DELAYS)
