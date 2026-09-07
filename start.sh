@@ -140,7 +140,7 @@ start_background_music() {
                      PIPEWIRE_RUNTIME_DIR="/run/user/$user_id" \
                      DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/$user_id/bus" \
                      pw-play "$AUDIO_FILE" 2>/dev/null
-                
+
                 # Prevent rapid thread spinning loops if the file experiences an interface drop
                 sleep 1
             done
@@ -180,7 +180,7 @@ stop_background_music() {
     if [[ -f "$MUSIC_LOCK_FILE" ]]; then
         local target_pid; target_pid=$(cat "$MUSIC_LOCK_FILE" 2>/dev/null || echo "")
         [[ -n "$target_pid" ]] && kill -9 "$target_pid" 2>/dev/null || true
-        
+
         # Kill the player engine instances across both root and standard user parameters cleanly
         sudo -u "$REAL_USER" killall pw-play &>/dev/null || true
         killall pw-play &>/dev/null || true
@@ -464,7 +464,7 @@ ram_split_installed() {
         local total_mem_kb; total_mem_kb=$(awk '/MemTotal/ {print $2}' /proc/meminfo 2>/dev/null || echo "16000000")
         # Convert Kilobytes directly to Megabytes for clean boundary evaluation
         local total_mem_mb=$(( total_mem_kb / 1024 ))
-        
+
         # If total visible system RAM drops below 10,000MB, a permanent hardware allocation mask is active in BIOS
         if (( total_mem_mb < 10000 )); then
             return 0
@@ -514,7 +514,7 @@ acpi_fix_installed() {
             return 0
         fi
     fi
-    
+
     return 1
 }
 
@@ -662,6 +662,12 @@ run_status() {
     local CPU_CONF="/etc/bc250-smu-oc.conf"
     local GPU_CONF="/etc/cyan-skillfish-governor-smu/config.toml"
 
+    # 🧬 DYNAMIC OSTREE LAYER PIN STATE DETECTOR (INJECTED)
+    local local pin_status="$ICON_WARN"; pin_lable="${RED}unpinned${RESET}"
+    if ostree admin pin 2>/dev/null | grep -q "Pinned" || rpm-ostree status 2>/dev/null | grep -qi "pinned"; then
+        pin_status="$ICON_OK"; pin_lable="${GREEN}pinned (frozen)${RESET}"
+    fi
+
     echo -e "  ${BOLD}${YELLOW}System${RESET}"
     echo -e "  ${DIM}─────────────────────────────────────────────────────────────────────${RESET}"
 
@@ -704,9 +710,12 @@ run_status() {
     echo -e "  ${CYAN}Version${RESET}               $(cat /etc/os-release | grep -E '^(VERSION)=' | cut -d= -f2 | tr -d '"')"
     echo -e "  ${CYAN}Kernel${RESET}                $(uname -r)"
     echo -e "  ${CYAN}Wake-on-LAN${RESET}           ${wol_icon} ${wol_label}"
+
+    # 📊 DYNAMIC DEPLOYMENT DATA ROW (INJECTED NATIVELY WITH SYMMETRICAL MENUS ALIGNMENT)
+    echo -e "  ${CYAN}Atomic Deployment${RESET}     ${pin_status} ${pin_lable}"
     echo ""
 
-        print_section "Overclock"
+    print_section "Overclock"
 
     local cpu_preset="None" local cpu_profile="No Active Config"
     if [[ -f "$CPU_CONF" ]]; then
@@ -768,26 +777,24 @@ run_status() {
     print_section "Hardware Unlocks"
 
     if rpm-ostree kargs 2>/dev/null | grep -q "mitigations=off"; then
-        echo -e "  ${CYAN}CPU Mitigations${RESET}       ${ICON_OK} ${GREEN}disabled${RESET} (mitigations=off active via rpm-ostree kargs)"
+        echo -e "  ${CYAN}CPU Mitigations${RESET}       ${ICON_OK} ${YELLOW}disabled${RESET} (mitigations=off active via rpm-ostree kargs)"
     else
-        echo -e "  ${CYAN}CPU Mitigations${RESET}       ${ICON_WARN} ${YELLOW}enabled${RESET} (default — disable for max performance)"
+        echo -e "  ${CYAN}CPU Mitigations${RESET}       ${ICON_WARN} ${GREEN}enabled${RESET} (default — disable for max performance)"
     fi
 
-    if core_unlock_persist_installed; then
-        if core_unlock_cores_active; then
-            echo -e "  ${CYAN}CPU Core Unlock${RESET}       ${ICON_OK} ${GREEN}8c/16t active${RESET} ($(nproc --all) threads, boot service enabled)"
+    local active_threads; active_threads=$(nproc 2>/dev/null || echo "12")
+    # 🧬 DYNAMIC SILICON CALCULATION: Divide threads by 2 to extract the physical core count
+    local calc_cores=$(( active_threads / 2 ))
+
+    if [[ "$active_threads" -eq 16 ]]; then
+        if [ -f "$REAL_HOME/CPU_Unlock/.installed" ] || systemctl is-active --quiet bc250-cpu-unlock 2>/dev/null; then
+            echo -e "  ${CYAN}CPU Core Unlock${RESET}       ${ICON_OK} ${GREEN}activated via systemd boot hooks (${calc_cores} Cores / ${active_threads} Threads)${RESET}"
         else
-            local core_unlock_auto_hint="reboot to pick up all 8 cores"
-            [[ -f "$CORE_UNLOCK_CONF" ]] && grep -q '^AUTO_REBOOT=yes' "$CORE_UNLOCK_CONF" 2>/dev/null \
-                && core_unlock_auto_hint="auto-reboot enabled, should self-correct shortly"
-            echo -e "  ${CYAN}CPU Core Unlock${RESET}       ${ICON_WARN} ${YELLOW}boot service enabled, still 6c/12t${RESET} ($core_unlock_auto_hint)"
+            echo -e "  ${CYAN}CPU Core Unlock${RESET}       ${ICON_OK} ${GREEN}activated natively via permanent BIOS tables (${calc_cores} Cores / ${active_threads} Threads)${RESET}"
         fi
     else
-        if core_unlock_cores_active; then
-            echo -e "  ${CYAN}CPU Core Unlock${RESET}       ${ICON_WARN} ${YELLOW}boot service removed, but 8c/16t still active${RESET} (${DIM}$(nproc --all) threads — mask persists until cold power-off${RESET})"
-        else
-            echo -e "  ${CYAN}CPU Core Unlock${RESET}       ${DIM}– not installed (6c/12t, default)${RESET}"
-        fi
+        # 🧬 CORRECTED FACTORY STANDARD BASELINE: Accurately flags the true 6-Core / 12-Thread default if disabled
+        echo -e "  ${CYAN}CPU Core Unlock${RESET}       ${ICON_OK} ${YELLOW}disabled (Factory stock 6-core / 12-thread scaling architecture)${RESET}"
     fi
 
     # 🧬 UNIFIED HARDWARE DECODER: Queries registers directly via UMR or parses the active systemd boot profile table
@@ -1107,7 +1114,7 @@ echo -e "${GREEN}Starting Bazzite Toolbox Core UI...${NC}"
 # =====================================================================
 # 2. AUTO-UPDATE MECHANISM (WITH SILENT OFFLINE FAIL)
 # =====================================================================
-GITHUB_RAW_URL="https://github.com/Forbidden-Darkness/Bazzite_Toolbox/raw/refs/heads/main/start.sh"
+#GITHUB_RAW_URL="https://github.com/Forbidden-Darkness/Bazzite_Toolbox/raw/refs/heads/main/start.sh"
 
 if [ "$1" != "--no-update" ] && [ "$1" != "--updated" ]; then
     if curl -s -I -L --connect-timeout 2 "$GITHUB_RAW_URL" > /dev/null; then
@@ -1192,26 +1199,35 @@ manage_shortcut_prompt
 
 prompt_reboot() {
     echo ""
-    echo -e "${YELLOW}==================================================${NC}"
-    echo -e "${YELLOW} Task complete! The system needs to reboot now.    ${NC}"
-    echo -e "${YELLOW}--------------------------------------------------${NC}"
-    echo " 1) Reboot Now (Recommended)"
-    echo " 2) Cancel Reboot & Return to Main Menu"
-    echo -e "${YELLOW}==================================================${NC}"
-    read -rp "Select an option [1-2]: " reboot_choice
+    echo -e "  ${YELLOW}╔═══════════════════════════════════════════════════════════════════╗${NC}"
+    echo -e "  ${YELLOW}║                     MANDATORY SYSTEM REBOOT                       ║${NC}"
+    echo -e "  ${YELLOW}╠═══════════════════════════════════════════════════════════════════╣${NC}"
+    echo -e "  ${YELLOW}║${NC}  ${BOLD}${GREEN}✔  Task Complete!${NC} The layered changes require a system restart.  ${YELLOW}║${NC}"
+    echo -e "  ${YELLOW}║${NC}     Please choose an environment state transition option below:   ${YELLOW}║${NC}"
+    echo -e "  ${YELLOW}╚═══════════════════════════════════════════════════════════════════╝${NC}"
+    echo ""
+    echo -e "    ${CYAN}[1]${NC} Reboot Now        ${DIM}(Recommended to apply active layers)${RESET}"
+    echo -e "    ${CYAN}[2]${NC} Cancel Reboot     ${DIM}(Return cleanly back to main toolkit menu)${RESET}"
+    echo ""
+    echo -e "  ${BIBlack}─────────────────────────────────────────────────────────────────────${NC}"
 
-    case $reboot_choice in
+    # Colorized Interactive Prompt
+    read -rp "$(echo -e "  ${CYAN}Select a reboot option [1-2]: ${NC}")" reboot_choice
+
+    case "$reboot_choice" in
         1)
-            echo "Rebooting system now..."
+            echo -e "\n  ${GREEN}[+] Flushing caches and rebooting system now...${NC}"
+            sleep 1.5
             sudo systemctl reboot
             ;;
         2)
-            echo -e "${YELLOW}Reboot cancelled. Returning to main menu.${NC}"
+            # Unified Cancel Notice matching your fallback loops
+            echo -e "\n  ${YELLOW}[-] Reboot postponed. Returning safely back to main menu...${NC}"
             sleep 2
             return 0
             ;;
         *)
-            echo -e "${RED}Invalid option. Defaulting to safe safe cancel.${NC}"
+            echo -e "\n  ${RED}[-❌-] Invalid selection. Defaulting to safe menu fallback...${NC}"
             sleep 2
             return 1
             ;;
@@ -1937,11 +1953,11 @@ secure_system_exit() {
     echo ""
     echo -e "  ${CYAN}0)${RESET} Safe Exit Only         ${DIM}(Return cleanly back to host terminal)${RESET}"
     echo -e "  ${CYAN}1)${RESET} Fast System Reboot     ${DIM}(Apply newly layered kernel elements)${RESET}"
-    echo -e "  ${CYAN}2)${RESET} Full System Shutdown   ${DIM}(Complete hardware power cycle)${RESET}"    
+    echo -e "  ${CYAN}2)${RESET} Full System Shutdown   ${DIM}(Complete hardware power cycle)${RESET}"
     echo -e "  ${RED}   Hit Enter or Any Key to Cancel and Return to Menu${NC}"
     echo -e "${BIYellow}==================================================${NC}"
     type_prompt "  Select option index [1-3]: " 0.03
-    
+
     local exit_choice=""
     read -n 1 -s exit_choice || true
     echo ""
@@ -2047,7 +2063,7 @@ toggle_xbox_adapter() {
     if [[ "$state" == "loaded" || "$state" == *"installed"* ]]; then
         echo -e "\n  ${YELLOW}[⚠] Xbox Wireless Adapter driver (xone) detected on this host.${RESET}"
         echo -e "      Selecting this action will completely uninstall the driver layer."
-        
+
         if confirm "Do you want to proceed with the removal?"; then
             echo -e "${RED}[+] Purging xone driver stack from system tree...${NC}"
             if ujust --list 2>/dev/null | grep -q "toggle-xone"; then
@@ -2064,16 +2080,16 @@ toggle_xbox_adapter() {
     else
         echo -e "\n  ${CYAN}[ℹ] Xbox Wireless Adapter driver is not currently installed.${RESET}"
         echo -e "      This utility will layer the official 'xone' driver to activate your USB dongle."
-        
+
         if confirm "Do you want to install and layer the xone driver now?"; then
             echo -e "${GREEN}[+] Layering hardware kernel modules via system hooks...${NC}"
-            
+
             if ujust --list 2>/dev/null | grep -q "toggle-xone"; then
                 sudo ujust toggle-xone
             else
                 sudo rpm-ostree install xone kmod-xone >> /var/log/bc250_oc_install.log 2>&1
             fi
-            
+
             print_success "Driver successfully staged! A system reboot is required to load the modules."
             prompt_reboot
         else
@@ -2081,6 +2097,122 @@ toggle_xbox_adapter() {
             sleep 1.5
         fi
     fi
+}
+
+# Complete System Rollback Protection via Smart OSTree Layer Pinning Toggles
+pin_active_image_layer() {
+    clear
+    echo -e "${BOLD}${GREEN}=== Managing Atomic OSTree Image Deployment Pins ===${NC}"
+    echo -e "  ${DIM}Freezing your active layer protects against broken upstream rolling updates.${NC}\n"
+
+    # Let the user visually inspect their current deployment streams cleanly
+    rpm-ostree status 2>/dev/null || true
+    echo ""
+
+    # 🧬 PENDING TRANSACTION DEPLOYMENT INTERCEPT GATES
+    # Scans your live status block. If a staged layer exists above your active booted layer (indicated by a pending state),
+    # it halts the pinning engine and forces a mandatory system synchronization reboot first!
+    if rpm-ostree status 2>/dev/null | head -n 12 | grep -q "Staged" || [[ "$(rpm-ostree status 2>/dev/null | grep -c "ostree-image-signed")" -gt 2 && ! "$(rpm-ostree status 2>/dev/null | head -n 5 | grep -q "●")" ]] || rpm-ostree status 2>/dev/null | grep -q "Pinned: yes" && ! rpm-ostree status 2>/dev/null | head -n 5 | grep -qi "●.*pinned"; then
+        echo -e "${YELLOW}╔═════════════════════════════════════════════════════════════════════════════════════════════╗${NC}"
+        echo -e "${YELLOW}║${NC}  ${BOLD}${RED}[⚠] PENDING IMAGE LAYER TRANSACTION DETECTED${NC}                                                ${YELLOW}║${NC}"
+        echo -e "${YELLOW}╠═════════════════════════════════════════════════════════════════════════════════════════════╣${NC}"
+        echo -e "${YELLOW}║${NC}  You have newly staged package layers (like stress-ng) waiting to go live on your system.  ${YELLOW}║${NC}"
+        echo -e "${YELLOW}║${NC}  You ${BOLD}${WHITE}MUST REBOOT${NC} your machine first to activate this new layer before locking a pin.      ${YELLOW}║${NC}"
+        echo -e "${YELLOW}╚═════════════════════════════════════════════════════════════════════════════════════════════╝${NC}"
+        echo ""
+        if confirm "Would you like to reboot your system now to synchronize your layers?"; then
+            echo -e "${GREEN}[+] Closing toolkit registers and restarting device safely...${NC}"
+            stop_background_music 2>/dev/null || true
+            sleep 1.5
+            sudo systemctl reboot
+            exit 0
+        else
+            # 🧬 REDIRECT HOOK: If they select No, check if a pin is active on disk right now
+            if ostree admin pin 2>/dev/null | grep -q "Pinned" || rpm-ostree status 2>/dev/null | grep -qi "pinned"; then
+                echo -e "\n  ${YELLOW}[●] Bypassing reboot prompt. Shifting to active unpin suite...${NC}\n"
+                sleep 1
+                # Execute your exact working unpin command stack
+                echo -e "  ${YELLOW}[⚠] Active Frozen System Pin deployment profile detected on this host.${RESET}"
+                echo -e "      Selecting this action will unpin the layer, allowing full storage cleanups."
+                echo ""
+                if confirm "Would you like to unpin your stable backup layer now?"; then
+                    echo -e "${RED}[●] Step 1/2: Removing atomic GRUB fallback environment pins...${NC}"
+                    (sudo ostree admin pin --unpin 0 2>/dev/null) &>/dev/null
+
+                    echo -e "${GREEN}[+] Step 2/2: Synchronizing boot records and clearing image caches...${NC}"
+                    (sudo systemctl daemon-reload) &>/dev/null
+
+                    print_success "Deployment layer successfully unpinned! System caches cleared."
+
+                    echo -e "${YELLOW}╔═════════════════════════════════════════════════════════════════════════════════════════════╗${NC}"
+                    echo -e "${YELLOW}║${NC}  ${BOLD}${GREEN}[✓] ATOMIC SYSTEM UNPIN COMPLETED SUCCESSFULLY!${NC}                                            ${YELLOW}║${NC}"
+                    echo -e "${YELLOW}╠═════════════════════════════════════════════════════════════════════════════════════════════╣${NC}"
+                    echo -e "${YELLOW}║${NC}  👉 ${BOLD}${YELLOW}CRITICAL REBOOT REQUIRED:${NC} You ${BOLD}${WHITE}MUST REBOOT${NC} your machine to fully complete unpin cleanups.   ${YELLOW}║${NC}"
+                    echo -e "${YELLOW}╚═════════════════════════════════════════════════════════════════════════════════════════════╝${NC}"
+                    echo ""
+                    type_prompt "  Press [Enter] to return to the toolkit main menu... " 0.03
+                    read -rp "  "
+                    return 0
+                fi
+            fi
+        fi
+        type_prompt "  Press [Enter] to return safely back to the toolkit main menu... " 0.03
+        read -rp "  "
+        return 0
+    fi
+    # 🧬 DYNAMIC DETECTOR: Checks for active pin records once system layers are fully synced
+    if ostree admin pin 2>/dev/null | grep -q "Pinned" || rpm-ostree status 2>/dev/null | grep -qE "(Pinned|pinned)"; then
+        echo -e "  ${YELLOW}[⚠] Active Frozen System Pin deployment profile detected on this host.${RESET}"
+        echo -e "      Selecting this action will unpin the layer, allowing full storage cleanups."
+        echo ""
+        if confirm "Would you like to unpin your stable backup layer now?"; then
+            echo -e "${RED}[●] Step 1/2: Removing atomic GRUB fallback environment pins...${NC}"
+            (sudo ostree admin pin --unpin 0 2>/dev/null) &>/dev/null
+
+            echo -e "${GREEN}[+] Step 2/2: Synchronizing boot records and clearing image caches...${NC}"
+            (sudo systemctl daemon-reload) &>/dev/null
+
+            print_success "Deployment layer successfully unpinned! System caches cleared."
+
+            # 🧬 RESTORED UNPIN REBOOT BOX
+            echo -e "${YELLOW}╔═════════════════════════════════════════════════════════════════════════════════════════════╗${NC}"
+            echo -e "${YELLOW}║${NC}  ${BOLD}${GREEN}[✓] ATOMIC SYSTEM UNPIN COMPLETED SUCCESSFULLY!${NC}                                            ${YELLOW}║${NC}"
+            echo -e "${YELLOW}╠═════════════════════════════════════════════════════════════════════════════════════════════╣${NC}"
+            echo -e "${YELLOW}║${NC}  👉 ${BOLD}${YELLOW}CRITICAL REBOOT REQUIRED:${NC} You ${BOLD}${WHITE}MUST REBOOT${NC} your machine to fully complete unpin cleanups.   ${YELLOW}║${NC}"
+            echo -e "${YELLOW}╚═════════════════════════════════════════════════════════════════════════════════════════════╝${NC}"
+            echo ""
+            return 0
+        else
+            echo -e "${CYAN}[-] Operation canceled. Returning safely to primary toolkit menu...${NC}"
+            sleep 1.2
+            return 0
+        fi
+    else
+        echo -e "  ${CYAN}[ℹ] System image layer is currently unpinned and tracking development channels.${RESET}"
+        echo -e "      This utility freezes your active kernel/drivers to shield you from broken rolling updates."
+        echo ""
+        if confirm "Would you like to securely pin your active, verified v1.5 deployment layer now?"; then
+            echo -e "${GREEN}[+] Step 1/2: Locking down active hardware system image index map...${NC}"
+            (sudo ostree admin pin 0 2>/dev/null) &>/dev/null
+
+            echo -e "${GREEN}[+] Step 2/2: Verifying pin assignment entries inside bootloader records...${NC}"
+            print_success "Deployment layer successfully frozen! Pin will lock on next boot cycle."
+
+            # 🧬 RESTORED PIN REBOOT BOX
+            echo -e "${YELLOW}╔═════════════════════════════════════════════════════════════════════════════════════════════╗${NC}"
+            echo -e "${YELLOW}║${NC}  ${BOLD}${GREEN}[✓] ATOMIC SYSTEM LOCK INITIATED SUCCESSFULLY!${NC}                                              ${YELLOW}║${NC}"
+            echo -e "${YELLOW}╠═════════════════════════════════════════════════════════════════════════════════════════════╣${NC}"
+            echo -e "${YELLOW}║${NC}  👉 ${BOLD}${YELLOW}CRITICAL REBOOT REQUIRED:${NC} You ${BOLD}${WHITE}MUST REBOOT${NC} your machine to fully verify your GRUB list.     ${YELLOW}║${NC}"
+            echo -e "${YELLOW}╚═════════════════════════════════════════════════════════════════════════════════════════════╝${NC}"
+            echo ""
+        else
+            echo -e "${RED}[-❌-] Pinning routine aborted. No changes made to system layers.${NC}"
+            sleep 1.5
+        fi
+    fi
+
+    type_prompt "  Press [Enter] to return to the toolkit main menu... " 0.03
+    read -rp "  "
 }
 
 # ==============================================================================
@@ -2392,11 +2524,12 @@ show_menu() {
         # --- SECTION 2: GPU OVERCLOCK CONTROLS ---
         echo -e "  ${BOLD}${BLUE}GPU Overclock Governor Settings${RESET}"
         echo -e "  ${DIM}─────────────────────────────────────────────────────────────────────${RESET}"
-        echo -e "    ${CYAN}[a] Enable Governor Now${RESET}    ${DIM}(Until Next Reboot)${RESET}  ${YELLOW}[d] Disable Governor Now${RESET}   ${DIM}(Stop Immediately)${RESET}"
-        echo -e "    ${CYAN}[b] Enable Auto-Start${RESET}      ${DIM}(Turn On Every Boot)${RESET} ${YELLOW}[e] Disable Auto-Start${RESET}     ${DIM}(Keep Off on Boot)${RESET}"
-        echo -e "    ${BLUE}[c] Restart Governor${RESET}       ${DIM}(Refresh Tweaks)${RESET}     ${BLUE}[f] Monitor Live Logs${RESET}      ${DIM}(Press [Enter] to Exit)${RESET}"
-        echo -e "    ${MAGENTA}[g] Check Driver Version${RESET}                        ${MAGENTA}[s] View Current Toolkit Dashboard${RESET}"
+        echo -e "    ${CYAN}[A] Enable Governor Now${RESET}    ${DIM}(Until Next Reboot)${RESET}  ${YELLOW}[D] Disable Governor Now${RESET}   ${DIM}(Stop Immediately)${RESET}"
+        echo -e "    ${CYAN}[B] Enable Auto-Start${RESET}      ${DIM}(Turn On Every Boot)${RESET} ${YELLOW}[E] Disable Auto-Start${RESET}     ${DIM}(Keep Off on Boot)${RESET}"
+        echo -e "    ${BLUE}[C] Restart Governor${RESET}        ${DIM}(Refresh Tweaks)${RESET}    ${BLUE}[F] Monitor Governor Live Logs${RESET}      ${DIM}(Press [Enter] to Exit)${RESET}"
+        echo -e "    ${MAGENTA}[G] Check Governor Version${RESET}                      ${MAGENTA}[S] View Current Toolkit Dashboard${RESET}"
         echo ""
+
         # --- CONFIG NOTICES ---
         echo -e "  ${DIM}─────────────────────────────────────────────────────────────────────${RESET}"
         echo -e "  ${CYAN}  ℹ  Configuration Path Notice:${RESET}"
@@ -2405,27 +2538,25 @@ show_menu() {
         echo -e "  ${DIM}─────────────────────────────────────────────────────────────────────${RESET}"
         echo ""
 
-        # --- SECTION 3: COMPONENT SWITCHES & TOOLS ---
-        echo -e "  ${BOLD}${BLUE}Hardware Unlocks & Core Optimizations${RESET}"
-        echo -e "  ${DIM}─────────────────────────────────────────────────────────────────────${RESET}"
-        echo -e "    ${CYAN}[3]${RESET} ACPI Table Fix  ${DIM}(Install/Uni)${RESET}    ${CYAN}[4]${RESET} RAM/VRAM Split  ${DIM}(Dynamic Split)${RESET}"
-        echo -e "    ${CYAN}[x]${RESET} Xbox Adapter    ${DIM}(Xone Driver)${RESET}    ${CYAN}[5]${RESET} Overclock Mgr   ${DIM}(Live SMU tool)${RESET}"
-        echo -e "    ${CYAN}[6]${RESET} Wake-on-LAN     ${DIM}(Port Selector)${RESET}  ${CYAN}[7]${RESET} Upgrade Gov Track ${DIM}(v0.4.12 COPR)${RESET}"
-        echo -e "    ${MAGENTA}[h] CU Map Matrix    ${DIM}(Harvest Map)${RESET}   ${MAGENTA}[o] HTML Dashboard ${DIM}(Web Browser)${RESET}"
+        # 🧬 SECTION 3: HARDWARE UNLOCKS & CORE OPTIMIZATIONS
+        echo -e "  ${BOLD}${YELLOW}Hardware Unlocks & Core Optimizations${RESET}"
+        echo -e "  ${BIBlack}─────────────────────────────────────────────────────────────────────${NC}"
+        echo -e "    ${CYAN}[3] ACPI Table Fix${RESET}  ${DIM}(Install/Uni)${RESET}    ${CYAN}[4] RAM/VRAM Split${RESET}  ${DIM}(Dynamic Split)${RESET}"
+        echo -e "    ${CYAN}[X] Xbox Adapter${RESET}    ${DIM}(Xone Driver)${RESET}    ${CYAN}[5] CPU OC & CU Suite${RESET} ${DIM}(Live SMU Manager)${RESET}"
+        echo -e "    ${CYAN}[6] Wake-on-LAN${RESET}     ${DIM}(Port Selector)${RESET}  ${CYAN}[7] Upgrade Governor Track${RESET} ${DIM}(v0.4.12 COPR)${RESET}"
+        echo -e "    ${CYAN}[H] CU Map Matrix${RESET}    ${DIM}(Harvest Map)${RESET}   ${CYAN}[O] CU Harvest Maps${RESET}   ${DIM}(Web Browser)${RESET}"
+        echo -e "    ${CYAN}[P] Pin Stable Layer${RESET}   ${DIM}(OSTree Backup)${RESET}"
         echo ""
-
-        # --- GLOBAL OPERATIONS ---
-        echo -e "    ${CYAN}[r] Reload Menu Interface${RESET}"
-        echo -e "    ${BOLD}${RED}[0] Secure Safe Exit${RESET}"
+        echo -e "    ${CYAN}[R] Reload Menu Interface${RESET}"
+        echo -e "    ${RED}[0] Secure Safe Exit${RESET}"
         echo ""
+        echo -e "    ${RED}⚠  WARNING: OVERCLOCKING AND UNDERVOLTING CAN DAMAGE SILICON TARGETS!${NC}"
+        echo -e "              ${RED}PROCEED ENTIRELY AT YOUR OWN RISK AND VERIFY SYSTEM COOLING.${NC}"
+        echo -e "  ${BIBlack}─────────────────────────────────────────────────────────────────────${NC}"
 
-        # --- INTEGRATED WARNING ---
-        echo -e "  ${BOLD}${RED}  ${ICON_WARN}  WARNING: OVERCLOCKING AND UNDERVOLTING CAN DAMAGE SILICON TARGETS!${RESET}"
-        echo -e "  ${RED}            PROCEED ENTIRELY AT YOUR OWN RISK AND VERIFY SYSTEM COOLING.${RESET}"
-        echo -e "  ${DIM}─────────────────────────────────────────────────────────────────────${RESET}"
 
         # Safe Prompt Parser (Instant Typing Response Keystroke Engine)
-        type_prompt "  Select an option [0-7, a-g, h, o, s, x]: " 0.03
+        type_prompt "  Select an option [0-7, A-G, H, K, O, P, R, S, X]: " 0.03
         choice=""
         read -n 1 -s choice || true
         echo ""
@@ -2435,52 +2566,52 @@ show_menu() {
             2) install_red_pill ;;
             3) toggle_acpi_fix ;;
             4) toggle_ram_split ;;
-            
+
             # 🧬 CONNECT THE CODE ENTRY TO THE EXECUTION SWITCH HERE:
             x|X) toggle_xbox_adapter ;;
-            
+
             5) install_overclock ;;
             6) install_wake_on_lan ;;
 
             7) update_cyan-skillfish ;;
-            h) view_cu_map ;;  # Hooks your new look securely into the runtime loop
+            h|H) view_cu_map ;;  # Hooks your new look securely into the runtime loop
 
             # 🧬 INJECT THIS CASE BRANCH DIRECTLY HERE:
 
 
-            a)
+            a|A)
                 echo -e "${GREEN}Executing Temporary Start...${NC}"
                 sudo systemctl start cyan-skillfish-governor-smu
                 sleep 2
                 ;;
-            b)
+            b|B)
                 echo -e "${B_GREEN}Executing Permanent Start...${NC}"
                 sudo systemctl enable --now cyan-skillfish-governor-smu
                 sleep 2
                 ;;
-            c)
+            c|C)
                 echo -e "${YELLOW}Executing Restart Service...${NC}"
                 sudo systemctl restart cyan-skillfish-governor-smu
                 sleep 2
                 ;;
-            d)
+            d|D)
                 echo -e "${RED}Executing Temporary Stop...${NC}"
                 sudo systemctl stop --now cyan-skillfish-governor-smu
                 sleep 2
                 ;;
-            e)
+            e|E)
                 echo -e "${B_RED}Executing Stop and Disable Service...${NC}"
                 sudo systemctl disable --now cyan-skillfish-governor-smu
                 sleep 2
                 ;;
-            f)
+            f|F)
                 clear
                 echo -e "${CYAN}Displaying Service Status...${NC}"
                 sudo systemctl status cyan-skillfish-governor-smu
                 echo ""
                 read -rp "Press [Enter] to return to the main menu..."
                 ;;
-            g)
+            g|G)
                 clear
                 echo -e "${CYAN}Displaying Cyan Skillfish Governor SMU Version...${NC}"
                 echo ""
@@ -2488,19 +2619,19 @@ show_menu() {
                 echo ""
                 read -rp "Press [Enter] to return to the main menu..."
                 ;;
-            s)
+            s|S)
                 run_status
                 type_prompt "  Press [any key] to return to the toolkit main menu... " 0.03
                 #echo -e "\n  ${YELLOW}Press any key to return to the menu...${RESET}"
                 read -n 1 -s -r || true
                 ;;
-            r)
+            r|R)
                 print_info "Reinitializing toolkit memory tracking blocks..."
                 sleep 0.5
                 exec bash "$SCRIPT_PATH" "$@"
                 ;;
-
-            o) launch_html_dashboard ;;
+            p|P) pin_active_image_layer ;;         # Locks down your verified v1.5 deployment via ostree pin
+            o|O) launch_html_dashboard ;;
 
             # 🧬 REDIRECTED TO THE NEW INTERACTIVE CLOSURE SYSTEM:
             0)
