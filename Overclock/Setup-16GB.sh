@@ -9,6 +9,10 @@ B_BLUE='\033[1;34m'
 RED='\033[0;31m'
 DIM='\033[38;2;110;110;110m'
 NC='\033[0m'
+GREEN='\033[0;32m'
+B_GREEN='\033[1;32m'
+MAGENTA="\033[1;95m"
+BOLD='\033[1m'
 
 # 🧬 SUITE IDENTITY BRANDING NOTICES
 ------------------------------
@@ -32,7 +36,6 @@ echo "[●] Step 3/8: Cleaning and refreshing rpm-ostree metadata tracking..." &
 (sudo rpm-ostree refresh-md 2>/dev/null || true) &>/dev/null &&
 
 echo "[●] Step 4/8: Staging Enhanced Cyan Skillfish Governor SMU layers (Takes ~25 mins total pipeline)..." &&
-# 🧬 FIXED: Removed 'local' constraint so the variable parses safely in a standalone script file
 is_reinstall=false
 if [[ -d /usr/etc/cyan-skillfish-governor-smu || -f /var/log/bc250_oc_install.log ]]; then
     is_reinstall=true
@@ -90,7 +93,18 @@ echo "[●] Step 8/8: Compiling lz4 acceleration drivers within system initramfs
 (rpm-ostree initramfs --enable --arg=--add-drivers --arg=lz4 2>/dev/null || true) &>/dev/null
 
 echo ""
-echo "Setup Complete"
-echo "Please reboot your system using the following command: systemctl reboot"
+echo -e "${B_GREEN}Setup Complete${NC}"
+echo -e "Please reboot your system using the following command: ${B_BLUE}systemctl reboot${NC}"
+echo ""
+echo -e "\033[5m${RED}╔═════════════════════════════════════════════════════════════════════════════════════════════╗${NC}"
+echo -e "${RED}║${NC}  ${BOLD}${YELLOW}[⚠] CRITICAL POST-REBOOT CONFIGURATION REQUIRED${NC}                                            ${RED}║${NC}"
+echo -e "${RED}╚═════════════════════════════════════════════════════════════════════════════════════════════╝${NC}"
+echo -e "    ${BOLD}${B_GREEN}● STEP 1:${NC} Do ${BOLD}${RED}NOT${NC} activate the Governor immediately upon rebooting."
+echo -e "    ${BOLD}${B_GREEN}● STEP 2:${NC} You ${BOLD}${YELLOW}MUST${NC} customize your hardware profiles to prevent instability targets."
+echo -e "    ${BOLD}${B_GREEN}● STEP 3:${NC} Open and modify your custom parameters using a text editor at this path:"
+echo -e "              👉  ${BOLD}${MAGENTA}/etc/cyan-skillfish-governor-smu/config.toml${NC}"
+echo -e "    ${BOLD}${B_GREEN}● STEP 4:${NC} Save your profile adjustments first, then turn the governor service ${B_GREEN}ON${NC}."
+echo ""
 echo "After the system has rebooted, if you wish to test GPU overclocking, then run the following command in the terminal: systemctl start cyan-skillfish-governor-smu"
-echo "CAUTION -> Overclocking the GPU can cause increased system heat and system instability"
+echo -e "${RED}CAUTION -> Overclocking the GPU can cause increased system heat and system instability${NC}"
+echo ""
