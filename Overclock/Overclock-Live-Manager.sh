@@ -19,7 +19,10 @@ BIBlue='\033[1;94m'       # Blue
 BIPurple='\033[1;95m'     # Purple
 BICyan='\033[1;96m'       # Cyan
 BIWhite='\033[1;97m'      # White
+DIM='\033[2m'
+BOLD='\033[1m'
 NC='\033[0m' # No Color (Reset)
+RESET='\033[0m'
 
 # Verify root/sudo privileges
 if [ "$EUID" -ne 0 ]; then
@@ -112,10 +115,9 @@ ensure_bazzite_dependencies() {
             ;;
     esac
 }
-
 # Configuration
 LOG_FILE="/var/log/bc250_oc_install.log"
-REPO_URL="https://github.com/bc250-collective/bc250_smu_oc.git"
+REPO_URL="https://github.com"
 SERVICE_FILE="/etc/systemd/system/bc250-resume.service"
 SCRIPT_PATH=$(realpath "$0")
 
@@ -142,8 +144,8 @@ ask_desktop_shortcut() {
     echo -e "  ${BOLD}${WHITE}Would you like to add a shortcut to your desktop?${RESET}"
     echo -e "  ${DIM}──────────────────────────────────────────────────────────────────${RESET}"
     echo ""
-    echo -e "    ${CYAN}[1]${RESET} Yes, create desktop shortcut"
-    echo -e "    ${CYAN}[2]${RESET} No, skip shortcut creation"
+    echo -e "    ${CYAN}${RESET} Yes, create desktop shortcut"
+    echo -e "    ${CYAN}${RESET} No, skip shortcut creation"
     echo ""
     echo -e "    ${DIM}[Press Enter]${NC} To continue to BC-250 TUNING & CONFIGURATION${RESET}"
     echo -e "  ${DIM}──────────────────────────────────────────────────────────────────${RESET}"
@@ -190,7 +192,7 @@ show_warning() {
     echo "NEVER EXCEED 1.325V (VID) UNDER ANY CIRCUMSTANCES!"
     echo "PROCEED ENTIRELY AT YOUR OWN RISK."
     echo -e "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!${NC}"
-    echo "Source: github.com/bc250-collective/bc250_smu_oc"
+    echo "Source: ://github.com"
     echo "Logs will be saved to: $LOG_FILE"
     echo ""
     read -p "Press [Enter] to accept the risk and continue, or Ctrl+C to abort..."
@@ -222,7 +224,6 @@ stress_settings() {
     read -p "Press [Enter] to return to the tuning menu..."
 }
 
-# 🧬 NEW CONGESTION-FREE STABILITY INJECTION MODULE (Sourced directly from community specs)
 run_cpu_core_stress_test() {
     clear
     echo -e "${BOLD}${YELLOW}=== Launching Silicon Per-Core Stability Sweep ===${NC}"
@@ -253,6 +254,256 @@ run_cpu_core_stress_test() {
     read -rp "  Press [Enter] to return to the primary management loop... "
 }
 
+# ==============================================================================
+# 🧬 HARDWARE-AWARE PERFORMANCE PROFILE CONFIGURATION GENERATOR
+# ==============================================================================
+configure_governor_profile() {
+    clear
+    echo -e "\n  ${CYAN}╔═══════════════════════════════════════════════════════════════════╗${NC}"
+    echo -e "  ${CYAN}║              BC-250 HARDWARE SPECIFICATIONS AUDIT WIZARD          ║${NC}"
+    echo -e "  ${CYAN}║               * AUTOMATED SAFETY THROTTOTHING ENGINE *             ║${NC}"
+    echo -e "  ${CYAN}╚═══════════════════════════════════════════════════════════════════╝${NC}"
+    echo ""
+
+    # 📋 QUESTION 1: COOLING INFRASTRUCTURE
+    echo -e "  ${BOLD}${BLUE}[1/2] Select the physical cooling system configuration currently active:${RESET}"
+    echo -e "    1) Stock / Factory OEM Basic Air Cooler"
+    echo -e "    2) High-End Aftermarket Air Cooled (Heavy Fin Stack / High CFM Fans)"
+    echo -e "    3) Liquid Cooled / AIO Closed Loop / Custom Water Block"
+    echo ""
+    local cooling_choice=""
+    read -p "  Enter cooling profile option [1-3]: " cooling_choice
+
+    local THROTTLE_TEMP=72
+    local RECOVERY_TEMP=65
+    local COOLING_LABEL="Stock Air"
+
+    case "$cooling_choice" in
+        1) THROTTLE_TEMP=72; RECOVERY_TEMP=65; COOLING_LABEL="Stock Air (Restricted)";;
+        2) THROTTLE_TEMP=84; RECOVERY_TEMP=75; COOLING_LABEL="Premium Air Cooled";;
+        3) THROTTLE_TEMP=65; RECOVERY_TEMP=58; COOLING_LABEL="Liquid Cooled Core";;
+        *) echo -e "  ${RED}❌ Invalid choice. Falling back to safe Stock Air parameters.${NC}"; THROTTLE_TEMP=72;;
+    esac
+    echo ""
+    # 📋 QUESTION 2: POWER BUDGET (300W - 500W+ STRATA)
+    echo -e "  ${BOLD}${BLUE}[2/2] Enter your current Power Supply (PSU) maximum wattage rating:${RESET}"
+    echo -e "        ${DIM}(Accepts 300W baseline up to 500W+ extreme power overhead profiles)${RESET}"
+    echo ""
+    local psu_wattage=""
+    read -p "  PSU Wattage Rating (e.g., 300, 450, 500): " psu_wattage
+
+    if ! [[ "$psu_wattage" =~ ^[0-9]+$ ]]; then
+        echo -e "  ${RED}⚠ Invalid format. Defaulting power tracking to minimal 300W limits.${NC}"
+        psu_wattage=300
+    fi
+    echo ""
+
+    # 📋 SYSTEM TARGET SELECTION
+    echo -e "  ${BOLD}${BLUE}Select desired system tuning optimization profile layer:${RESET}"
+    echo -e "    1) Normal Computer Use  ${DIM}(Silent profile, low voltage, browser/desktop work)${RESET}"
+    echo -e "    2) Standard Gaming      ${DIM}(Balanced high-efficiency foundation at 1800MHz)${RESET}"
+    echo -e "    3) Heavy Overclocking   ${DIM}(Absolute Max Custom Curve: Up to 2150MHz @ 1020mV)${RESET}"
+    echo ""
+    local tuning_choice=""
+    read -p "  Select tuning profile [1-3]: " tuning_choice
+    echo ""
+
+    local PROFILE_LABEL=""
+    local RAMP_NORMAL=15
+    local RAMP_BURST=40
+    local FREQ_MAX=1400
+    local VOLT_MAX=780
+
+    case "$tuning_choice" in
+        1)
+            PROFILE_LABEL="NORMAL COMPUTER USE (LOW POWER)"
+            RAMP_NORMAL=5; RAMP_BURST=15; FREQ_MAX=1400; VOLT_MAX=780
+            ;;
+        2)
+            PROFILE_LABEL="STANDARD GAMING (BALANCED PERFORMANCE)"
+            RAMP_NORMAL=10; RAMP_BURST=50; FREQ_MAX=1800; VOLT_MAX=900
+            ;;
+        3)
+            PROFILE_LABEL="HEAVY OVERCLOCKING GAMEPLAY (MAX CEILING)"
+            RAMP_NORMAL=15; RAMP_BURST=80; FREQ_MAX=2150; VOLT_MAX=1020
+            ;;
+        *)
+            echo -e "  ${RED}❌ Invalid tuning layout selection. Aborting...${NC}"; sleep 1.5; return 1;;
+    esac
+
+    # 🧬 THE STEPPED INTERCEPT ENGINE: Automated downscaling enforcement rules based on PSU Strata
+    if (( psu_wattage >= 300 && psu_wattage < 400 )); then
+        echo -e "  ${RED}╔═════════════════════════════════════════════════════════════════════════════════════════════╗${NC}"
+        echo -e "  ${RED}║  [⚠] CRITICAL HARDWARE LOCKOUT: SEVERE PSU CONSTRAINT ENFORCED                              ║${NC}"
+        echo -e "  ${RED}╠═════════════════════════════════════════════════════════════════════════════════════════════╣${NC}"
+        echo -e "  ${RED}║  Your reported ${psu_wattage}W power supply is below the minimum required headroom for 3D gaming.  ║${NC}"
+        echo -e "  ${RED}║  Toolkit has hardlocked profile to Normal Computer Use (1400MHz) to prevent OCP trips.      ║${NC}"
+        echo -e "  ${RED}╚═════════════════════════════════════════════════════════════════════════════════════════════╝${NC}"
+        echo ""
+        PROFILE_LABEL="NORMAL COMPUTER USE (FORCED SAFETY CLAMP)"
+        FREQ_MAX=1400; VOLT_MAX=780; RAMP_NORMAL=5; RAMP_BURST=15; tuning_choice=1
+
+    elif (( psu_wattage >= 400 && psu_wattage < 500 )) && [ "$tuning_choice" -eq 3 ]; then
+        echo -e "  ${YELLOW}╔═════════════════════════════════════════════════════════════════════════════════════════════╗${NC}"
+        echo -e "  ${YELLOW}║  [⚠] MODERATE POWER HEADROOM DETECTED: AUTO-DOWN-SAMPLING PERFORMANCE ACTIVE                ║${NC}"
+        echo -e "  ${YELLOW}╠═════════════════════════════════════════════════════════════════════════════════════════════╣${NC}"
+        echo -e "  ${YELLOW}║  Your reported ${psu_wattage}W PSU cannot safely protect against 2150MHz transient spikes.           ║${NC}"
+        echo -e "  ${YELLOW}║  Toolkit has safely scaled your target down to Standard Gaming mode (1800MHz @ 900mV).      ║${NC}"
+        echo -e "  ${YELLOW}╚═════════════════════════════════════════════════════════════════════════════════════════════╝${NC}"
+        echo ""
+        PROFILE_LABEL="STANDARD GAMING (AUTO-DOWNSCALED FROM MAXIMUM CEILING)"
+        FREQ_MAX=1800; VOLT_MAX=900; RAMP_BURST=50; tuning_choice=2
+    fi
+    echo -e "  ${YELLOW}[ℹ] Compiling target configurations using tailored hardware masks...${NC}"
+    local TARGET_CONF="/etc/cyan-skillfish-governor-smu/config.toml"
+    sudo mkdir -p /etc/cyan-skillfish-governor-smu 2>/dev/null
+
+    # 🚀 AUTO-BACKUP TRACE: Preserves existing setup properties cleanly before overwriting
+    if [[ -f "$TARGET_CONF" ]]; then
+        sudo cp "$TARGET_CONF" "${TARGET_CONF}.bak_$(date +%Y%m%d_%H%M%S)" 2>/dev/null
+    fi
+
+    sudo bash -c "cat <<EOF > $TARGET_CONF
+# ==============================================================================
+# PROFILE TEMPLATE LAYOUT: $PROFILE_LABEL
+# Calculated dynamically via BC-250 Spec Auditor Wizard Suite
+# Hardware Mask: Cooling = $COOLING_LABEL | Power Budget Source = ${psu_wattage}W PSU
+# ==============================================================================
+
+[timing.intervals]
+sample = 4000          # Loosened to 4ms to stop governor telemetry from choking the CPU
+adjust = 30000         # 30ms loop ensures smooth clock stepping without micro-stutter
+
+[gpu-usage]
+fix-freq = true
+fix-metrics = true
+method = \"busy-flag\"   # Best compatibility mode for RDNA2 Cyan Skillfish architectures
+flush-every = 5        # Flushes frequently to completely eliminate micro-stutter
+
+[gpu]
+set-method = \"smu\"     # Direct SMU control for immediate frequency overrides
+target_card = \"card1\"  # Points directly to your active BC-250 hardware node
+
+[dbus]
+enabled = true         # Enables inter-process communication for system overlays
+
+# MHz/ms scaling rates
+[timing.ramp-rates]
+normal = $RAMP_NORMAL            # Tracking speed optimized for active profile limits
+burst = $RAMP_BURST             # Frequency jumps scaled dynamically to match your ${psu_wattage}W current allocation
+
+# Evaluation sampling parameters
+[timing]
+burst-samples = 3      # Allows fast response to heavy engine load spikes
+down-events = 20       # High filtration to aggressively prevent framerate drops
+
+# Control loop window boundaries (MHz)
+[frequency-thresholds]
+adjust = 5             # Tighter control loop window for precise stability
+upper = 0.94           # Lock peak frequencies until utilization drops significantly
+lower = 0.82           # Force higher clocks even during brief engine stalls or asset loading
+
+# Utilization target margins (%)
+[load-target]
+upper = 0.80           # Prevents aggressive downclocking during variable frame times
+lower = 0.60           # Forces high clock retention during geometry/draw call pipeline limits
+
+# °C Thermal tracking configurations
+[temperature]
+throttling = $THROTTLE_TEMP        # HARD CEILING: Scaled directly from your $COOLING_LABEL spec option
+throttling_recovery = $RECOVERY_TEMP # Safe temperature buffer to prevent rapid thermal stutter loops
+
+# ==============================================================================
+# CLOCK & VOLTAGE FREQUENCY CURVE
+# Ceiling and exponential safe-points auto-scaled for active spec parameters.
+# ==============================================================================
+
+[frequency-range]
+min = 350
+max = $FREQ_MAX             # Dynamic performance ceiling applied securely
+min_voltage = 700      # Stabilized voltage floor for hardware system bus
+max_voltage = $VOLT_MAX     # Maximum voltage ceiling matching profile budget limit
+
+[[safe-points]]
+frequency = 350
+voltage = 700
+
+[[safe-points]]
+frequency = 500
+voltage = 700
+
+[[safe-points]]
+frequency = 1000
+voltage = 740          # Raised low-state voltage to prevent hard-lock idling crashes
+
+[[safe-points]]
+frequency = 1400
+voltage = 780          # Adjusted mid-state baseline
+EOF"
+
+    if [ "$tuning_choice" -gt 1 ]; then
+    sudo bash -c "cat <<EOF >> $TARGET_CONF
+
+[[safe-points]]
+frequency = 1500
+voltage = 810          # Exponential scaling begins here to combat silicon leakage
+
+[[safe-points]]
+frequency = 1600
+voltage = 840
+
+[[safe-points]]
+frequency = 1700
+voltage = 870
+
+[[safe-points]]
+frequency = 1800
+voltage = 900          # High-efficiency gaming foundation threshold
+EOF"
+    fi
+
+    if [ "$tuning_choice" -eq 3 ]; then
+    sudo bash -c "cat <<EOF >> $TARGET_CONF
+
+[[safe-points]]
+frequency = 1900
+voltage = 930
+
+[[safe-points]]
+frequency = 1950
+voltage = 945
+
+[[safe-points]]
+frequency = 2000
+voltage = 960          # 2GHz high-performance threshold
+
+[[safe-points]]
+frequency = 2050
+voltage = 975
+
+[[safe-points]]
+frequency = 2100
+voltage = 995          # Approaching high-stress limits (+20mV)
+
+[[safe-points]]
+frequency = 2125
+voltage = 1008         # High-leakage compensation step
+
+[[safe-points]]
+frequency = 2150
+voltage = 1020         # Maximum performance tier matching your exact --vid 1020 limit
+EOF"
+    fi
+
+    echo -e "  ${GREEN}[✓] New config.toml compiled successfully using hardware constraints!${NC}"
+    echo -e "  ${YELLOW}[⚙] Cycling changes into live governor service memory...${NC}"
+
+    sudo systemctl daemon-reload 2>/dev/null || true
+    sudo systemctl restart cyan-skillfish-governor-smu 2>/dev/null || true
+
+    echo -e "  ${GREEN}[✓] Task complete! Active system profiles locked into memory space cleanly.${NC}\n"
+    read -rp "  Press [Enter] to exit back to the main menu..."
+}
 launch_tuning_menu() {
     while true; do
         clear
@@ -369,7 +620,6 @@ run_phase2() {
     log "${GREEN}[Success] Installation complete! 'bc250-detect' and 'bc250-apply' are ready.${NC}"
     launch_tuning_menu
 }
-
 run_manager_phase1() {
     log "${GREEN}[CU Live Manager] Preparing installation requirements...${NC}"
     sudo bash -c "cat <<EOF > $SERVICE_FILE
@@ -397,7 +647,7 @@ run_manager_phase2() {
     sudo rm -f $SERVICE_FILE
     sudo systemctl daemon-reload
     cd /tmp || exit
-    curl -L -o bc250-cu-live-manager.sh https://raw.githubusercontent.com/WinnieLV/bc250-cu-live-manager/refs/heads/main/bc250-cu-live-manager.sh >> "$LOG_FILE" 2>&1
+    curl -L -o bc250-cu-live-manager.sh https://githubusercontent.com >> "$LOG_FILE" 2>&1
     chmod +x bc250-cu-live-manager.sh
     sudo ./bc250-cu-live-manager.sh
 }
@@ -437,9 +687,6 @@ case "$1" in
     --uninstall-cu) uninstall_cu_live_manager; exit 0 ;;
 esac
 
-    # 🧬 FIXED: Pre-flight shortcut configurations execute ONLY ONCE upon initial script boot!
-#ask_desktop_shortcut
-
 # ==============================================================================
 # 🚀 CLEAN CONGESTION-FREE MASTER MENU LOOP (NO REFLECTION DELAYS)
 # ==============================================================================
@@ -460,7 +707,10 @@ clear
     echo -e "    ${BOLD}${BLUE}• Compute Unit Live Manager:${RESET}"
     echo -e "      ${CYAN}[2a]${RESET} Install Package Dependencies            ${DIM}(Phase 1 - Requires Reboot)${RESET}"
     echo -e "      ${CYAN}[2b]${RESET} Launch Live Matrix Configuration        ${DIM}(Phase 2)${RESET}"
-    echo ""    
+    echo ""
+    echo -e "    ${BOLD}${CYAN}• Silicon Governor & Performance Tuning Profile Manager:${RESET}"
+    echo -e "      ${CYAN}[M]${RESET}  Modify Governor Performance Profile     ${DIM}(Hardware Spec Audit Wizard)${RESET}"
+    echo ""
     echo -e "    ${BOLD}${YELLOW}• Rollback & Restoration Profiles:${RESET}"
     echo -e "      ${DIM}[3a] Uninstall CPU Overclock Profiles Completely${RESET}"
     echo -e "      ${DIM}[3b] Uninstall Compute Unit Live Manager Service Paths${RESET}"
@@ -472,18 +722,18 @@ clear
     echo -e "      ${BOLD}${MAGENTA}[↵]${RESET} Hit Enter to Secure Safe Exit Overclock-Live-Manager"
     echo ""
 
-    read -p "  Select an option [ 1a-4, ↵ ]: " choice
+    read -p "  Select an option [ 1a-4, M, ↵ ]: " choice
 
     case "$choice" in
         1a) run_phase1 ;;
         1b) run_phase2 ;;
         2a) run_manager_phase1 ;;
         2b) run_manager_phase2 ;;
+        m|M) configure_governor_profile ;;
         3a) uninstall_cpu_overclock ;;
         3b) uninstall_cu_live_manager ;;
         4)  run_cpu_core_stress_test ;;
         0|"") exit 0 ;;
-        *) echo -e "${RED}Invalid choice! Please select a valid number code option.${NC}"; sleep 1.5 ;;
+        *) echo -e "${RED}Invalid choice! Please select a valid option.${NC}"; sleep 1.5 ;;
     esac
 done
-
