@@ -190,35 +190,50 @@ show_warning() {
     echo "NEVER EXCEED 1.325V (VID) UNDER ANY CIRCUMSTANCES!"
     echo "PROCEED ENTIRELY AT YOUR OWN RISK."
     echo -e "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!${NC}"
-    echo "Source: github.com/bc250-collective/bc250_smu_oc"
+    echo "Source: ://github.com"
     echo "Logs will be saved to: $LOG_FILE"
     echo ""
     read -p "Press [Enter] to accept the risk and continue, or Ctrl+C to abort..."
 }
 
+# ==============================================================================
+# 🧬 HARDENED SERVICE ACTIVATION ENGINE (PREVENTS MISSING SERVICE ALERTS)
+# ==============================================================================
 finalize_settings() {
     log "${GREEN}[Step 9] Finalizing and activating SMU service...${NC}"
     bc250-apply --install overclock.conf >> "$LOG_FILE" 2>&1
-    sudo systemctl daemon-reload >> "$LOG_FILE" 2>&1
-    sudo systemctl restart bc250-smu-oc.service >> "$LOG_FILE" 2>&1
-    sudo systemctl enable bc250-smu-oc.service >> "$LOG_FILE" 2>&1
-    clear
 
-    echo -e "${YELLOW}--- Current SMU Service Status ${RED}Press [Enter] to return to menu ---${NC}"
-    sudo systemctl status bc250-smu-oc.service
+    # 🧬 Check if the service actually exists before trying to touch it!
+    if [[ -f "/etc/systemd/system/bc250-smu-oc.service" ]]; then
+        sudo systemctl daemon-reload >> "$LOG_FILE" 2>&1
+        sudo systemctl restart bc250-smu-oc.service >> "$LOG_FILE" 2>&1
+        sudo systemctl enable bc250-smu-oc.service >> "$LOG_FILE" 2>&1
+        clear
+        echo -e "${YELLOW}--- Current SMU Service Status ${RED}Press [Enter] to return to menu ---${NC}"
+        sudo systemctl status bc250-smu-oc.service
+    else
+        clear
+        echo -e "${GREEN}[✓] Settings applied to local conf! Toolchain installation required to activate as boot service.${NC}"
+    fi
     read -p "Press [Enter] to return to the tuning menu..."
 }
 
 stress_settings() {
     log "${GREEN}[Step 9] Stressing CPU...${NC}"
     stress --cpu 16 --timeout 150 >> "$LOG_FILE" 2>&1
-    sudo systemctl daemon-reload >> "$LOG_FILE" 2>&1
-    sudo systemctl restart bc250-smu-oc.service >> "$LOG_FILE" 2>&1
-    sudo systemctl enable bc250-smu-oc.service >> "$LOG_FILE" 2>&1
-    clear
 
-    echo -e "${YELLOW}--- Current SMU Service Status ${RED}Press [Enter] to return to menu ---${NC}"
-    sudo systemctl status bc250-smu-oc.service
+    # 🧬 Check if the service actually exists before trying to touch it!
+    if [[ -f "/etc/systemd/system/bc250-smu-oc.service" ]]; then
+        sudo systemctl daemon-reload >> "$LOG_FILE" 2>&1
+        sudo systemctl restart bc250-smu-oc.service >> "$LOG_FILE" 2>&1
+        sudo systemctl enable bc250-smu-oc.service >> "$LOG_FILE" 2>&1
+        clear
+        echo -e "${YELLOW}--- Current SMU Service Status ${RED}Press [Enter] to return to menu ---${NC}"
+        sudo systemctl status bc250-smu-oc.service
+    else
+        clear
+        echo -e "${GREEN}[✓] Stress test completed! Toolchain installation required to monitor live background service.${NC}"
+    fi
     read -p "Press [Enter] to return to the tuning menu..."
 }
 
@@ -332,7 +347,7 @@ configure_governor_profile() {
     fi
     echo ""
 
-    # 📋 AUDIT NO. 3: FUTURE TARGET COMPUTE UNITS (INTELLIGENT HYBRID CONFIRMATION)
+        # 📋 AUDIT NO. 3: FUTURE TARGET COMPUTE UNITS (INTELLIGENT HYBRID CONFIRMATION)
     echo -e "  ${BOLD}${BLUE}[3/5] I do see you have ${detected_cus}/40 CUs currently active on this system.${RESET}"
     echo -e "        Are you planning to change or target a different configuration footprint?"
     echo -e "    1) Target 36 CUs Active  ${DIM}(Down-binned / Maximum High-Efficiency Target Layout)${RESET}"
@@ -351,21 +366,34 @@ configure_governor_profile() {
     esac
     echo ""
 
+    # ==============================================================================
+    # 🚀 NEW INJECTED TRACK: AUDIT NO. 4 (12-THREAD ASYMMETRICAL SAFETY ALIGNMENT)
+    # ==============================================================================
     # 📋 AUDIT NO. 4: FUTURE TARGET CPU CORES
-    echo -e "  ${BOLD}${BLUE}[4/5] I do see you have ${detected_cores} CPU Cores currently active on this system.${RESET}"
-    echo -e "        Are you planning to change or target a different operational complex?"
-    echo -e "    1) Target 6 Cores Active  ${DIM}(Power-saving / SMT Restructured Layout)${RESET}"
-    echo -e "    2) Target 8 Cores Active  ${DIM}(Full Hardware Multithreading Core Complex Unlocked)${RESET}"
+    echo -e "  ${BOLD}${BLUE}[4/5] I do see you have ${detected_cores} CPU Cores / ${live_threads} Threads active.${RESET}"
+    echo -e "        Select your target configuration profile layout:"
+    echo -e "    1) Target 6 Cores / 12 Threads  ${DIM}(Power-saving / High-Efficiency Sweet Spot)${RESET}"
+    echo -e "    2) Target 8 Cores / 16 Threads  ${DIM}(Full Hardware Multithreading Unlocked)${RESET}"
     echo ""
     local core_choice=""
-    read -p "  Select target CPU core layout [1-2]: " core_choice
+    read -p "  Select target CPU core complex [1-2]: " core_choice
 
     local ACTIVE_CORES=8
     local INTERVAL_SAMPLE=4000
     case "$core_choice" in
-        1) ACTIVE_CORES=6; INTERVAL_SAMPLE=6000;; # Loosen sampling slightly on 6 cores to protect cycle starvation
-        2) ACTIVE_CORES=8; INTERVAL_SAMPLE=4000;;
-        *) echo -e "  ${YELLOW}⚠ Unknown parameter. Defaulting to full 8 Core complex scaling matrices.${NC}"; ACTIVE_CORES=8;;
+        1)
+            ACTIVE_CORES=6
+            INTERVAL_SAMPLE=6000   # Loosen to 6ms to protect a 12-thread pool from telemetry choke
+            ;;
+        2)
+            ACTIVE_CORES=8
+            INTERVAL_SAMPLE=4000   # Keep at ultra-fast 4ms for full 16-thread pools
+            ;;
+        *)
+            echo -e "  ${YELLOW}⚠ Defaulting to full 8 Core / 16 Thread complex matrices.${NC}"
+            ACTIVE_CORES=8
+            INTERVAL_SAMPLE=4000
+            ;;
     esac
     echo ""
 
