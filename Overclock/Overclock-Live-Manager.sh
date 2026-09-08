@@ -587,11 +587,11 @@ launch_tuning_menu() {
         echo ""
         echo -e "  ${YELLOW}Select a baseline template for your hardware variant:${NC}"
         echo -e "  ${BIBlack}─────────────────────────────────────────────────────────────────────${NC}"
-        echo -e "    ${CYAN}1)${NC} 40/40       CU Model    ${BIBlack}───${NC}  3500 MHz  @  1000 mV  ${BIBlack}│${NC}  Max 85°C"
-        echo -e "    ${CYAN}2)${NC} 36/40 38/40 CU Model    ${BIBlack}───${NC}  3500 MHz  @   980 mV  ${BIBlack}│${NC}  Max 82°C"
-        echo -e "    ${CYAN}3)${NC} 36/40 38/40 CU Model    ${BIBlack}───${NC}  3500 MHz  @  1015 mV  ${BIBlack}│${NC}  Max 85°C"
-        echo -e "    ${CYAN}4)${NC} 36/40 38/40 CU Model    ${BIBlack}───${NC}  3500 MHz  @  1020 mV  ${BIBlack}│${NC}  Max 85°C"
-        echo -e "    ${CYAN}5)${NC} 36/40 38/40 CU Model    ${BIBlack}───${NC}  3500 MHz  @  1050 mV  ${BIBlack}│${NC}  Max 85°C"
+        echo -e "    ${CYAN}1)${NC} 40/40 CU - Extreme Overclock  ${BIBlack}───${NC}  3500 MHz  @  1000 mV  ${BIBlack}│${NC}  Max 85°C"
+        echo -e "    ${CYAN}2)${NC} 40/40 CU - High-Efficiency    ${BIBlack}───${NC}  3000 MHz  @   920 mV  ${BIBlack}│${NC}  Max 78°C"
+        echo -e "    ${CYAN}3)${NC} 38/40 CU - Extreme Overclock  ${BIBlack}───${NC}  3500 MHz  @  1020 mV  ${BIBlack}│${NC}  Max 85°C"
+        echo -e "    ${CYAN}4)${NC} 38/40 CU - Balanced Gaming    ${BIBlack}───${NC}  3000 MHz  @   945 mV  ${BIBlack}│${NC}  Max 80°C"
+        echo -e "    ${CYAN}5)${NC} 36/40 CU - Silent / Eco Core  ${BIBlack}───${NC}  2800 MHz  @   890 mV  ${BIBlack}│${NC}  Max 75°C"
         echo ""
         echo -e "    ${BIGreen}6) Manual Custom Profile${NC}       ${BIBlack}(Fill MHz, mV, Max Temp manually)${NC}"
         echo -e "    ${BIGreen}7) Manual Test Profile${NC}         ${BIBlack}(Fill MHz, mV, Max Temp for safety test)${NC}"
@@ -602,12 +602,12 @@ launch_tuning_menu() {
         read -p "  Enter selection [1-7, ↵]: " tune_choice
 
         case "$tune_choice" in
-            1) log "${GREEN}Launching 40/40 CU profile optimization...${NC}"; bc250-detect --frequency 3500 --vid 1000 -t 85 --keep; finalize_settings ;;
-            2) log "${GREEN}Launching 36/40 38/40 CU profile optimization...${NC}"; bc250-detect --frequency 3500 --vid 980 -t 82 --keep; finalize_settings ;;
-            3) log "${GREEN}Launching 36/40 38/40 CU profile optimization...${NC}"; bc250-detect --frequency 3500 --vid 1015 -t 85 --keep; finalize_settings ;;
-            4) log "${GREEN}Launching 36/40 38/40 CU profile optimization...${NC}"; bc250-detect --frequency 3500 --vid 1020 -t 85 --keep; finalize_settings ;;
-            5) log "${GREEN}Launching 36/40 38/40 CU profile optimization...${NC}"; bc250-detect --frequency 3500 --vid 1050 -t 85 --keep; finalize_settings ;;
-            6|7)
+            1) log "${GREEN}Launching 40/40 CU extreme overclock...${NC}"; bc250-detect --frequency 3500 --vid 1000 -t 85 --keep; finalize_settings ;;
+            2) log "${GREEN}Launching 40/40 CU high-efficiency profile...${NC}"; bc250-detect --frequency 3000 --vid 920 -t 78 --keep; finalize_settings ;;
+            3) log "${GREEN}Launching 38/40 CU extreme overclock...${NC}"; bc250-detect --frequency 3500 --vid 1020 -t 85 --keep; finalize_settings ;;
+            4) log "${GREEN}Launching 38/40 CU balanced gaming sweet spot...${NC}"; bc250-detect --frequency 3000 --vid 945 -t 80 --keep; finalize_settings ;;
+            5) log "${GREEN}Launching 36/40 CU silent eco profile...${NC}"; bc250-detect --frequency 2800 --vid 890 -t 75 --keep; finalize_settings ;;
+                        6|7)
                 clear
                 echo -e "${YELLOW}====================================================${NC}"
                 echo -e "${YELLOW}             CUSTOM PROFILE CONFIGURATION           ${NC}"
@@ -625,7 +625,7 @@ launch_tuning_menu() {
                 done
                 while true; do
                     read -p "Enter Max Temperature Target (°C) [e.g., 85]: " custom_temp
-                    if [[ "$custom_freq" =~ ^[0-9]+$ ]] && [ "$custom_temp" -gt 0 ] && [ "$custom_temp" -lt 105 ]; then break; else echo -e "${RED}Invalid input. Please enter a safe temperature limit below 105°C.${NC}"; fi
+                    if [[ "$custom_temp" =~ ^[0-9]+$ ]] && [ "$custom_temp" -gt 0 ] && [ "$custom_temp" -lt 105 ]; then break; else echo -e "${RED}Invalid input. Please enter a safe temperature limit below 105°C.${NC}"; fi
                 done
                 log "${GREEN}Running custom tuning profile optimization...${NC}"
                 bc250-detect --frequency "$custom_freq" --vid "$custom_vid" -t "$custom_temp" --keep
