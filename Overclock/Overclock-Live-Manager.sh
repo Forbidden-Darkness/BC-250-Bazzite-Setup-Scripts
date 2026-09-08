@@ -201,9 +201,17 @@ show_warning() {
 # ==============================================================================
 finalize_settings() {
     log "${GREEN}[Step 9] Finalizing and activating SMU service...${NC}"
-    bc250-apply --install overclock.conf >> "$LOG_FILE" 2>&1
+    
+    # 🧬 DYNAMIC PATH RESOLVER: Detects if the config file is inside a sub-toolbox directory
+    local local_conf="overclock.conf"
+    if [ -f "$REAL_HOME/Bazzite_Toolbox/Overclock/overclock.conf" ]; then
+        local_conf="$REAL_HOME/Bazzite_Toolbox/Overclock/overclock.conf"
+    fi
 
-    # 🧬 Check if the service actually exists before trying to touch it!
+    # Pass the fully verified path explicitly to the toolchain application binary
+    bc250-apply --install "$local_conf" >> "$LOG_FILE" 2>&1
+    
+    # Check if the service actually exists before trying to touch it!
     if [[ -f "/etc/systemd/system/bc250-smu-oc.service" ]]; then
         sudo systemctl daemon-reload >> "$LOG_FILE" 2>&1
         sudo systemctl restart bc250-smu-oc.service >> "$LOG_FILE" 2>&1
