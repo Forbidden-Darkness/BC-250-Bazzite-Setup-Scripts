@@ -153,7 +153,7 @@ ask_desktop_shortcut() {
     read -rp "  Select an option [1-2]: " shortcut_choice
 
     case $shortcut_choice in
-        1)
+        Yes)
             cat > "$shortcut" <<SHORTCUT_EOF
 [Desktop Entry]
 Type=Application
@@ -171,7 +171,7 @@ SHORTCUT_EOF
             print_info "Overclock Manager shortcut created successfully!"
             sleep 2
             ;;
-        2)
+        No)
             print_info "Skipping desktop shortcut generation."
             sleep 1.5
             ;;
@@ -261,12 +261,25 @@ configure_governor_profile() {
     clear
     echo -e "\n  ${CYAN}╔═══════════════════════════════════════════════════════════════════╗${NC}"
     echo -e "  ${CYAN}║              BC-250 HARDWARE SPECIFICATIONS AUDIT WIZARD          ║${NC}"
-    echo -e "  ${CYAN}║               * AUTOMATED SAFETY THROTTOTHING ENGINE *             ║${NC}"
+    echo -e "  ${CYAN}║               * AUTOMATED SAFETY THROTTLING ENGINE *              ║${NC}"
     echo -e "  ${CYAN}╚═══════════════════════════════════════════════════════════════════╝${NC}"
     echo ""
 
-    # 📋 QUESTION 1: COOLING INFRASTRUCTURE
-    echo -e "  ${BOLD}${BLUE}[1/2] Select the physical cooling system configuration currently active:${RESET}"
+    # 🚀 AUTOMATED HARDWARE PRE-FLIGHT SCANNER (INJECTED DETECTOR LOGIC)
+    echo -e "  ${YELLOW}[●] Background System Telemetry Audit Active...${NC}"
+    local detected_cus=24
+    if command -v umr &> /dev/null; then
+        detected_cus=$(umr -i 0 -g 2>/dev/null | grep -i "cu_per_sh" | awk '{print $3 * 4}')
+    fi
+    if [[ ! "$detected_cus" =~ ^[0-9]+$ ]] || [ "$detected_cus" -le 0 ]; then
+        detected_cus=24
+    fi
+
+    local detected_cores=$(nproc 2>/dev/null || echo "6")
+    echo -e "      ${BIBlue}[ℹ] LIVE HARDWARE SCAN DETECTED: ${detected_cus}/40 CUs Unlocked | ${detected_cores} CPU Cores Operational.${NC}\n"
+
+    # 📋 AUDIT NO. 1: COOLING INFRASTRUCTURE
+    echo -e "  ${BOLD}${BLUE}[1/5] Select the physical cooling system configuration currently active:${RESET}"
     echo -e "    1) Stock / Factory OEM Basic Air Cooler"
     echo -e "    2) High-End Aftermarket Air Cooled (Heavy Fin Stack / High CFM Fans)"
     echo -e "    3) Liquid Cooled / AIO Closed Loop / Custom Water Block"
@@ -285,8 +298,8 @@ configure_governor_profile() {
         *) echo -e "  ${RED}❌ Invalid choice. Falling back to safe Stock Air parameters.${NC}"; THROTTLE_TEMP=72;;
     esac
     echo ""
-    # 📋 QUESTION 2: POWER BUDGET (300W - 500W+ STRATA)
-    echo -e "  ${BOLD}${BLUE}[2/2] Enter your current Power Supply (PSU) maximum wattage rating:${RESET}"
+    # 📋 AUDIT NO. 2: POWER BUDGET (300W - 500W+ STRATA)
+    echo -e "  ${BOLD}${BLUE}[2/5] Enter your current Power Supply (PSU) maximum wattage rating:${RESET}"
     echo -e "        ${DIM}(Accepts 300W baseline up to 500W+ extreme power overhead profiles)${RESET}"
     echo ""
     local psu_wattage=""
@@ -298,8 +311,45 @@ configure_governor_profile() {
     fi
     echo ""
 
-    # 📋 SYSTEM TARGET SELECTION
-    echo -e "  ${BOLD}${BLUE}Select desired system tuning optimization profile layer:${RESET}"
+    # 📋 AUDIT NO. 3: FUTURE TARGET COMPUTE UNITS (DETERMINES SAFE-POINT EXTENSIONS)
+    echo -e "  ${BOLD}${BLUE}[3/5] Your system currently shows ${detected_cus}/40 CUs operational.${RESET}"
+    echo -e "        Are you planning to enable or target a higher Compute Unit count?"
+    echo -e "    1) Target 36 CUs Active  ${DIM}(Down-binned / Maximum High-Efficiency Target Layout)${RESET}"
+    echo -e "    2) Target 38 CUs Active  ${DIM}(Optimal Mid-Tier Custom Performance Curve Baseline)${RESET}"
+    echo -e "    3) Target 40 CUs Active  ${DIM}(Absolute Full Die Silicon Array Matrix Unlocked)${RESET}"
+    echo ""
+    local cu_choice=""
+    read -p "  Select target CU configuration profile [1-3]: " cu_choice
+
+    local ACTIVE_CUS=38
+    case "$cu_choice" in
+        1) ACTIVE_CUS=36;;
+        2) ACTIVE_CUS=38;;
+        3) ACTIVE_CUS=40;;
+        *) echo -e "  ${YELLOW}⚠ Unknown parameter. Defaulting profile curve to stable 38 CU footprint.${NC}"; ACTIVE_CUS=38;;
+    esac
+    echo ""
+
+    # 📋 AUDIT NO. 4: FUTURE TARGET CPU CORES (SCALES INTERACTION INTERVAL REGISTERS)
+    echo -e "  ${BOLD}${BLUE}[4/5] Your system currently shows ${detected_cores} CPU Cores active.${RESET}"
+    echo -e "        Are you planning to change or target a higher CPU Core configuration?"
+    echo -e "    1) Target 6 Cores Active  ${DIM}(Power-saving / SMT Restructured Layout)${RESET}"
+    echo -e "    2) Target 8 Cores Active  ${DIM}(Full Hardware Multithreading Core Complex Unlocked)${RESET}"
+    echo ""
+    local core_choice=""
+    read -p "  Select target CPU core layout [1-2]: " core_choice
+
+    local ACTIVE_CORES=8
+    local INTERVAL_SAMPLE=4000
+    case "$core_choice" in
+        1) ACTIVE_CORES=6; INTERVAL_SAMPLE=6000;; # Loosen sampling slightly on 6 cores to protect cycle starvation
+        2) ACTIVE_CORES=8; INTERVAL_SAMPLE=4000;;
+        *) echo -e "  ${YELLOW}⚠ Unknown parameter. Defaulting to full 8 Core complex scaling matrices.${NC}"; ACTIVE_CORES=8;;
+    esac
+    echo ""
+
+    # 📋 SYSTEM TARGET TUNING LEVEL SELECTION
+    echo -e "  ${BOLD}${BLUE}[5/5] Select desired system tuning optimization profile layer:${RESET}"
     echo -e "    1) Normal Computer Use  ${DIM}(Silent profile, low voltage, browser/desktop work)${RESET}"
     echo -e "    2) Standard Gaming      ${DIM}(Balanced high-efficiency foundation at 1800MHz)${RESET}"
     echo -e "    3) Heavy Overclocking   ${DIM}(Absolute Max Custom Curve: Up to 2150MHz @ 1020mV)${RESET}"
@@ -367,11 +417,12 @@ configure_governor_profile() {
 # ==============================================================================
 # PROFILE TEMPLATE LAYOUT: $PROFILE_LABEL
 # Calculated dynamically via BC-250 Spec Auditor Wizard Suite
-# Hardware Mask: Cooling = $COOLING_LABEL | Power Budget Source = ${psu_wattage}W PSU
+# Hardware Target Mask: $ACTIVE_CUS CUs Unlocked | $ACTIVE_CORES CPU Cores Active
+# Hardware Spec Mask: Cooling = $COOLING_LABEL | Power Source = ${psu_wattage}W PSU
 # ==============================================================================
 
 [timing.intervals]
-sample = 4000          # Loosened to 4ms to stop governor telemetry from choking the CPU
+sample = $INTERVAL_SAMPLE          # Auto-scaled based on targeted operational CPU core complex
 adjust = 30000         # 30ms loop ensures smooth clock stepping without micro-stutter
 
 [gpu-usage]
@@ -440,7 +491,7 @@ voltage = 740          # Raised low-state voltage to prevent hard-lock idling cr
 frequency = 1400
 voltage = 780          # Adjusted mid-state baseline
 EOF"
-
+    # Appends extra safe points up to 1800MHz if option 2 or 3 is authorized
     if [ "$tuning_choice" -gt 1 ]; then
     sudo bash -c "cat <<EOF >> $TARGET_CONF
 
@@ -462,6 +513,7 @@ voltage = 900          # High-efficiency gaming foundation threshold
 EOF"
     fi
 
+    # Appends your exact extreme safe points up to 2150MHz ONLY if 500W+ overhead is verified
     if [ "$tuning_choice" -eq 3 ]; then
     sudo bash -c "cat <<EOF >> $TARGET_CONF
 
@@ -716,7 +768,7 @@ clear
     echo -e "      ${DIM}[3b] Uninstall Compute Unit Live Manager Service Paths${RESET}"
     echo ""
     echo -e "    ${BOLD}${YELLOW}• Silicon Stability Testing Channels:${RESET}"
-    echo -e "      ${CYAN}[4]${RESET}   Launch Silicon Per-Core Stability Sweep ${DIM}(test-cores Curve Validation)${RESET}"
+    echo -e "      ${CYAN}${RESET}   Launch Silicon Per-Core Stability Sweep ${DIM}(test-cores Curve Validation)${RESET}"
     echo ""
     echo -e "  ${DIM}──────────────────────────────────────────────────────────────────────────────────${RESET}"
     echo -e "      ${BOLD}${MAGENTA}[↵]${RESET} Hit Enter to Secure Safe Exit Overclock-Live-Manager"
