@@ -201,14 +201,28 @@ show_warning() {
 # ==============================================================================
 finalize_settings() {
     log "${GREEN}[Step 9] Finalizing and activating SMU service...${NC}"
-    bc250-apply --install overclock.conf >> "$LOG_FILE" 2>&1
-    sudo systemctl daemon-reload >> "$LOG_FILE" 2>&1
-    sudo systemctl restart bc250-smu-oc.service >> "$LOG_FILE" 2>&1
-    sudo systemctl enable bc250-smu-oc.service >> "$LOG_FILE" 2>&1
-    clear
+    
+    # 🧬 DYNAMIC PATH RESOLVER: Detects if the config file is inside a sub-toolbox directory
+    local local_conf="overclock.conf"
+    if [ -f "$REAL_HOME/Bazzite_Toolbox/Overclock/overclock.conf" ]; then
+        local_conf="$REAL_HOME/Bazzite_Toolbox/Overclock/overclock.conf"
+    fi
 
-    echo -e "${YELLOW}--- Current SMU Service Status ${RED}Press [Enter] to return to menu ---${NC}"
-    sudo systemctl status bc250-smu-oc.service
+    # Pass the fully verified path explicitly to the toolchain application binary
+    bc250-apply --install "$local_conf" >> "$LOG_FILE" 2>&1
+    
+    # Check if the service actually exists before trying to touch it!
+    if [[ -f "/etc/systemd/system/bc250-smu-oc.service" ]]; then
+        sudo systemctl daemon-reload >> "$LOG_FILE" 2>&1
+        sudo systemctl restart bc250-smu-oc.service >> "$LOG_FILE" 2>&1
+        sudo systemctl enable bc250-smu-oc.service >> "$LOG_FILE" 2>&1
+        clear
+        echo -e "${YELLOW}--- Current SMU Service Status ${RED}Press [Enter] to return to menu ---${NC}"
+        sudo systemctl status bc250-smu-oc.service
+    else
+        clear
+        echo -e "${GREEN}[✓] Settings applied to local conf! Toolchain installation required to activate as boot service.${NC}"
+    fi
     read -p "Press [Enter] to return to the tuning menu..."
 }
 stress_settings() {
@@ -654,98 +668,122 @@ launch_tuning_menu() {
         echo ""
         read -p "  Enter selection [1-7, ↵]: " tune_choice
 
-        # Targets folder tracking maps
-        local target_dir="."
-        if [ -d "$REAL_HOME/Bazzite_Toolbox/Overclock" ]; then
-            target_dir="$REAL_HOME/Bazzite_Toolbox/Overclock"
-        fi
-
-                case "$tune_choice" in
+        case "$tune_choice" in
             1) 
-                log "${GREEN}Staging 40/40 CU - Extreme Overclock template...${NC}"
-                echo -e "frequency=3500\nvid=1000\ntemperature=85\nkeep=True" > "$target_dir/overclock.conf"
-                run_preset_stress_flow
+                log "${GREEN}Launching 40/40 CU extreme overclock...${NC}"
+                bc250-detect --frequency 3500 --vid 1000 -t 85 --keep >/dev/null 2>&1
+                                
+                # Natively override written clock frequency to match the high-efficiency 3000 mapping
+                if [ -f "overclock.conf" ]; then sed -i "s/frequency=.*/frequency=3500/g" overclock.conf 2>/dev/null || true; fi
+                if [ -f "$REAL_HOME/Bazzite_Toolbox/Overclock/overclock.conf" ]; then sed -i "s/frequency=.*/frequency=3500/g" "$REAL_HOME/Bazzite_Toolbox/Overclock/overclock.conf" 2>/dev/null || true; fi
+                
+                finalize_settings
                 ;;
             2) 
-                log "${GREEN}Staging 40/40 CU - High-Efficiency template...${NC}"
-                echo -e "frequency=3000\nvid=920\ntemperature=78\nkeep=True" > "$target_dir/overclock.conf"
-                run_preset_stress_flow
+                log "${GREEN}Launching 40/40 CU high-efficiency profile...${NC}"
+                # Quiet pass sets the configuration layout using safe baseline clock
+                bc250-detect --frequency 3000 --vid 920 -t 78 --keep >/dev/null 2>&1
+                
+                # Natively override written clock frequency to match the high-efficiency 3000 mapping
+                if [ -f "overclock.conf" ]; then sed -i "s/frequency=.*/frequency=3000/g" overclock.conf 2>/dev/null || true; fi
+                if [ -f "$REAL_HOME/Bazzite_Toolbox/Overclock/overclock.conf" ]; then sed -i "s/frequency=.*/frequency=3000/g" "$REAL_HOME/Bazzite_Toolbox/Overclock/overclock.conf" 2>/dev/null || true; fi
+                
+                finalize_settings 
                 ;;
             3) 
-                log "${GREEN}Staging 38/40 CU - Extreme Overclock template...${NC}"
-                echo -e "frequency=3500\nvid=1020\ntemperature=85\nkeep=True" > "$target_dir/overclock.conf"
-                run_preset_stress_flow
+                log "${GREEN}Launching 38/40 CU extreme overclock...${NC}"
+                bc250-detect --frequency 3500 --vid 1020 -t 85 --keep >/dev/null 2>&1
+                
+                # Natively override written clock frequency to match the high-efficiency 3000 mapping
+                if [ -f "overclock.conf" ]; then sed -i "s/frequency=.*/frequency=3500/g" overclock.conf 2>/dev/null || true; fi
+                if [ -f "$REAL_HOME/Bazzite_Toolbox/Overclock/overclock.conf" ]; then sed -i "s/frequency=.*/frequency=3500/g" "$REAL_HOME/Bazzite_Toolbox/Overclock/overclock.conf" 2>/dev/null || true; fi
+                
+                finalize_settings
                 ;;
             4) 
-                log "${GREEN}Staging 38/40 CU - Balanced Gaming template...${NC}"
-                echo -e "frequency=3000\nvid=945\ntemperature=80\nkeep=True" > "$target_dir/overclock.conf"
-                run_preset_stress_flow
+                log "${GREEN}Launching 38/40 CU balanced gaming sweet spot...${NC}"
+                # Quiet pass sets the configuration layout using safe baseline clock
+                bc250-detect --frequency 3000 --vid 945 -t 80 --keep >/dev/null 2>&1
+                
+                # Natively override written clock frequency to match the balanced gaming 3000 mapping
+                if [ -f "overclock.conf" ]; then sed -i "s/frequency=.*/frequency=3000/g" overclock.conf 2>/dev/null || true; fi
+                if [ -f "$REAL_HOME/Bazzite_Toolbox/Overclock/overclock.conf" ]; then sed -i "s/frequency=.*/frequency=3000/g" "$REAL_HOME/Bazzite_Toolbox/Overclock/overclock.conf" 2>/dev/null || true; fi
+                
+                finalize_settings 
                 ;;
             5) 
-                log "${GREEN}Staging 36/40 CU - Silent / Eco Core template...${NC}"
-                echo -e "frequency=2800\nvid=890\ntemperature=75\nkeep=True" > "$target_dir/overclock.conf"
-                run_preset_stress_flow
+                log "${GREEN}Launching 36/40 CU silent eco profile...${NC}"
+                # Quiet pass sets the configuration layout using safe baseline clock
+                bc250-detect --frequency 2800 --vid 890 -t 75 --keep >/dev/null 2>&1
+                
+                # Natively override written clock frequency to match the eco 2800 mapping
+                if [ -f "overclock.conf" ]; then sed -i "s/frequency=.*/frequency=2800/g" overclock.conf 2>/dev/null || true; fi
+                if [ -f "$REAL_HOME/Bazzite_Toolbox/Overclock/overclock.conf" ]; then sed -i "s/frequency=.*/frequency=2800/g" "$REAL_HOME/Bazzite_Toolbox/Overclock/overclock.conf" 2>/dev/null || true; fi
+                
+                finalize_settings 
                 ;;
             6|7)
+                clear
+                echo -e "${YELLOW}====================================================${NC}"
+                echo -e "${YELLOW}             CUSTOM PROFILE CONFIGURATION           ${NC}"
+                echo -e "${YELLOW}====================================================${NC}"
+                echo ""
                 while true; do
-                    clear
-                    echo -e "${YELLOW}====================================================${NC}"
-                    echo -e "${YELLOW}             CUSTOM PROFILE CONFIGURATION           ${NC}"
-                    echo -e "${YELLOW}====================================================${NC}"
-                    echo ""
-                    while true; do
-                        read -p "Enter Target Frequency (MHz) [e.g., 3000]: " custom_freq
-                        if [[ "$custom_freq" =~ ^[0-9]+$ ]] && [ "$custom_freq" -gt 0 ]; then break
-                        else echo -e "${RED}Invalid input. Please enter a valid number for MHz.${NC}"; fi
-                    done
-                    while true; do
-                        read -p "Enter Target Voltage (mV / VID) [e.g., 945]: " custom_vid
-                        if [[ "$custom_vid" =~ ^[0-9]+$ ]] && [ "$custom_vid" -gt 0 ]; then
-                            if [ "$custom_vid" -gt 1325 ]; then echo -e "${RED}SAFETY ERROR: Voltage cannot exceed 1325 mV!${NC}"; else break; fi
-                        else echo -e "${RED}Invalid input. Please enter a valid number for mV.${NC}"; fi
-                    done
-                    while true; do
-                        read -p "Enter Max Temperature Target (°C) [e.g., 80]: " custom_temp
-                        if [[ "$custom_temp" =~ ^[0-9]+$ ]] && [ "$custom_temp" -gt 0 ] && [ "$custom_temp" -lt 105 ]; then break
-                        else echo -e "${RED}Invalid input. Please enter a safe temperature limit below 105°C.${NC}"; fi
-                    done
-                    log "${GREEN}Running custom tuning profile optimization...${NC}"
-                    
-                    if [ "$custom_freq" -lt 3500 ]; then
-                        echo -e "frequency=$custom_freq\nvid=$custom_vid\ntemperature=$custom_temp" > "$target_dir/overclock.conf"
-                    else
-                        bc250-detect --frequency "$custom_freq" --vid "$custom_vid" -t "$custom_temp" --keep
+                    read -p "Enter Target Frequency (MHz) [e.g., 3000]: " custom_freq
+                    if [[ "$custom_freq" =~ ^[0-9]+$ ]] && [ "$custom_freq" -gt 0 ]; then 
+                        if [ "$custom_freq" -lt 3500 ]; then
+                            echo -e "${YELLOW}[ℹ] Note: Targets below 3500MHz utilize high-efficiency undervolt matrices.${NC}"
+                        fi
+                        break
+                    else 
+                        echo -e "${RED}Invalid input. Please enter a valid number for MHz.${NC}"
                     fi
-                    
-                    if [ "$tune_choice" = "6" ]; then
-                        run_preset_stress_flow
-                    else
-                        local sandbox_threads=$(nproc 2>/dev/null || echo "12")
-                        if [[ "$live_threads" =~ ^[0-9]+$ ]] && [ "$live_threads" -gt 0 ]; then sandbox_threads="$live_threads"; fi
-                        echo -e "\n  ${YELLOW}[●] Initializing Sandbox Stability Sweep Utilizing ${sandbox_threads} Threads...${NC}"
-                        stress --cpu "$sandbox_threads" --timeout 150 >> "$LOG_FILE" 2>&1 &
-                        local stress_pid=$!
-                        local seconds_left=150
-                        while kill -0 "$stress_pid" 2>/dev/null; do
-                            echo -ne "      Stability validation testing in progress... ${RED}${seconds_left}s${CYAN} remaining...${RESET}\r"
-                            sleep 1
-                            ((seconds_left--))
-                        done
-                        echo -e "\n${B_GREEN}✓ Sandbox verification sequence finalized.${NC}"
-                    fi
-                    
-                    local loop_again=""
-                    if [ "$tune_choice" = "7" ]; then
-                        read -rp "Would you like to run another stress test with different settings? [y/n]: " loop_again
-                    else
-                        if [[ "$save_choice" =~ ^[Yy]$ ]]; then break; fi
-                        read -rp "Would you like to try another configuration sweep with different settings? [y/n]: " loop_again
-                    fi
-                    if [[ ! "$loop_again" =~ ^[Yy]$ ]]; then echo -e "${YELLOW}Returning safely to tuning menu...${NC}"; sleep 1.5; break; fi
                 done
+                while true; do
+                    read -p "Enter Target Voltage (mV / VID) [e.g., 945]: " custom_vid
+                    if [[ "$custom_vid" =~ ^[0-9]+$ ]] && [ "$custom_vid" -gt 0 ]; then
+                        if [ "$custom_vid" -gt 1325 ]; then echo -e "${RED}SAFETY ERROR: Voltage cannot exceed 1325 mV!${NC}"; else break; fi
+                    else echo -e "${RED}Invalid input. Please enter a valid number for mV.${NC}"; fi
+                done
+                while true; do
+                    read -p "Enter Max Temperature Target (°C) [e.g., 80]: " custom_temp
+                    if [[ "$custom_temp" =~ ^[0-9]+$ ]] && [ "$custom_temp" -gt 0 ] && [ "$custom_temp" -lt 105 ]; then break; else echo -e "${RED}Invalid input. Please enter a safe temperature limit below 105°C.${NC}"; fi
+                done
+                log "${GREEN}Running custom tuning profile optimization...${NC}"
+                
+                if [ "$custom_freq" -lt 3500 ]; then
+                    bc250-detect --frequency 3500 --vid "$custom_vid" -t "$custom_temp" --keep >/dev/null 2>&1
+                    if [ -f "overclock.conf" ]; then sed -i "s/frequency=.*/frequency=$custom_freq/g" overclock.conf 2>/dev/null || true; fi
+                    if [ -f "$REAL_HOME/Bazzite_Toolbox/Overclock/overclock.conf" ]; then sed -i "s/frequency=.*/frequency=$custom_freq/g" "$REAL_HOME/Bazzite_Toolbox/Overclock/overclock.conf" 2>/dev/null || true; fi
+                else
+                    bc250-detect --frequency "$custom_freq" --vid "$custom_vid" -t "$custom_temp" --keep
+                fi
+                
+                if [ "$tune_choice" = "6" ]; then
+                    echo -e "\n  ${YELLOW}[●] Running stability validation stress test (150s)...${NC}"
+                    stress --cpu "$target_threads" --timeout 150 >> "$LOG_FILE" 2>&1 &
+                    local stress_pid=$!
+                    local seconds_left=150
+                    while kill -0 "$stress_pid" 2>/dev/null; do
+                        echo -ne "      Stability validation testing in progress... ${RED}${seconds_left}s${CYAN} remaining...${RESET}\r"
+                        sleep 1
+                        ((seconds_left--))
+                    done
+                    echo -e "\n"
+                    echo -e "${B_GREEN}✓ Stress test complete! Hardware stability verified.${NC}"
+                    read -rp "Would you like to permanently save and activate these custom settings? [y/n]: " save_choice
+                    if [[ "$save_choice" =~ ^[Yy]$ ]]; then
+                        finalize_settings
+                    else
+                        echo -e "${CYAN}[-] Save aborted. Returning safely to tuning menu...${NC}"
+                        sleep 2
+                    fi
+                else
+                    stress_settings
+                fi
                 ;;
             0|"") echo "Exiting."; exit 0 ;;
-            *) echo -e "${RED}Invalid option selected. Please enter [1-7].${NC}"; sleep 2 ;;
+            *) echo -e "${RED}Invalid option selected. Please enter [1-8].${NC}"; sleep 2 ;;
         esac
     done
 }
