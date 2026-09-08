@@ -153,7 +153,7 @@ ask_desktop_shortcut() {
     read -rp "  Select an option [1-2]: " shortcut_choice
 
     case $shortcut_choice in
-        Yes)
+        Yes|yes)
             cat > "$shortcut" <<SHORTCUT_EOF
 [Desktop Entry]
 Type=Application
@@ -171,7 +171,7 @@ SHORTCUT_EOF
             print_info "Overclock Manager shortcut created successfully!"
             sleep 2
             ;;
-        No)
+        No|no)
             print_info "Skipping desktop shortcut generation."
             sleep 1.5
             ;;
