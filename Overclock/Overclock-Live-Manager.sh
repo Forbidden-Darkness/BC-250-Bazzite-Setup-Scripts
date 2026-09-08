@@ -677,7 +677,7 @@ launch_tuning_menu() {
                 if [ -f "overclock.conf" ]; then sed -i "s/frequency=.*/frequency=3500/g" overclock.conf 2>/dev/null || true; fi
                 if [ -f "$REAL_HOME/Bazzite_Toolbox/Overclock/overclock.conf" ]; then sed -i "s/frequency=.*/frequency=3500/g" "$REAL_HOME/Bazzite_Toolbox/Overclock/overclock.conf" 2>/dev/null || true; fi
                 
-                finalize_settings
+                run_preset_stress_flow
                 ;;
             2) 
                 log "${GREEN}Launching 40/40 CU high-efficiency profile...${NC}"
@@ -688,7 +688,7 @@ launch_tuning_menu() {
                 if [ -f "overclock.conf" ]; then sed -i "s/frequency=.*/frequency=3000/g" overclock.conf 2>/dev/null || true; fi
                 if [ -f "$REAL_HOME/Bazzite_Toolbox/Overclock/overclock.conf" ]; then sed -i "s/frequency=.*/frequency=3000/g" "$REAL_HOME/Bazzite_Toolbox/Overclock/overclock.conf" 2>/dev/null || true; fi
                 
-                finalize_settings 
+                run_preset_stress_flow 
                 ;;
             3) 
                 log "${GREEN}Launching 38/40 CU extreme overclock...${NC}"
@@ -698,7 +698,7 @@ launch_tuning_menu() {
                 if [ -f "overclock.conf" ]; then sed -i "s/frequency=.*/frequency=3500/g" overclock.conf 2>/dev/null || true; fi
                 if [ -f "$REAL_HOME/Bazzite_Toolbox/Overclock/overclock.conf" ]; then sed -i "s/frequency=.*/frequency=3500/g" "$REAL_HOME/Bazzite_Toolbox/Overclock/overclock.conf" 2>/dev/null || true; fi
                 
-                finalize_settings
+                run_preset_stress_flow
                 ;;
             4) 
                 log "${GREEN}Launching 38/40 CU balanced gaming sweet spot...${NC}"
@@ -709,7 +709,7 @@ launch_tuning_menu() {
                 if [ -f "overclock.conf" ]; then sed -i "s/frequency=.*/frequency=3000/g" overclock.conf 2>/dev/null || true; fi
                 if [ -f "$REAL_HOME/Bazzite_Toolbox/Overclock/overclock.conf" ]; then sed -i "s/frequency=.*/frequency=3000/g" "$REAL_HOME/Bazzite_Toolbox/Overclock/overclock.conf" 2>/dev/null || true; fi
                 
-                finalize_settings 
+                run_preset_stress_flow 
                 ;;
             5) 
                 log "${GREEN}Launching 36/40 CU silent eco profile...${NC}"
@@ -720,7 +720,7 @@ launch_tuning_menu() {
                 if [ -f "overclock.conf" ]; then sed -i "s/frequency=.*/frequency=2800/g" overclock.conf 2>/dev/null || true; fi
                 if [ -f "$REAL_HOME/Bazzite_Toolbox/Overclock/overclock.conf" ]; then sed -i "s/frequency=.*/frequency=2800/g" "$REAL_HOME/Bazzite_Toolbox/Overclock/overclock.conf" 2>/dev/null || true; fi
                 
-                finalize_settings 
+                run_preset_stress_flow 
                 ;;
             6|7)
                 clear
@@ -773,7 +773,7 @@ launch_tuning_menu() {
                     echo -e "${B_GREEN}✓ Stress test complete! Hardware stability verified.${NC}"
                     read -rp "Would you like to permanently save and activate these custom settings? [y/n]: " save_choice
                     if [[ "$save_choice" =~ ^[Yy]$ ]]; then
-                        finalize_settings
+                        run_preset_stress_flow
                     else
                         echo -e "${CYAN}[-] Save aborted. Returning safely to tuning menu...${NC}"
                         sleep 2
