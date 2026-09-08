@@ -635,7 +635,7 @@ launch_tuning_menu() {
             3) log "${GREEN}Launching 38/40 CU extreme overclock...${NC}"; bc250-detect --frequency 3500 --vid 1020 -t 85 --keep; finalize_settings ;;
             4) log "${GREEN}Launching 38/40 CU balanced gaming sweet spot...${NC}"; bc250-detect --frequency 3000 --vid 945 -t 80 --keep 2>/dev/null || bc250-detect --frequency 3500 --vid 945 -t 80 --keep; finalize_settings ;;
             5) log "${GREEN}Launching 36/40 CU silent eco profile...${NC}"; bc250-detect --frequency 2800 --vid 890 -t 75 --keep 2>/dev/null || bc250-detect --frequency 3500 --vid 890 -t 75 --keep; finalize_settings ;;
-            6|7)
+                        6|7)
                 clear
                 echo -e "${YELLOW}====================================================${NC}"
                 echo -e "${YELLOW}             CUSTOM PROFILE CONFIGURATION           ${NC}"
@@ -653,7 +653,7 @@ launch_tuning_menu() {
                     read -p "Enter Target Voltage (mV / VID) [e.g., 945]: " custom_vid
                     if [[ "$custom_vid" =~ ^[0-9]+$ ]] && [ "$custom_vid" -gt 0 ]; then
                         if [ "$custom_vid" -gt 1325 ]; then echo -e "${RED}SAFETY ERROR: Voltage cannot exceed 1325 mV!${NC}"; else break; fi
-                    else echo -e "${RED}Invalid input. Please enter a valid number for mV.${NC}"; fi
+                    else echo -e "${RED}Invalid input. Please enter a valid number for mV.${NC}"fi
                 done
                 while true; do
                     read -p "Enter Max Temperature Target (°C) [e.g., 80]: " custom_temp
@@ -661,23 +661,35 @@ launch_tuning_menu() {
                 done
                 log "${GREEN}Running custom tuning profile optimization...${NC}"
                 
-                # 🧬 NEW HARDENED INJECTION TRACK: Safe single-pass execution mapping
+                # 🧬 Safe single-pass execution mapping to handle underclocks flawlessly
                 if [ "$custom_freq" -lt 3500 ]; then
-                    echo -e "${YELLOW}[ℹ] Underclock footprint detected. Staging safe configuration profile targets...${NC}"
-                    # Quietly execute at base to build the file framework without throwing binary panel errors
                     bc250-detect --frequency 3500 --vid "$custom_vid" -t "$custom_temp" --keep >/dev/null 2>&1
-                    
-                    # Force patch the written configuration file manually to match your exact 3000 target!
                     if [ -f "overclock.conf" ]; then
                         sed -i "s/frequency=.*/frequency=$custom_freq/g" overclock.conf 2>/dev/null || true
                     fi
                 else
-                    # Standard overclock profile path executes normally
                     bc250-detect --frequency "$custom_freq" --vid "$custom_vid" -t "$custom_temp" --keep
                 fi
                 
-                # Route safely to final hooks without duplicate process clashes
-                if [ "$tune_choice" = "7" ]; then stress_settings; else finalize_settings; fi
+                # 🚀 ROUTING LAYER SEPARATION
+                if [ "$tune_choice" = "6" ]; then
+                    # Option 6: Force heavy stability stress test FIRST
+                    log "${GREEN}[●] Running stability validation stress test (150s)...${NC}"
+                    stress --cpu 16 --timeout 150 >> "$LOG_FILE" 2>&1
+                    
+                    echo ""
+                    echo -e "${B_GREEN}✓ Stress test complete! Hardware stability verified.${NC}"
+                    read -rp "Would you like to permanently save and activate these custom settings? [y/n]: " save_choice
+                    if [[ "$save_choice" =~ ^[Yy]$ ]]; then
+                        finalize_settings
+                    else
+                        echo -e "${CYAN}[-] Save aborted. Returning safely to tuning menu...${NC}"
+                        sleep 2
+                    fi
+                else
+                    # Option 7: Standalone test track (Stresses and returns without saving)
+                    stress_settings
+                fi
                 ;;
             0|"") echo "Exiting."; exit 0 ;;
             *) echo -e "${RED}Invalid option selected. Please enter [1-8].${NC}"; sleep 2 ;;
