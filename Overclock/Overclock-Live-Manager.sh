@@ -635,7 +635,7 @@ launch_tuning_menu() {
             3) log "${GREEN}Launching 38/40 CU extreme overclock...${NC}"; bc250-detect --frequency 3500 --vid 1020 -t 85 --keep; finalize_settings ;;
             4) log "${GREEN}Launching 38/40 CU balanced gaming sweet spot...${NC}"; bc250-detect --frequency 3000 --vid 945 -t 80 --keep 2>/dev/null || bc250-detect --frequency 3500 --vid 945 -t 80 --keep; finalize_settings ;;
             5) log "${GREEN}Launching 36/40 CU silent eco profile...${NC}"; bc250-detect --frequency 2800 --vid 890 -t 75 --keep 2>/dev/null || bc250-detect --frequency 3500 --vid 890 -t 75 --keep; finalize_settings ;;
-                        6|7)
+            6|7)
                 clear
                 echo -e "${YELLOW}====================================================${NC}"
                 echo -e "${YELLOW}             CUSTOM PROFILE CONFIGURATION           ${NC}"
@@ -687,25 +687,28 @@ launch_tuning_menu() {
                     target_threads="$live_threads"
                 fi
                 
-                # 🚀 ROUTING LAYER SEPARATION WITH LIVE COUNTDOWN TIMER & AUTO-THREADS
+                # ==============================================================================
+                # 🚀 UNIFIED SILICON STABILITY SWEEP (COUNTDOWN ACTIVE FOR BOTH CHANNELS)
+                # ==============================================================================
+                echo -e "\n  ${YELLOW}[●] Initializing Silicon Stability Sweep Utilizing ${target_threads} Active Threads...${NC}"
+                
+                # Spawns stress silently into a background process thread block
+                stress --cpu "$target_threads" --timeout 150 >> "$LOG_FILE" 2>&1 &
+                local stress_pid=$!
+                
+                # Universal Countdown Loop Tracker: Tracks background process dynamically
+                local seconds_left=150
+                while kill -0 "$stress_pid" 2>/dev/null; do
+                    echo -ne "      ${CYAN}Stability validation testing in progress... ${RED}${seconds_left}s${CYAN} remaining...${RESET}\r"
+                    sleep 1
+                    ((seconds_left--))
+                done
+                echo -e "\n" # Flush trailing text carriage returns safely
+                echo -e "${B_GREEN}✓ Stability validation loop finished successfully!${NC}"
+
+                # 🚀 DEPLOYMENT CHANNELS SPLIT GATE
                 if [ "$tune_choice" = "6" ]; then
-                    # Option 6: Force heavy stability stress test FIRST with a live countdown display
-                    echo -e "\n  ${YELLOW}[●] Initializing Silicon Stability Sweep Utilizing ${target_threads} Active Threads...${NC}"
-                    
-                    # 🧬 Spawns stress silently using the exact auto-detected thread count!
-                    stress --cpu "$target_threads" --timeout 150 >> "$LOG_FILE" 2>&1 &
-                    local stress_pid=$!
-                    
-                    # Core Loop Tracker: Displays active countdown while background pid is running
-                    local seconds_left=150
-                    while kill -0 "$stress_pid" 2>/dev/null; do
-                        echo -ne "      ${CYAN}Stability validation testing in progress... ${RED}${seconds_left}s${CYAN} remaining...${RESET}\r"
-                        sleep 1
-                        ((seconds_left--))
-                    done
-                    echo -e "\n" # Flush trailing text carriage returns safely
-                    
-                    echo -e "${B_GREEN}✓ Stress test complete! Hardware stability verified.${NC}"
+                    # Option 6 Interactive Save Prompter
                     read -rp "Would you like to permanently save and activate these custom settings? [y/n]: " save_choice
                     if [[ "$save_choice" =~ ^[Yy]$ ]]; then
                         finalize_settings
@@ -714,10 +717,13 @@ launch_tuning_menu() {
                         sleep 2
                     fi
                 else
-                    # Option 7: Standalone test track (Stresses and returns natively via original logs)
-                    # 🧬 Force patch the static stress command inside your standalone function at runtime
-                    sudo sed -i "s/stress --cpu [0-9]*/stress --cpu $target_threads/g" "$SCRIPT_PATH" 2>/dev/null || true
-                    stress_settings
+                    # Option 7 Safe Exit Loop (Clears sandbox, checks service safely, skips save prompt)
+                    if [[ -f "/etc/systemd/system/bc250-smu-oc.service" ]]; then
+                        sudo systemctl daemon-reload >> "$LOG_FILE" 2>&1
+                        sudo systemctl restart bc250-smu-oc.service >> "$LOG_FILE" 2>&1
+                    fi
+                    echo -e "${YELLOW}[ℹ] Sandbox verification sequence finalized. Returning to tuning menu...${NC}"
+                    sleep 2.5
                 fi
                 ;;
             0|"") echo "Exiting."; exit 0 ;;
