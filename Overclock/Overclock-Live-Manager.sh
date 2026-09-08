@@ -672,7 +672,6 @@ launch_tuning_menu() {
     done
 }
 
-
 prompt_reboot() {
     echo ""
     echo -e "${YELLOW}==================================================${NC}"
@@ -689,6 +688,27 @@ prompt_reboot() {
 }
 
 run_phase1() {
+    # 🧬 PRE-FLIGHT DEPLOYMENT GATE: Detects if the CPU suite is already initialized or staged
+    if [[ -f "/usr/local/bin/bc250-detect" ]] || [[ -f "$SERVICE_FILE" ]]; then
+        clear
+        echo -e "\n  ${YELLOW}╔═════════════════════════════════════════════════════════════════════════════════════════════╗${NC}"
+        echo -e "  ${YELLOW}║${NC}  ${BOLD}${CYAN}[ℹ] CPU TUNING TOOLCHAIN DETECTED${NC}                                                          ${YELLOW}║${NC}"
+        echo -e "  ${YELLOW}╠═════════════════════════════════════════════════════════════════════════════════════════════╣${NC}"
+        echo -e "  ${YELLOW}║${NC}  The Overclock Suite and its underlying background binaries are already present on this host.  ${YELLOW}║${NC}"
+        echo -e "  ${YELLOW}╚═════════════════════════════════════════════════════════════════════════════════════════════╝${NC}"
+        echo ""
+        echo " 1) Cancel operation and return safely to the primary layout loop"
+        echo " 2) Force a complete, clean re-installation (Wipes and rebuilds the toolchain)"
+        echo ""
+        read -rp "  Select an option [1-2]: " static_choice
+        if [[ "$static_choice" != "2" ]]; then
+            print_info "Operation canceled safely. Returning to menu..."
+            sleep 1.5
+            return 0
+        fi
+        print_info "Force override accepted. Staging clean deployment tree..."
+    fi
+
     show_warning
     log "${GREEN}[Phase 1] Initializing universal Bazzite 43/44 deployment tree...${NC}"
     sudo bash -c "cat <<EOF > $SERVICE_FILE
@@ -729,7 +749,32 @@ run_phase2() {
     log "${GREEN}[Success] Installation complete! 'bc250-detect' and 'bc250-apply' are ready.${NC}"
     launch_tuning_menu
 }
+
+# ==============================================================================
+# 🧬 HARDENED COMPUTE UNIT LIVE MANAGER GATEWAY (PREVENTS DUPLICATE DEPLOYMENTS)
+# ==============================================================================
 run_manager_phase1() {
+    # 🧬 PRE-FLIGHT DEPLOYMENT GATE: Detects if the CU Live Manager suite is already initialized or staged
+    if [[ -f "/usr/local/bin/bc250-cu-live-manager" ]] || [[ -f "/etc/bc250-cu-live-manager.conf" ]] || [[ -f "/etc/systemd/system/bc250-cu-live-manager.service" ]]; then
+        clear
+        echo -e "\n  ${YELLOW}╔═════════════════════════════════════════════════════════════════════════════════════════════╗${NC}"
+        echo -e "  ${YELLOW}║${NC}  ${BOLD}${BLUE}[ℹ] COMPUTE UNIT LIVE MANAGER DETECTED${NC}                                                     ${YELLOW}║${NC}"
+        echo -e "  ${YELLOW}╠═════════════════════════════════════════════════════════════════════════════════════════════╣${NC}"
+        echo -e "  ${YELLOW}║${NC}  The dynamic CU bitmask manager and active daemon profiles are already active on this host.   ${YELLOW}║${NC}"
+        echo -e "  ${YELLOW}╚═════════════════════════════════════════════════════════════════════════════════════════════╝${NC}"
+        echo ""
+        echo " 1) Cancel operation and return safely to the primary layout loop"
+        echo " 2) Force a complete, clean re-installation (Wipes and rebuilds the dependency mapping)"
+        echo ""
+        read -rp "  Select an option [1-2]: " static_choice
+        if [[ "$static_choice" != "2" ]]; then
+            print_info "Operation canceled safely. Returning to menu..."
+            sleep 1.5
+            return 0
+        fi
+        print_info "Force override accepted. Staging clean dependency layers..."
+    fi
+
     log "${GREEN}[CU Live Manager] Preparing installation requirements...${NC}"
     sudo bash -c "cat <<EOF > $SERVICE_FILE
 [Unit]
