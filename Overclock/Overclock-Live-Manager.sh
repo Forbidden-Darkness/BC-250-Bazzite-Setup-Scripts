@@ -671,55 +671,30 @@ launch_tuning_menu() {
         case "$tune_choice" in
             1) 
                 log "${GREEN}Launching 40/40 CU extreme overclock...${NC}"
-                bc250-detect --frequency 3500 --vid 1000 -t 85 --keep >/dev/null 2>&1
-                                
-                # Natively override written clock frequency to match the high-efficiency 3000 mapping
-                if [ -f "overclock.conf" ]; then sed -i "s/frequency=.*/frequency=3500/g" overclock.conf 2>/dev/null || true; fi
-                if [ -f "$REAL_HOME/Bazzite_Toolbox/Overclock/overclock.conf" ]; then sed -i "s/frequency=.*/frequency=3500/g" "$REAL_HOME/Bazzite_Toolbox/Overclock/overclock.conf" 2>/dev/null || true; fi
-                
+                bc250-detect --frequency 3500 --vid 1000 -t 85 --keep >/dev/null 2>&1                               
                 run_preset_stress_flow
                 ;;
             2) 
                 log "${GREEN}Launching 40/40 CU high-efficiency profile...${NC}"
                 # Quiet pass sets the configuration layout using safe baseline clock
-                bc250-detect --frequency 3000 --vid 920 -t 78 --keep >/dev/null 2>&1
-                
-                # Natively override written clock frequency to match the high-efficiency 3000 mapping
-                if [ -f "overclock.conf" ]; then sed -i "s/frequency=.*/frequency=3000/g" overclock.conf 2>/dev/null || true; fi
-                if [ -f "$REAL_HOME/Bazzite_Toolbox/Overclock/overclock.conf" ]; then sed -i "s/frequency=.*/frequency=3000/g" "$REAL_HOME/Bazzite_Toolbox/Overclock/overclock.conf" 2>/dev/null || true; fi
-                
+                bc250-detect --frequency 3000 --vid 920 -t 78 --keep >/dev/null 2>&1                            
                 run_preset_stress_flow 
                 ;;
             3) 
                 log "${GREEN}Launching 38/40 CU extreme overclock...${NC}"
-                bc250-detect --frequency 3500 --vid 1020 -t 85 --keep >/dev/null 2>&1
-                
-                # Natively override written clock frequency to match the high-efficiency 3000 mapping
-                if [ -f "overclock.conf" ]; then sed -i "s/frequency=.*/frequency=3500/g" overclock.conf 2>/dev/null || true; fi
-                if [ -f "$REAL_HOME/Bazzite_Toolbox/Overclock/overclock.conf" ]; then sed -i "s/frequency=.*/frequency=3500/g" "$REAL_HOME/Bazzite_Toolbox/Overclock/overclock.conf" 2>/dev/null || true; fi
-                
+                bc250-detect --frequency 3500 --vid 1020 -t 85 --keep >/dev/null 2>&1                              
                 run_preset_stress_flow
                 ;;
             4) 
                 log "${GREEN}Launching 38/40 CU balanced gaming sweet spot...${NC}"
                 # Quiet pass sets the configuration layout using safe baseline clock
-                bc250-detect --frequency 3000 --vid 945 -t 80 --keep >/dev/null 2>&1
-                
-                # Natively override written clock frequency to match the balanced gaming 3000 mapping
-                if [ -f "overclock.conf" ]; then sed -i "s/frequency=.*/frequency=3000/g" overclock.conf 2>/dev/null || true; fi
-                if [ -f "$REAL_HOME/Bazzite_Toolbox/Overclock/overclock.conf" ]; then sed -i "s/frequency=.*/frequency=3000/g" "$REAL_HOME/Bazzite_Toolbox/Overclock/overclock.conf" 2>/dev/null || true; fi
-                
+                bc250-detect --frequency 3000 --vid 945 -t 80 --keep >/dev/null 2>&1                
                 run_preset_stress_flow 
                 ;;
             5) 
                 log "${GREEN}Launching 36/40 CU silent eco profile...${NC}"
                 # Quiet pass sets the configuration layout using safe baseline clock
-                bc250-detect --frequency 2800 --vid 890 -t 75 --keep >/dev/null 2>&1
-                
-                # Natively override written clock frequency to match the eco 2800 mapping
-                if [ -f "overclock.conf" ]; then sed -i "s/frequency=.*/frequency=2800/g" overclock.conf 2>/dev/null || true; fi
-                if [ -f "$REAL_HOME/Bazzite_Toolbox/Overclock/overclock.conf" ]; then sed -i "s/frequency=.*/frequency=2800/g" "$REAL_HOME/Bazzite_Toolbox/Overclock/overclock.conf" 2>/dev/null || true; fi
-                
+                bc250-detect --frequency 2800 --vid 890 -t 75 --keep >/dev/null 2>&1                
                 run_preset_stress_flow 
                 ;;
             6|7)
