@@ -612,7 +612,7 @@ run_preset_stress_flow() {
     local stress_pid=$!
     
     # Universal Countdown Loop Tracker
-    local seconds_left=150
+    local seconds_left=30
     while kill -0 "$stress_pid" 2>/dev/null; do
         echo -ne "      Stability validation testing in progress... ${RED}${seconds_left}s${CYAN} remaining...${RESET}\r"
         sleep 1
