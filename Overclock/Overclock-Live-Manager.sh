@@ -19,10 +19,7 @@ BIBlue='\033[1;94m'       # Blue
 BIPurple='\033[1;95m'     # Purple
 BICyan='\033[1;96m'       # Cyan
 BIWhite='\033[1;97m'      # White
-DIM='\033[2m'
-BOLD='\033[1m'
 NC='\033[0m' # No Color (Reset)
-RESET='\033[0m'
 
 # Verify root/sudo privileges
 if [ "$EUID" -ne 0 ]; then
@@ -115,6 +112,7 @@ ensure_bazzite_dependencies() {
             ;;
     esac
 }
+
 # Configuration
 LOG_FILE="/var/log/bc250_oc_install.log"
 REPO_URL="https://github.com/bc250-collective/bc250_smu_oc.git"
@@ -144,8 +142,8 @@ ask_desktop_shortcut() {
     echo -e "  ${BOLD}${WHITE}Would you like to add a shortcut to your desktop?${RESET}"
     echo -e "  ${DIM}──────────────────────────────────────────────────────────────────${RESET}"
     echo ""
-    echo -e "    ${CYAN}${RESET} Yes, create desktop shortcut"
-    echo -e "    ${CYAN}${RESET} No, skip shortcut creation"
+    echo -e "    ${CYAN}[1]${RESET} Yes, create desktop shortcut"
+    echo -e "    ${CYAN}[2]${RESET} No, skip shortcut creation"
     echo ""
     echo -e "    ${DIM}[Press Enter]${NC} To continue to BC-250 TUNING & CONFIGURATION${RESET}"
     echo -e "  ${DIM}──────────────────────────────────────────────────────────────────${RESET}"
@@ -153,7 +151,7 @@ ask_desktop_shortcut() {
     read -rp "  Select an option [1-2]: " shortcut_choice
 
     case $shortcut_choice in
-        Yes|yes)
+        1)
             cat > "$shortcut" <<SHORTCUT_EOF
 [Desktop Entry]
 Type=Application
@@ -171,7 +169,7 @@ SHORTCUT_EOF
             print_info "Overclock Manager shortcut created successfully!"
             sleep 2
             ;;
-        No|no)
+        2)
             print_info "Skipping desktop shortcut generation."
             sleep 1.5
             ;;
@@ -265,18 +263,41 @@ configure_governor_profile() {
     echo -e "  ${CYAN}╚═══════════════════════════════════════════════════════════════════╝${NC}"
     echo ""
 
-    # 🚀 AUTOMATED HARDWARE PRE-FLIGHT SCANNER (INJECTED DETECTOR LOGIC)
-    echo -e "  ${YELLOW}[●] Background System Telemetry Audit Active...${NC}"
+    # 🚀 ADVANCED HYBRID SILICON AUTODETECTOR LAYER
+    echo -e "  ${YELLOW}[●] Scanning live hardware topologies and live configuration logs...${NC}"
     local detected_cus=24
-    if command -v umr &> /dev/null; then
+
+    # 🔍 WinnieLV WGP Mask Parser: Dynamically decodes active live config files
+    if [[ -f /etc/bc250-cu-live-manager.conf ]]; then
+        local raw_masks
+        raw_masks=$(grep "BC250_WGP_MASKS=" /etc/bc250-cu-live-manager.conf | cut -d= -f2)
+        if [[ -n "$raw_masks" ]]; then
+            # Sum up bit elements across all four shader engine channels smoothly
+            local total_bits=0
+            IFS=',' read -r -a mask_array <<< "$raw_masks"
+            for mask in "${mask_array[@]}"; do
+                local val=$((mask))
+                # Counts active binary bits to pull exact total routed WGPs
+                for ((i=0; i<32; i++)); do
+                    (( (val >> i) & 1 )) && ((total_bits++))
+                done
+            done
+            # Each active bit represents 1 WGP which houses exactly 2 active CUs
+            (( detected_cus = total_bits * 2 ))
+        fi
+    fi
+
+    # Fallback to direct kernel diagnostics query if manager profile config hasn't been written yet
+    if (( detected_cus == 0 )) && command -v umr &> /dev/null; then
         detected_cus=$(umr -i 0 -g 2>/dev/null | grep -i "cu_per_sh" | awk '{print $3 * 4}')
     fi
-    if [[ ! "$detected_cus" =~ ^[0-9]+$ ]] || [ "$detected_cus" -le 0 ]; then
+    if [[ ! "$detected_cus" =~ ^[0-9]+$ ]] || (( detected_cus <= 0 )); then
         detected_cus=24
     fi
 
-    local detected_cores=$(nproc 2>/dev/null || echo "6")
-    echo -e "      ${BIBlue}[ℹ] LIVE HARDWARE SCAN DETECTED: ${detected_cus}/40 CUs Unlocked | ${detected_cores} CPU Cores Operational.${NC}\n"
+    local live_threads=$(nproc 2>/dev/null || echo "12")
+    local detected_cores=$(( live_threads / 2 ))
+    echo -e "      ${BIBlue}[ℹ] SYSTEM CURRENTLY RUNNING: ${detected_cus}/40 Active CUs | ${detected_cores} CPU Cores Active.${NC}\n"
 
     # 📋 AUDIT NO. 1: COOLING INFRASTRUCTURE
     echo -e "  ${BOLD}${BLUE}[1/5] Select the physical cooling system configuration currently active:${RESET}"
@@ -311,9 +332,9 @@ configure_governor_profile() {
     fi
     echo ""
 
-    # 📋 AUDIT NO. 3: FUTURE TARGET COMPUTE UNITS (DETERMINES SAFE-POINT EXTENSIONS)
-    echo -e "  ${BOLD}${BLUE}[3/5] Your system currently shows ${detected_cus}/40 CUs operational.${RESET}"
-    echo -e "        Are you planning to enable or target a higher Compute Unit count?"
+    # 📋 AUDIT NO. 3: FUTURE TARGET COMPUTE UNITS (INTELLIGENT HYBRID CONFIRMATION)
+    echo -e "  ${BOLD}${BLUE}[3/5] I do see you have ${detected_cus}/40 CUs currently active on this system.${RESET}"
+    echo -e "        Are you planning to change or target a different configuration footprint?"
     echo -e "    1) Target 36 CUs Active  ${DIM}(Down-binned / Maximum High-Efficiency Target Layout)${RESET}"
     echo -e "    2) Target 38 CUs Active  ${DIM}(Optimal Mid-Tier Custom Performance Curve Baseline)${RESET}"
     echo -e "    3) Target 40 CUs Active  ${DIM}(Absolute Full Die Silicon Array Matrix Unlocked)${RESET}"
@@ -330,9 +351,9 @@ configure_governor_profile() {
     esac
     echo ""
 
-    # 📋 AUDIT NO. 4: FUTURE TARGET CPU CORES (SCALES INTERACTION INTERVAL REGISTERS)
-    echo -e "  ${BOLD}${BLUE}[4/5] Your system currently shows ${detected_cores} CPU Cores active.${RESET}"
-    echo -e "        Are you planning to change or target a higher CPU Core configuration?"
+    # 📋 AUDIT NO. 4: FUTURE TARGET CPU CORES
+    echo -e "  ${BOLD}${BLUE}[4/5] I do see you have ${detected_cores} CPU Cores currently active on this system.${RESET}"
+    echo -e "        Are you planning to change or target a different operational complex?"
     echo -e "    1) Target 6 Cores Active  ${DIM}(Power-saving / SMT Restructured Layout)${RESET}"
     echo -e "    2) Target 8 Cores Active  ${DIM}(Full Hardware Multithreading Core Complex Unlocked)${RESET}"
     echo ""
@@ -441,7 +462,7 @@ enabled = true         # Enables inter-process communication for system overlays
 # MHz/ms scaling rates
 [timing.ramp-rates]
 normal = $RAMP_NORMAL            # Tracking speed optimized for active profile limits
-burst = $RAMP_BURST             # Frequency jumps scaled dynamically to match your ${psu_wattage}W current allocation
+burst = $RAMP_BURST             # Frequency jumps scaled dynamically to match your \${psu_wattage}W current allocation
 
 # Evaluation sampling parameters
 [timing]
@@ -461,7 +482,7 @@ lower = 0.60           # Forces high clock retention during geometry/draw call p
 
 # °C Thermal tracking configurations
 [temperature]
-throttling = $THROTTLE_TEMP        # HARD CEILING: Scaled directly from your $COOLING_LABEL spec option
+throttling = $THROTTLE_TEMP        # HARD CEILING: Scaled directly from your \$COOLING_LABEL spec option
 throttling_recovery = $RECOVERY_TEMP # Safe temperature buffer to prevent rapid thermal stutter loops
 
 # ==============================================================================
@@ -604,7 +625,7 @@ launch_tuning_menu() {
                 done
                 while true; do
                     read -p "Enter Max Temperature Target (°C) [e.g., 85]: " custom_temp
-                    if [[ "$custom_temp" =~ ^[0-9]+$ ]] && [ "$custom_temp" -gt 0 ] && [ "$custom_temp" -lt 105 ]; then break; else echo -e "${RED}Invalid input. Please enter a safe temperature limit below 105°C.${NC}"; fi
+                    if [[ "$custom_freq" =~ ^[0-9]+$ ]] && [ "$custom_temp" -gt 0 ] && [ "$custom_temp" -lt 105 ]; then break; else echo -e "${RED}Invalid input. Please enter a safe temperature limit below 105°C.${NC}"; fi
                 done
                 log "${GREEN}Running custom tuning profile optimization...${NC}"
                 bc250-detect --frequency "$custom_freq" --vid "$custom_vid" -t "$custom_temp" --keep
@@ -768,7 +789,7 @@ clear
     echo -e "      ${DIM}[3b] Uninstall Compute Unit Live Manager Service Paths${RESET}"
     echo ""
     echo -e "    ${BOLD}${YELLOW}• Silicon Stability Testing Channels:${RESET}"
-    echo -e "      ${CYAN}${RESET}   Launch Silicon Per-Core Stability Sweep ${DIM}(test-cores Curve Validation)${RESET}"
+    echo -e "      ${CYAN}[4]${RESET}   Launch Silicon Per-Core Stability Sweep ${DIM}(test-cores Curve Validation)${RESET}"
     echo ""
     echo -e "  ${DIM}──────────────────────────────────────────────────────────────────────────────────${RESET}"
     echo -e "      ${BOLD}${MAGENTA}[↵]${RESET} Hit Enter to Secure Safe Exit Overclock-Live-Manager"
