@@ -117,7 +117,7 @@ ensure_bazzite_dependencies() {
 }
 # Configuration
 LOG_FILE="/var/log/bc250_oc_install.log"
-REPO_URL="https://github.com"
+REPO_URL="https://github.com/bc250-collective/bc250_smu_oc.git"
 SERVICE_FILE="/etc/systemd/system/bc250-resume.service"
 SCRIPT_PATH=$(realpath "$0")
 
@@ -192,7 +192,7 @@ show_warning() {
     echo "NEVER EXCEED 1.325V (VID) UNDER ANY CIRCUMSTANCES!"
     echo "PROCEED ENTIRELY AT YOUR OWN RISK."
     echo -e "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!${NC}"
-    echo "Source: ://github.com"
+    echo "Source: github.com/bc250-collective/bc250_smu_oc"
     echo "Logs will be saved to: $LOG_FILE"
     echo ""
     read -p "Press [Enter] to accept the risk and continue, or Ctrl+C to abort..."
@@ -647,7 +647,7 @@ run_manager_phase2() {
     sudo rm -f $SERVICE_FILE
     sudo systemctl daemon-reload
     cd /tmp || exit
-    curl -L -o bc250-cu-live-manager.sh https://githubusercontent.com >> "$LOG_FILE" 2>&1
+    curl -L -o bc250-cu-live-manager.sh https://raw.githubusercontent.com/WinnieLV/bc250-cu-live-manager/refs/heads/main/bc250-cu-live-manager.sh >> "$LOG_FILE" 2>&1
     chmod +x bc250-cu-live-manager.sh
     sudo ./bc250-cu-live-manager.sh
 }
