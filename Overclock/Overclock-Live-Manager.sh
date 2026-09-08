@@ -675,33 +675,30 @@ launch_tuning_menu() {
             target_dir="$REAL_HOME/Bazzite_Toolbox/Overclock"
         fi
 
-        case "$tune_choice" in
+                case "$tune_choice" in
             1) 
-                log "${GREEN}Launching 40/40 CU extreme overclock...${NC}"
-                bc250-detect --frequency 3500 --vid 1000 -t 85 --keep
+                log "${GREEN}Staging 40/40 CU - Extreme Overclock template...${NC}"
+                echo -e "frequency=3500\nvid=1000\ntemperature=85\nkeep=True" > "$target_dir/overclock.conf"
                 run_preset_stress_flow
                 ;;
             2) 
-                log "${GREEN}Staging 40/40 CU high-efficiency template...${NC}"
-                # 🧬 Directly write template out to disk safely to avoid binary validation panics
-                echo -e "frequency=3000\nvid=920\ntemperature=78" > "$target_dir/overclock.conf"
+                log "${GREEN}Staging 40/40 CU - High-Efficiency template...${NC}"
+                echo -e "frequency=3000\nvid=920\ntemperature=78\nkeep=True" > "$target_dir/overclock.conf"
                 run_preset_stress_flow
                 ;;
             3) 
-                log "${GREEN}Launching 38/40 CU extreme overclock...${NC}"
-                bc250-detect --frequency 3500 --vid 1020 -t 85 --keep
+                log "${GREEN}Staging 38/40 CU - Extreme Overclock template...${NC}"
+                echo -e "frequency=3500\nvid=1020\ntemperature=85\nkeep=True" > "$target_dir/overclock.conf"
                 run_preset_stress_flow
                 ;;
             4) 
-                log "${GREEN}Staging 38/40 CU balanced gaming template...${NC}"
-                # 🧬 Directly write template out to disk safely to avoid binary validation panics
-                echo -e "frequency=3000\nvid=945\ntemperature=80" > "$target_dir/overclock.conf"
+                log "${GREEN}Staging 38/40 CU - Balanced Gaming template...${NC}"
+                echo -e "frequency=3000\nvid=945\ntemperature=80\nkeep=True" > "$target_dir/overclock.conf"
                 run_preset_stress_flow
                 ;;
             5) 
-                log "${GREEN}Staging 36/40 CU silent eco template...${NC}"
-                # 🧬 Directly write template out to disk safely to avoid binary validation panics
-                echo -e "frequency=2800\nvid=890\ntemperature=75" > "$target_dir/overclock.conf"
+                log "${GREEN}Staging 36/40 CU - Silent / Eco Core template...${NC}"
+                echo -e "frequency=2800\nvid=890\ntemperature=75\nkeep=True" > "$target_dir/overclock.conf"
                 run_preset_stress_flow
                 ;;
             6|7)
