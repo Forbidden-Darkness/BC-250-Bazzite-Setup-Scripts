@@ -681,13 +681,30 @@ launch_tuning_menu() {
                     bc250-detect --frequency "$custom_freq" --vid "$custom_vid" -t "$custom_temp" --keep
                 fi
                 
-                # 🚀 ROUTING LAYER SEPARATION
+                # 🚀 DYNAMIC THREAD RESOLUTION ENGINE
+                local target_threads=$(nproc 2>/dev/null || echo "12")
+                if [[ "$live_threads" =~ ^[0-9]+$ ]] && [ "$live_threads" -gt 0 ]; then
+                    target_threads="$live_threads"
+                fi
+                
+                # 🚀 ROUTING LAYER SEPARATION WITH LIVE COUNTDOWN TIMER & AUTO-THREADS
                 if [ "$tune_choice" = "6" ]; then
-                    # Option 6: Force heavy stability stress test FIRST
-                    log "${GREEN}[●] Running stability validation stress test (150s)...${NC}"
-                    stress --cpu 16 --timeout 150 >> "$LOG_FILE" 2>&1
+                    # Option 6: Force heavy stability stress test FIRST with a live countdown display
+                    echo -e "\n  ${YELLOW}[●] Initializing Silicon Stability Sweep Utilizing ${target_threads} Active Threads...${NC}"
                     
-                    echo ""
+                    # 🧬 Spawns stress silently using the exact auto-detected thread count!
+                    stress --cpu "$target_threads" --timeout 150 >> "$LOG_FILE" 2>&1 &
+                    local stress_pid=$!
+                    
+                    # Core Loop Tracker: Displays active countdown while background pid is running
+                    local seconds_left=150
+                    while kill -0 "$stress_pid" 2>/dev/null; do
+                        echo -ne "      ${CYAN}Stability validation testing in progress... ${RED}${seconds_left}s${CYAN} remaining...${RESET}\r"
+                        sleep 1
+                        ((seconds_left--))
+                    done
+                    echo -e "\n" # Flush trailing text carriage returns safely
+                    
                     echo -e "${B_GREEN}✓ Stress test complete! Hardware stability verified.${NC}"
                     read -rp "Would you like to permanently save and activate these custom settings? [y/n]: " save_choice
                     if [[ "$save_choice" =~ ^[Yy]$ ]]; then
@@ -697,7 +714,9 @@ launch_tuning_menu() {
                         sleep 2
                     fi
                 else
-                    # Option 7: Standalone test track (Stresses and returns without saving)
+                    # Option 7: Standalone test track (Stresses and returns natively via original logs)
+                    # 🧬 Force patch the static stress command inside your standalone function at runtime
+                    sudo sed -i "s/stress --cpu [0-9]*/stress --cpu $target_threads/g" "$SCRIPT_PATH" 2>/dev/null || true
                     stress_settings
                 fi
                 ;;
