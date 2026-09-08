@@ -644,7 +644,7 @@ launch_tuning_menu() {
                 while true; do
                     read -p "Enter Target Frequency (MHz) [e.g., 3000]: " custom_freq
                     if [[ "$custom_freq" =~ ^[0-9]+$ ]] && [ "$custom_freq" -gt 0 ]; then 
-                        break; 
+                        break
                     else 
                         echo -e "${RED}Invalid input. Please enter a valid number for MHz.${NC}"
                     fi
@@ -652,12 +652,22 @@ launch_tuning_menu() {
                 while true; do
                     read -p "Enter Target Voltage (mV / VID) [e.g., 945]: " custom_vid
                     if [[ "$custom_vid" =~ ^[0-9]+$ ]] && [ "$custom_vid" -gt 0 ]; then
-                        if [ "$custom_vid" -gt 1325 ]; then echo -e "${RED}SAFETY ERROR: Voltage cannot exceed 1325 mV!${NC}"; else break; fi
-                    else echo -e "${RED}Invalid input. Please enter a valid number for mV.${NC}"fi
+                        if [ "$custom_vid" -gt 1325 ]; then 
+                            echo -e "${RED}SAFETY ERROR: Voltage cannot exceed 1325 mV!${NC}"
+                        else 
+                            break
+                        fi
+                    else 
+                        echo -e "${RED}Invalid input. Please enter a valid number for mV.${NC}"
+                    fi
                 done
                 while true; do
                     read -p "Enter Max Temperature Target (°C) [e.g., 80]: " custom_temp
-                    if [[ "$custom_temp" =~ ^[0-9]+$ ]] && [ "$custom_temp" -gt 0 ] && [ "$custom_temp" -lt 105 ]; then break; else echo -e "${RED}Invalid input. Please enter a safe temperature limit below 105°C.${NC}"; fi
+                    if [[ "$custom_temp" =~ ^[0-9]+$ ]] && [ "$custom_temp" -gt 0 ] && [ "$custom_temp" -lt 105 ]; then 
+                        break
+                    else 
+                        echo -e "${RED}Invalid input. Please enter a safe temperature limit below 105°C.${NC}"
+                    fi
                 done
                 log "${GREEN}Running custom tuning profile optimization...${NC}"
                 
