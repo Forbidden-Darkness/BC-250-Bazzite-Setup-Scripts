@@ -760,7 +760,7 @@ run_manager_phase1() {
         echo -e "\n  ${YELLOW}╔═════════════════════════════════════════════════════════════════════════════════════════════╗${NC}"
         echo -e "  ${YELLOW}║${NC}  ${BOLD}${BLUE}[ℹ] COMPUTE UNIT LIVE MANAGER DETECTED${NC}                                                     ${YELLOW}║${NC}"
         echo -e "  ${YELLOW}╠═════════════════════════════════════════════════════════════════════════════════════════════╣${NC}"
-        echo -e "  ${YELLOW}║${NC}  The dynamic CU bitmask manager and active daemon profiles are already active on this host.${YELLOW} ║${NC}"
+        echo -e "  ${YELLOW}║${NC} The dynamic CU bitmask manager and active daemon profiles are already active on this host.${YELLOW} ║${NC}"
         echo -e "  ${YELLOW}╚═════════════════════════════════════════════════════════════════════════════════════════════╝${NC}"
         echo ""
         echo " 1) Cancel operation and return safely to the primary layout loop"
