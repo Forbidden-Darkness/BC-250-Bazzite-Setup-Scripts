@@ -613,6 +613,38 @@ EOF"
     echo -e "  ${GREEN}[✓] Task complete! Active system profiles locked into memory space cleanly.${NC}\n"
     read -rp "  Press [Enter] to exit back to the main menu..."
 }
+# 🧬 HELPER ENGINE: Executes countdown loop and interactive save gate for options 1-6
+run_preset_stress_flow() {
+    local target_threads=$(nproc 2>/dev/null || echo "12")
+    if [[ "$live_threads" =~ ^[0-9]+$ ]] && [ "$live_threads" -gt 0 ]; then
+        target_threads="$live_threads"
+    fi
+
+    echo -e "\n  ${YELLOW}[●] Initializing Silicon Stability Sweep Utilizing ${target_threads} Active Threads...${NC}"
+    
+    # Spawns stress silently into a background process thread block
+    stress --cpu "$target_threads" --timeout 150 >> "$LOG_FILE" 2>&1 &
+    local stress_pid=$!
+    
+    # Universal Countdown Loop Tracker
+    local seconds_left=150
+    while kill -0 "$stress_pid" 2>/dev/null; do
+        echo -ne "      Stability validation testing in progress... ${RED}${seconds_left}s${CYAN} remaining...${RESET}\r"
+        sleep 1
+        ((seconds_left--))
+    done
+    echo -e "\n"
+    echo -e "${B_GREEN}✓ Stress test complete! Hardware stability verified.${NC}"
+    
+    read -rp "Would you like to permanently save and activate these custom settings? [y/n]: " save_choice
+    if [[ "$save_choice" =~ ^[Yy]$ ]]; then
+        finalize_settings
+    else
+        echo -e "${CYAN}[-] Save aborted. Returning safely to tuning menu...${NC}"
+        sleep 2
+    fi
+}
+
 launch_tuning_menu() {
     while true; do
         clear
@@ -638,13 +670,38 @@ launch_tuning_menu() {
         read -p "  Enter selection [1-7, ↵]: " tune_choice
 
         case "$tune_choice" in
-            1) log "${GREEN}Launching 40/40 CU extreme overclock...${NC}"; bc250-detect --frequency 3500 --vid 1000 -t 85 --keep; finalize_settings ;;
-            2) log "${GREEN}Launching 40/40 CU high-efficiency profile...${NC}"; bc250-detect --frequency 3000 --vid 920 -t 78 --keep 2>/dev/null || bc250-detect --frequency 3500 --vid 920 -t 78 --keep; finalize_settings ;;
-            3) log "${GREEN}Launching 38/40 CU extreme overclock...${NC}"; bc250-detect --frequency 3500 --vid 1020 -t 85 --keep; finalize_settings ;;
-            4) log "${GREEN}Launching 38/40 CU balanced gaming sweet spot...${NC}"; bc250-detect --frequency 3000 --vid 945 -t 80 --keep 2>/dev/null || bc250-detect --frequency 3500 --vid 945 -t 80 --keep; finalize_settings ;;
-            5) log "${GREEN}Launching 36/40 CU silent eco profile...${NC}"; bc250-detect --frequency 2800 --vid 890 -t 75 --keep 2>/dev/null || bc250-detect --frequency 3500 --vid 890 -t 75 --keep; finalize_settings ;;
+            1) 
+                log "${GREEN}Launching 40/40 CU extreme overclock...${NC}"
+                bc250-detect --frequency 3500 --vid 1000 -t 85 --keep
+                run_preset_stress_flow
+                ;;
+            2) 
+                log "${GREEN}Launching 40/40 CU high-efficiency profile...${NC}"
+                bc250-detect --frequency 3500 --vid 920 -t 78 --keep >/dev/null 2>&1
+                if [ -f "overclock.conf" ]; then sed -i "s/frequency=.*/frequency=3000/g" overclock.conf 2>/dev/null || true; fi
+                if [ -f "$REAL_HOME/Bazzite_Toolbox/Overclock/overclock.conf" ]; then sed -i "s/frequency=.*/frequency=3000/g" "$REAL_HOME/Bazzite_Toolbox/Overclock/overclock.conf" 2>/dev/null || true; fi
+                run_preset_stress_flow
+                ;;
+            3) 
+                log "${GREEN}Launching 38/40 CU extreme overclock...${NC}"
+                bc250-detect --frequency 3500 --vid 1020 -t 85 --keep
+                run_preset_stress_flow
+                ;;
+            4) 
+                log "${GREEN}Launching 38/40 CU balanced gaming sweet spot...${NC}"
+                bc250-detect --frequency 3500 --vid 945 -t 80 --keep >/dev/null 2>&1
+                if [ -f "overclock.conf" ]; then sed -i "s/frequency=.*/frequency=3000/g" overclock.conf 2>/dev/null || true; fi
+                if [ -f "$REAL_HOME/Bazzite_Toolbox/Overclock/overclock.conf" ]; then sed -i "s/frequency=.*/frequency=3000/g" "$REAL_HOME/Bazzite_Toolbox/Overclock/overclock.conf" 2>/dev/null || true; fi
+                run_preset_stress_flow
+                ;;
+            5) 
+                log "${GREEN}Launching 36/40 CU silent eco profile...${NC}"
+                bc250-detect --frequency 3500 --vid 890 -t 75 --keep >/dev/null 2>&1
+                if [ -f "overclock.conf" ]; then sed -i "s/frequency=.*/frequency=2800/g" overclock.conf 2>/dev/null || true; fi
+                if [ -f "$REAL_HOME/Bazzite_Toolbox/Overclock/overclock.conf" ]; then sed -i "s/frequency=.*/frequency=2800/g" "$REAL_HOME/Bazzite_Toolbox/Overclock/overclock.conf" 2>/dev/null || true; fi
+                run_preset_stress_flow
+                ;;
             6|7)
-                # 🧬 CORE LOOP GATE: Encapsulates the entire custom pass inside an active retry loop
                 while true; do
                     clear
                     echo -e "${YELLOW}====================================================${NC}"
@@ -653,102 +710,58 @@ launch_tuning_menu() {
                     echo ""
                     while true; do
                         read -p "Enter Target Frequency (MHz) [e.g., 3000]: " custom_freq
-                        if [[ "$custom_freq" =~ ^[0-9]+$ ]] && [ "$custom_freq" -gt 0 ]; then 
-                            break
-                        else 
-                            echo -e "${RED}Invalid input. Please enter a valid number for MHz.${NC}"
-                        fi
+                        if [[ "$custom_freq" =~ ^[0-9]+$ ]] && [ "$custom_freq" -gt 0 ]; then break
+                        else echo -e "${RED}Invalid input. Please enter a valid number for MHz.${NC}"; fi
                     done
                     while true; do
                         read -p "Enter Target Voltage (mV / VID) [e.g., 945]: " custom_vid
                         if [[ "$custom_vid" =~ ^[0-9]+$ ]] && [ "$custom_vid" -gt 0 ]; then
-                            if [ "$custom_vid" -gt 1325 ]; then 
-                                echo -e "${RED}SAFETY ERROR: Voltage cannot exceed 1325 mV!${NC}"
-                            else 
-                                break
-                            fi
-                        else 
-                            echo -e "${RED}Invalid input. Please enter a valid number for mV.${NC}"
-                        fi
+                            if [ "$custom_vid" -gt 1325 ]; then echo -e "${RED}SAFETY ERROR: Voltage cannot exceed 1325 mV!${NC}"; else break; fi
+                        else echo -e "${RED}Invalid input. Please enter a valid number for mV.${NC}"; fi
                     done
                     while true; do
                         read -p "Enter Max Temperature Target (°C) [e.g., 80]: " custom_temp
-                        if [[ "$custom_temp" =~ ^[0-9]+$ ]] && [ "$custom_temp" -gt 0 ] && [ "$custom_temp" -lt 105 ]; then 
-                            break
-                        else 
-                            echo -e "${RED}Invalid input. Please enter a safe temperature limit below 105°C.${NC}"
-                        fi
+                        if [[ "$custom_temp" =~ ^[0-9]+$ ]] && [ "$custom_temp" -gt 0 ] && [ "$custom_temp" -lt 105 ]; then break
+                        else echo -e "${RED}Invalid input. Please enter a safe temperature limit below 105°C.${NC}"; fi
                     done
                     log "${GREEN}Running custom tuning profile optimization...${NC}"
                     
-                    # 🧬 Safe single-pass execution mapping to handle underclocks flawlessly
                     if [ "$custom_freq" -lt 3500 ]; then
                         bc250-detect --frequency 3500 --vid "$custom_vid" -t "$custom_temp" --keep >/dev/null 2>&1
-                        if [ -f "overclock.conf" ]; then
-                            sed -i "s/frequency=.*/frequency=$custom_freq/g" overclock.conf 2>/dev/null || true
-                        fi
+                        if [ -f "overclock.conf" ]; then sed -i "s/frequency=.*/frequency=$custom_freq/g" overclock.conf 2>/dev/null || true; fi
+                        if [ -f "$REAL_HOME/Bazzite_Toolbox/Overclock/overclock.conf" ]; then sed -i "s/frequency=.*/frequency=$custom_freq/g" "$REAL_HOME/Bazzite_Toolbox/Overclock/overclock.conf" 2>/dev/null || true; fi
                     else
                         bc250-detect --frequency "$custom_freq" --vid "$custom_vid" -t "$custom_temp" --keep
                     fi
                     
-                    # 🚀 DYNAMIC THREAD RESOLUTION ENGINE
-                    local target_threads=$(nproc 2>/dev/null || echo "12")
-                    if [[ "$live_threads" =~ ^[0-9]+$ ]] && [ "$live_threads" -gt 0 ]; then
-                        target_threads="$live_threads"
-                    fi
-                    
-                    # ==============================================================================
-                    # 🚀 UNIFIED SILICON STABILITY SWEEP (COUNTDOWN ACTIVE FOR BOTH CHANNELS)
-                    # ==============================================================================
-                    echo -e "\n  ${YELLOW}[●] Initializing Silicon Stability Sweep Utilizing ${target_threads} Active Threads...${NC}"
-                    
-                    # Spawns stress silently into a background process thread block
-                    stress --cpu "$target_threads" --timeout 150 >> "$LOG_FILE" 2>&1 &
-                    local stress_pid=$!
-                    
-                    # Universal Countdown Loop Tracker: Tracks background process dynamically
-                    local seconds_left=150
-                    while kill -0 "$stress_pid" 2>/dev/null; do
-                        echo -ne "      ${CYAN}Stability validation testing in progress... ${RED}${seconds_left}s${CYAN} remaining...${RESET}\r"
-                        sleep 1
-                        ((seconds_left--))
-                    done
-                    echo -e "\n" # Flush trailing text carriage returns safely
-                    echo -e "${B_GREEN}✓ Stability validation loop finished successfully!${NC}"
-
-                    # 🚀 DEPLOYMENT CHANNELS SPLIT GATE
-                    local loop_again=""
                     if [ "$tune_choice" = "6" ]; then
-                        # Option 6 Interactive Save Prompter
-                        read -rp "Would you like to permanently save and activate these custom settings? [y/n]: " save_choice
-                        if [[ "$save_choice" =~ ^[Yy]$ ]]; then
-                            finalize_settings
-                            break # Core save committed successfully; break out of the loop natively
-                        else
-                            echo -e "${CYAN}[-] Save aborted.${NC}"
-                            echo ""
-                            read -rp "Would you like to try another configuration sweep with different settings? [y/n]: " loop_again
-                            if [[ ! "$loop_again" =~ ^[Yy]$ ]]; then
-                                echo -e "${YELLOW}Returning safely to tuning menu...${NC}"
-                                sleep 1.5
-                                break
-                            fi
-                        fi
+                        run_preset_stress_flow
                     else
-                        # Option 7 Safe Exit Loop (Clears sandbox, checks service safely, skips save prompt)
-                        if [[ -f "/etc/systemd/system/bc250-smu-oc.service" ]]; then
-                            sudo systemctl daemon-reload >> "$LOG_FILE" 2>&1
-                            sudo systemctl restart bc250-smu-oc.service >> "$LOG_FILE" 2>&1
-                        fi
-                        echo -e "${YELLOW}[ℹ] Sandbox verification sequence finalized.${NC}"
-                        echo ""
-                        read -rp "Would you like to run another stress test with different settings? [y/n]: " loop_again
-                        if [[ ! "$loop_again" =~ ^[Yy]$ ]]; then
-                            echo -e "${YELLOW}Returning safely to tuning menu...${NC}"
-                            sleep 1.5
-                            break
-                        fi
+                        # Option 7 Path: Pure Sandbox Ticker (Runs countdown and exits without saving)
+                        local sandbox_threads=$(nproc 2>/dev/null || echo "12")
+                        if [[ "$live_threads" =~ ^[0-9]+$ ]] && [ "$live_threads" -gt 0 ]; then sandbox_threads="$live_threads"; fi
+                        echo -e "\n  ${YELLOW}[●] Initializing Sandbox Stability Sweep Utilizing ${sandbox_threads} Threads...${NC}"
+                        stress --cpu "$sandbox_threads" --timeout 150 >> "$LOG_FILE" 2>&1 &
+                        local stress_pid=$!
+                        local seconds_left=150
+                        while kill -0 "$stress_pid" 2>/dev/null; do
+                            echo -ne "      Stability validation testing in progress... ${RED}${seconds_left}s${CYAN} remaining...${RESET}\r"
+                            sleep 1
+                            ((seconds_left--))
+                        done
+                        echo -e "\n${B_GREEN}✓ Sandbox verification sequence finalized.${NC}"
                     fi
+                    
+                    # Intercept loop-back request
+                    local loop_again=""
+                    if [ "$tune_choice" = "7" ]; then
+                        read -rp "Would you like to run another stress test with different settings? [y/n]: " loop_again
+                    else
+                        # If choice 1-6 was saved, break loop immediately. Otherwise, offer loop.
+                        if [[ "$save_choice" =~ ^[Yy]$ ]]; then break; fi
+                        read -rp "Would you like to try another configuration sweep with different settings? [y/n]: " loop_again
+                    fi
+                    if [[ ! "$loop_again" =~ ^[Yy]$ ]]; then echo -e "${YELLOW}Returning safely to tuning menu...${NC}"; sleep 1.5; break; fi
                 done
                 ;;
             0|"") echo "Exiting."; exit 0 ;;
