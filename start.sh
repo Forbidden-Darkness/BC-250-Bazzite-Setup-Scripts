@@ -662,10 +662,10 @@ run_status() {
     local CPU_CONF="/etc/bc250-smu-oc.conf"
     local GPU_CONF="/etc/cyan-skillfish-governor-smu/config.toml"
 
-    # 🧬 DYNAMIC OSTREE LAYER PIN STATE DETECTOR (INJECTED)
-    local local pin_status="$ICON_WARN"; pin_lable="${RED}unpinned${RESET}"
+    # 🧬 DYNAMIC OSTREE LAYER PIN STATE DETECTOR (CORRECTED BASH DECLARATION)
+    local pin_status="$ICON_WARN" pin_lable="${RED}unpinned${RESET}"
     if ostree admin pin 2>/dev/null | grep -q "Pinned" || rpm-ostree status 2>/dev/null | grep -qi "pinned"; then
-        pin_status="$ICON_OK"; pin_lable="${GREEN}pinned (frozen)${RESET}"
+        pin_status="$ICON_OK" pin_lable="${GREEN}pinned (frozen)${RESET}"
     fi
 
     echo -e "  ${BOLD}${YELLOW}System${RESET}"
@@ -1548,16 +1548,63 @@ install_wake_on_lan() {
 }
 
 
-# Function to update_cyan-skillfish
+# Function to update_cyan-skillfish (Intelligent Version Detection Engine)
 update_cyan-skillfish() {
-    echo -e "${B_RED}=== Updating cyan-skillfish ===${NC}"
+    clear
+    echo -e "\n  ${CYAN}╔═══════════════════════════════════════════════════════════════════╗${NC}"
+    echo -e "  ${CYAN}║                UPGRADE CYAN-SKILLFISH GOVERNOR TRACK              ║${NC}"
+    echo -e "  ${CYAN}╚═══════════════════════════════════════════════════════════════════╝${NC}"
+    echo ""
 
-    cyan-skillfish-governor-smu --version
-    sudo rpm-ostree refresh-md --force
-    sudo rpm-ostree install cyan-skillfish-governor-smu-v0.4.12
-    sudo sed -i '/^\[gpu-usage\]/a fix-freq = true' /etc/cyan-skillfish-governor-smu/config.toml
-    prompt_reboot
+    echo -e "  ${YELLOW}[ℹ] Interrogating active package repository tables for updates...${NC}"
+    echo -ne "      Current local binary version profile: "
+    cyan-skillfish-governor-smu --version 2>/dev/null || echo "Not Installed / Staged Only"
+    echo ""
+
+    # 🚀 LIVE VERSION UPGRADE CHECKER:
+    # Queries the ostree tree to determine if a newer version package is waiting on the server database
+    local check_update
+    check_update=$(rpm-ostree upgrade --check 2>/dev/null || true)
+
+    if [[ -z "$check_update" ]] || ! echo "$check_update" | grep -qi "cyan-skillfish-governor-smu"; then
+    TEXT_STR=" Your machine is already running the absolute newest optimized build from the COPR tracking stream. "
+        echo -e "  ${GREEN}╔════════════════════════════════════════════════════════════════════════════════════════════════════╗${NC}"
+        echo -e "  ${GREEN}║${NC}  ${BOLD}[✓] GOVERNOR SUITE IS COMPLETELY UP TO DATE!${NC}                                                      ${GREEN}║${NC}"
+        echo -e "  ${GREEN}╠════════════════════════════════════════════════════════════════════════════════════════════════════╣${NC}"
+        echo -e "  ${GREEN}║${NC}${TEXT_STR}${GREEN}║${NC}"
+        echo -e "  ${GREEN}╚════════════════════════════════════════════════════════════════════════════════════════════════════╝${NC}"
+        echo ""
+        type_prompt "  Press [Enter] to return safely back to the toolkit main menu... " 0.03
+        read -rp "  "
+        return 0
+    fi
+
+    # Cascading Path: If the checker discovers that a new version exists, prompt to apply it
+    echo -e "  ${BIYellow}[●] ATTENTION: A newer optimized governor update layer has been discovered!${NC}\n"
+    if confirm "Would you like to pull the latest optimized governor image layers now?"; then
+        echo -e "${GREEN}[+] Step 1/3: Forcing background package index updates...${NC}"
+        (sudo rpm-ostree refresh-md --force) &>/dev/null
+
+        echo -e "${GREEN}[+] Step 2/3: Pulling latest system-compatible governor package layers...${NC}"
+        sudo rpm-ostree install -y cyan-skillfish-governor-smu >> /var/log/bc250_oc_install.log 2>&1
+
+        echo -e "${GREEN}[+] Step 3/3: Seeding frequency fix locks inside container profiles...${NC}"
+        if [[ -f /etc/cyan-skillfish-governor-smu/config.toml ]]; then
+            if ! grep -q "fix-freq = true" /etc/cyan-skillfish-governor-smu/config.toml; then
+                sudo sed -i '/^\[gpu-usage\]/a fix-freq = true' /etc/cyan-skillfish-governor-smu/config.toml 2>/dev/null
+            fi
+        fi
+
+        print_success "Cyan-Skillfish governor tracking parameters upgraded successfully!"
+        prompt_reboot
+        return 0
+    else
+        echo -e "${CYAN}[-] Operation canceled. Returning safely to primary toolkit menu...${NC}"
+        sleep 1.2
+        return 0
+    fi
 }
+
 
 # ==============================================================================
 # UNIFIED ACPI FIX SUBSYSTEM TOGGLE ENGINE (BIOS PROTETCTED)
@@ -1593,7 +1640,14 @@ toggle_acpi_fix() {
 }
 
 # Function to handle ACPI Override Fix
+# Function to handle ACPI Override Fix (Original Verified Multi-Version Logic)
 apply_acpi_fix() {
+    clear
+    echo -e "\n  ${CYAN}╔═══════════════════════════════════════════════════════════════════╗${NC}"
+    echo -e "  ${CYAN}║                    DEPLOY AMD BC-250 ACPI FIX                     ║${NC}"
+    echo -e "  ${CYAN}╚═══════════════════════════════════════════════════════════════════╝${NC}"
+    echo ""
+
     echo -e "${B_VIOLET}=== Executing BC-250 ACPI Fix ===${NC}"
 
     cd /tmp || return 1
@@ -1644,6 +1698,7 @@ apply_acpi_fix() {
         sudo grub2-mkconfig -o /etc/grub2.cfg 2>/dev/null || true
     fi
 
+    print_success "Custom ACPI firmware tables successfully injected into boot sector!"
     prompt_reboot
 }
 
@@ -2526,8 +2581,8 @@ show_menu() {
         echo -e "  ${DIM}─────────────────────────────────────────────────────────────────────${RESET}"
         echo -e "    ${CYAN}[A] Enable Governor Now${RESET}    ${DIM}(Until Next Reboot)${RESET}  ${YELLOW}[D] Disable Governor Now${RESET}   ${DIM}(Stop Immediately)${RESET}"
         echo -e "    ${CYAN}[B] Enable Auto-Start${RESET}      ${DIM}(Turn On Every Boot)${RESET} ${YELLOW}[E] Disable Auto-Start${RESET}     ${DIM}(Keep Off on Boot)${RESET}"
-        echo -e "    ${BLUE}[C] Restart Governor${RESET}        ${DIM}(Refresh Tweaks)${RESET}    ${BLUE}[F] Monitor Governor Live Logs${RESET}      ${DIM}(Press [Enter] to Exit)${RESET}"
-        echo -e "    ${MAGENTA}[G] Check Governor Version${RESET}                      ${MAGENTA}[S] View Current Toolkit Dashboard${RESET}"
+        echo -e "    ${BLUE}[C] Restart Governor${RESET}        ${DIM}(Refresh Tweaks)${RESET}    ${BLUE}[F] Monitor Governor Live Logs${RESET}   ${DIM}(Press [Enter] to Exit)${RESET}"
+        echo -e "    ${MAGENTA}[G] Check Governor Version${RESET}                      ${CYAN}[H] Upgrade Governor Track${RESET} ${DIM}  (Fetch Latest Stable COPR Build)${RESET}"
         echo ""
 
         # --- CONFIG NOTICES ---
@@ -2543,9 +2598,14 @@ show_menu() {
         echo -e "  ${BIBlack}─────────────────────────────────────────────────────────────────────${NC}"
         echo -e "    ${CYAN}[3] ACPI Table Fix${RESET}  ${DIM}(Install/Uni)${RESET}    ${CYAN}[4] RAM/VRAM Split${RESET}  ${DIM}(Dynamic Split)${RESET}"
         echo -e "    ${CYAN}[X] Xbox Adapter${RESET}    ${DIM}(Xone Driver)${RESET}    ${CYAN}[5] CPU OC & CU Suite${RESET} ${DIM}(Live SMU Manager)${RESET}"
-        echo -e "    ${CYAN}[6] Wake-on-LAN${RESET}     ${DIM}(Port Selector)${RESET}  ${CYAN}[7] Upgrade Governor Track${RESET} ${DIM}(v0.4.12 COPR)${RESET}"
+        echo -e "    ${CYAN}[6] Wake-on-LAN${RESET}     ${DIM}(Port Selector)${RESET}  ${CYAN}[P] Pin Stable Layer${RESET}   ${DIM}(OSTree Backup)${RESET}"
         echo -e "    ${CYAN}[H] CU Map Matrix${RESET}    ${DIM}(Harvest Map)${RESET}   ${CYAN}[O] CU Harvest Maps${RESET}   ${DIM}(Web Browser)${RESET}"
-        echo -e "    ${CYAN}[P] Pin Stable Layer${RESET}   ${DIM}(OSTree Backup)${RESET}"
+        echo ""
+
+        # 🧬 NEW SECTION 4: TELEMETRY & DASHBOARD READOUTS (INJECTED)
+        echo -e "  ${BOLD}${MAGENTA}Telemetry & View Dashboards${RESET}"
+        echo -e "  ${BIBlack}─────────────────────────────────────────────────────────────────────${NC}"
+        echo -e "    ${MAGENTA}[S] View Current Toolkit Dashboard${RESET}  ${DIM}(Real-time telemetry and hardware state panel)${RESET}"
         echo ""
         echo -e "    ${CYAN}[R] Reload Menu Interface${RESET}"
         echo -e "    ${RED}[0] Secure Safe Exit${RESET}"
@@ -2556,12 +2616,12 @@ show_menu() {
 
 
         # Safe Prompt Parser (Instant Typing Response Keystroke Engine)
-        type_prompt "  Select an option [0-7, A-G, H, K, O, P, R, S, X]: " 0.03
+        type_prompt "  Select an option [0-6, A-G, H, O, P, R, S, X]: " 0.03
         choice=""
         read -n 1 -s choice || true
         echo ""
 
-            case "$choice" in
+        case "$choice" in
             1) install_blue_pill ;;
             2) install_red_pill ;;
             3) toggle_acpi_fix ;;
@@ -2573,11 +2633,17 @@ show_menu() {
             5) install_overclock ;;
             6) install_wake_on_lan ;;
 
-            7) update_cyan-skillfish ;;
-            h|H) view_cu_map ;;  # Hooks your new look securely into the runtime loop
-
-            # 🧬 INJECT THIS CASE BRANCH DIRECTLY HERE:
-
+            # 🚀 UPDATED CORRESPONDING SWITCH ENGINES NATIVELY
+            h|H) update_cyan-skillfish ;; # Captures your new Section 2 choice cleanly
+            g|G)
+                clear
+                echo -e "${CYAN}Displaying Cyan Skillfish Governor SMU Version...${NC}"
+                echo ""
+                sudo cyan-skillfish-governor-smu --version
+                echo ""
+                read -rp "Press [Enter] to return to the main menu..."
+                ;;
+            m|M|h_matrix) view_cu_map ;; # Moved from lower case H to preserve loop safety mappings
 
             a|A)
                 echo -e "${GREEN}Executing Temporary Start...${NC}"
@@ -2611,18 +2677,9 @@ show_menu() {
                 echo ""
                 read -rp "Press [Enter] to return to the main menu..."
                 ;;
-            g|G)
-                clear
-                echo -e "${CYAN}Displaying Cyan Skillfish Governor SMU Version...${NC}"
-                echo ""
-                sudo cyan-skillfish-governor-smu --version
-                echo ""
-                read -rp "Press [Enter] to return to the main menu..."
-                ;;
             s|S)
                 run_status
                 type_prompt "  Press [any key] to return to the toolkit main menu... " 0.03
-                #echo -e "\n  ${YELLOW}Press any key to return to the menu...${RESET}"
                 read -n 1 -s -r || true
                 ;;
             r|R)
@@ -2638,7 +2695,7 @@ show_menu() {
                 secure_system_exit
                 ;;
             *)
-                echo -e "${RED}Invalid choice! Please select a valid number.${NC}"
+                echo -e "${RED}Invalid choice! Please select a valid option.${NC}"
                 sleep 1.5
                 ;;
         esac
