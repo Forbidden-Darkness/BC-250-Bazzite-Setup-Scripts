@@ -799,9 +799,9 @@ launch_tuning_menu() {
                         local sandbox_threads=$(nproc 2>/dev/null || echo "12")
                         if [[ "$live_threads" =~ ^[0-9]+$ ]] && [ "$live_threads" -gt 0 ]; then sandbox_threads="$live_threads"; fi
                         echo -e "\n  ${YELLOW}[●] Initializing Sandbox Stability Sweep Utilizing ${sandbox_threads} Threads...${NC}"
-                        stress --cpu "$sandbox_threads" --timeout 10 >> "$LOG_FILE" 2>&1 &
+                        stress --cpu "$sandbox_threads" --timeout 150 >> "$LOG_FILE" 2>&1 &
                         local stress_pid=$!
-                        local seconds_left=10
+                        local seconds_left=150
                         while kill -0 "$stress_pid" 2>/dev/null; do
                             echo -ne "      Stability validation testing in progress... ${RED}${seconds_left}s${CYAN} remaining...${RESET}\r"
                             sleep 1
