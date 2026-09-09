@@ -672,36 +672,34 @@ launch_tuning_menu() {
         local target_dir="."
         if [ -d "$REAL_HOME/Bazzite_Toolbox/Overclock" ]; then target_dir="$REAL_HOME/Bazzite_Toolbox/Overclock"; fi
 
-        case "$tune_choice" in
+                case "$tune_choice" in
             1) 
-                log "${GREEN}Launching 40/40 CU - Extreme Overclock...${NC}"
-                bc250-detect -f 3500 -v 1000 -t 85 -k
+                log "${GREEN}Staging 40/40 CU - Extreme Overclock template...${NC}"
+                # 🧬 Unified Structured Text Layout: Perfectly matches your patched Python driver
+                printf "[overclock]\nfrequency=3500\nscale=-19\nmax_temperature=85\nkeep=True\n" > "$target_dir/overclock.conf"
                 run_preset_stress_flow
                 ;;
             2) 
                 log "${GREEN}Staging 40/40 CU - High-Efficiency template...${NC}"
-                # 🧬 Pure Text Framework configuration generation skips calibration deadlocks entirely
-                printf "frequency=3000\nvid=920\ntemperature=78\nkeep=True\n" > "$target_dir/overclock.conf"
+                printf "[overclock]\nfrequency=3000\nscale=-19\nmax_temperature=78\nkeep=True\n" > "$target_dir/overclock.conf"
                 run_preset_stress_flow
                 ;;
             3) 
-                log "${GREEN}Launching 38/40 CU - Extreme Overclock...${NC}"
-                bc250-detect -f 3500 -v 1020 -t 85 -k
+                log "${GREEN}Staging 38/40 CU - Extreme Overclock template...${NC}"
+                printf "[overclock]\nfrequency=3500\nscale=-19\nmax_temperature=85\nkeep=True\n" > "$target_dir/overclock.conf"
                 run_preset_stress_flow
                 ;;
             4) 
                 log "${GREEN}Staging 38/40 CU - Balanced Gaming template...${NC}"
-                # 🧬 Pure Text Framework configuration generation skips calibration deadlocks entirely
-                printf "frequency=3000\nvid=945\ntemperature=80\nkeep=True\n" > "$target_dir/overclock.conf"
+                printf "[overclock]\nfrequency=3000\nscale=-19\nmax_temperature=80\nkeep=True\n" > "$target_dir/overclock.conf"
                 run_preset_stress_flow
                 ;;
             5) 
-                log "${GREEN}Staging 36/40 CU - Silent / Eco Core...${NC}"
-                # 🧬 Pure Text Framework configuration generation skips calibration deadlocks entirely
-                printf "frequency=2800\nvid=890\ntemperature=75\nkeep=True\n" > "$target_dir/overclock.conf"
+                log "${GREEN}Staging 36/40 CU - Silent / Eco Core template...${NC}"
+                printf "[overclock]\nfrequency=2800\nscale=-19\nmax_temperature=75\nkeep=True\n" > "$target_dir/overclock.conf"
                 run_preset_stress_flow
                 ;;
-            6|7)
+                        6|7)
                 while true; do
                     clear
                     echo -e "${YELLOW}====================================================${NC}"
@@ -726,18 +724,15 @@ launch_tuning_menu() {
                     done
                     log "${GREEN}Running custom tuning profile optimization...${NC}"
                     
-                    if [ "$custom_freq" -lt 3500 ]; then
-                        printf "frequency=%s\nvid=%s\ntemperature=%s\nkeep=True\n" "$custom_freq" "$custom_vid" "$custom_temp" > "$target_dir/overclock.conf"
-                    else
-                        bc250-detect -f "$custom_freq" -v "$custom_vid" -t "$custom_temp" -k
-                    fi
+                    # 🧬 Beautiful, 100% unified template generation for all custom entries!
+                    printf "[overclock]\nfrequency=%s\nscale=-19\nmax_temperature=%s\nkeep=True\n" "$custom_freq" "$custom_temp" > "$target_dir/overclock.conf"
                     
                     if [ "$tune_choice" = "6" ]; then
                         run_preset_stress_flow
                     else
                         local sandbox_threads=$(nproc 2>/dev/null || echo "12")
                         if [[ "$live_threads" =~ ^[0-9]+$ ]] && [ "$live_threads" -gt 0 ]; then sandbox_threads="$live_threads"; fi
-                        echo -ne "\n  ${YELLOW}[●] Initializing Sandbox Stability Sweep Utilizing ${sandbox_threads} Threads...${NC}"
+                        echo -e "\n  ${YELLOW}[●] Initializing Sandbox Stability Sweep Utilizing ${sandbox_threads} Threads...${NC}"
                         stress --cpu "$sandbox_threads" --timeout 150 >> "$LOG_FILE" 2>&1 &
                         local stress_pid=$!
                         local seconds_left=150
