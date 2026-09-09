@@ -727,7 +727,7 @@ launch_tuning_menu() {
                 while true; do
                     clear
                     echo -e "  ${CYAN}╔═════════════════════════════════════════════════════════════════════════════════════════════╗${NC}"
-    echo -e "  ${CYAN}║                    ${BOLD}${BICyan}BC-250 SILICON VOLTAGE & THERMAL SCALING MATRIX${NC}                   ${CYAN}║${NC}"
+    echo -e "  ${CYAN}║                    ${BOLD}${BICyan}BC-250 SILICON VOLTAGE & THERMAL SCALING MATRIX${NC}                                       ${CYAN}║${NC}"
     echo -e "  ${CYAN}╚═════════════════════════════════════════════════════════════════════════════════════════════╝${NC}"
     printf "     ${BOLD}%-15s │ %-18s │ %-12s │ %-34s${RESET}\n" "Freq Block" "Voltage (VID)" "Thermal Load" "Silicon Performance Profile"
     echo -e "     ${BIBlack}────────────────┼────────────────────┼──────────────┼──────────────────────────────────${NC}"
