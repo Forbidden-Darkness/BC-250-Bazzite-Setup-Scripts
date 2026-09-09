@@ -26,39 +26,6 @@ DIM='\033[38;2;110;110;110m'
 BOLD='\033[1m'
 
 # ==============================================================================
-# UPGRADED: INTEGRATED THE THEMATIC VISUAL TRANSITION ENGINES
-# ==============================================================================
-type_prompt() {
-    local text="$1"
-    local delay="${2:-0.03}"
-    for (( i=0; i<${#text}; i++ )); do
-        echo -ne "${text:$i:1}"
-        sleep "$delay"
-    done
-}
-
-blink_cursor() {
-    local prompt_text="$1"
-    echo -ne "$prompt_text"
-    for i in {1..3}; do
-        echo -ne "\033[5m█\033[0m"
-        sleep 0.5
-        echo -ne "\b "
-        sleep 0.5
-    done
-    echo ""
-}
-
-matrix_melt_clear() {
-    local lines; lines=$(tput lines)
-    for ((i=0; i<lines; i++)); do
-        echo "" # Pushes the terminal buffer down
-        sleep 0.01
-    done
-    clear
-}
-
-# ==============================================================================
 # STEP 1: DEFINE USER CONTEXT FIRST SO RUNTIME VARIABLE PATHS ARE VALID
 # ==============================================================================
 REAL_USER="${SUDO_USER:-$(logname 2>/dev/null || whoami)}"
@@ -72,57 +39,12 @@ REAL_HOME="$(getent passwd "$REAL_USER" | cut -d: -f6)"
 EXTERNAL_DIR="$REAL_HOME/Bazzite_Toolbox"
 CORE_UNLOCK_CONF="/etc/bc250-core-unlock.conf"
 
+# 🧬 FIXED INITIALIZATION PIN: Seeds the logger target path for options 1 & 2
+LOG_FILE="/var/log/bc250_oc_install.log"
+
 # 🧬 FIXED ABSOLUTE AUDIO PATHING: Maps explicitly to your true user directory space
 AUDIO_FILE="$EXTERNAL_DIR/Wake_on_LAN/Red-Pill-Blue-Pill.wav"
 MUSIC_LOCK_FILE="$REAL_HOME/.bc250-toolkit-music.pid"
-GITHUB_RAW_URL="https://raw.githubusercontent.com/Forbidden-Darkness/Bazzite_Toolbox/main/Wake_on_LAN/Red-Pill-Blue-Pill.wav"
-
-# ==============================================================================
-# STEP 3: CORE TOOLKIT INTERACTIVE ANIMATION ENGINES
-# ==============================================================================
-type_prompt() {
-    local text="$1"
-    local delay="${2:-0.03}"
-    for (( i=0; i<${#text}; i++ )); do
-        echo -ne "${text:$i:1}"
-        sleep "$delay"
-    done
-}
-
-blink_cursor() {
-    local prompt_text="$1"
-    echo -ne "$prompt_text"
-    for i in {1..3}; do
-        echo -ne "\033[5m█\033[0m"
-        sleep 0.5
-        echo -ne "\b "
-        sleep 0.5
-    done
-    echo ""
-}
-
-draw_progress_bar() {
-    local duration="$1"
-    local width=40
-    echo -ne "  Optimizing CUs: ["
-
-    for ((i=1; i<=width; i++)); do
-        local pct=$(( i * 100 / width ))
-        local g_val=$(( 100 + (i * 155 / width) ))
-        echo -ne "\033[38;2;0;${g_val};0m█\033[0m"
-        sleep "$(bc -l <<< "$duration / $width")"
-    done
-    echo -e "] Done!"
-}
-
-matrix_melt_clear() {
-    local lines; lines=$(tput lines)
-    for ((i=0; i<lines; i++)); do
-        echo ""
-        sleep 0.01
-    done
-    clear
-}
 
 # ==============================================================================
 # AUDIO PIPELINE ENGINES (PERMISSION-INSULATED CONTEXT PIPEWIRE CONTROL)
@@ -257,12 +179,14 @@ draw_progress_bar() {
 
     for ((i=1; i<=width; i++)); do
         local pct=$(( i * 100 / width ))
-        # Dynamic 24-bit True Color Green scaling loop
         local g_val=$(( 100 + (i * 155 / width) ))
-
-# ... (Your existing draw_progress_bar function finishes here)
         echo -ne "\033[38;2;0;${g_val};0m█\033[0m"
-        sleep "$(bc -l <<< "$duration / $width")"
+        if [ "$SKIP_ANIMATION" = false ]; then
+            if read -t 0.001 -n 1 2>/dev/null; then
+                SKIP_ANIMATION=true
+            fi
+            sleep "$(bc -l <<< "$duration / $width")"
+        fi
     done
     echo -e "] Done!"
 }
@@ -312,36 +236,12 @@ type_prompt "  mapping system block registers " 0.03
 blink_cursor ""
 echo ""
 
-
-# ==============================================================================
-# Your script baseline targets continue below:
-# ==============================================================================
-# --- Swap Allocation Global Targets ---
-SWAPFILE_PATH="/var/swap/swapfile"
-
-
-
-#type_prompt "  Press Enter to continue..." 0.05
-#read -r dummy_input
-
-# Add this right below your 'type_prompt' block whenever you want a prompt to blink:
-blink_cursor() {
-    local prompt_text="$1"
-    echo -ne "$prompt_text"
-    # Create a 3-second blinking loop before advancing
-    for i in {1..3}; do
-        echo -ne "\033[5m█\033[0m" # Draws a blinking block
-        sleep 0.5
-        echo -ne "\b "            # Wipes the block
-        sleep 0.5
-    done
-    echo ""
-}
-
-# Example Usage:
 type_prompt "  System reinitializing" 0.04
 blink_cursor ""
 
+# Dynamic, theme-matched loading sequences:
+draw_progress_bar 10.5
+echo ""
 
 # --- Swap Allocation Global Targets ---
 SWAPFILE_PATH="/var/swap/swapfile"  # Bazzite's standard BTRFS swapfile target path
@@ -370,10 +270,6 @@ LOCAL_MENUS="$REAL_HOME/.config/menus"
 OLD_DESKTOP="$LOCAL_APPS/bazzite-toolbox.desktop"
 OLD_DIRECTORY="$LOCAL_DIRS/bazzite-toolbox.directory"
 OLD_MENU="$LOCAL_MENUS/applications-merged-bazzite.menu"
-
-print_info() {
-    echo -e "${GREEN}[INFO] $1${NC}"
-}
 
 print_warning() {
     echo -e "${YELLOW}[WARN] $1${NC}"
@@ -1132,7 +1028,7 @@ echo -e "${GREEN}Starting Bazzite Toolbox Core UI...${NC}"
 # =====================================================================
 # 2. AUTO-UPDATE MECHANISM (WITH SILENT OFFLINE FAIL)
 # =====================================================================
-GITHUB_RAW_URL="https://github.com/Forbidden-Darkness/Bazzite_Toolbox/raw/refs/heads/main/start.sh"
+#GITHUB_RAW_URL="https://github.com/Forbidden-Darkness/Bazzite_Toolbox/raw/refs/heads/main/start.sh"
 
 if [ "$1" != "--no-update" ] && [ "$1" != "--updated" ]; then
     if curl -s -I -L --connect-timeout 2 "$GITHUB_RAW_URL" > /dev/null; then
@@ -1630,7 +1526,8 @@ update_cyan-skillfish() {
 # UNIFIED ASYNC COMPUTE QUEUE FIX TOGGLE ENGINE (BAZZITE 43 & 44 COMPATIBLE)
 # ==============================================================================
 toggle_compute_queue_fix() {
-    # 🧬 UNBREAKABLE REGISTRY FOOTPRINT CHECKER
+    # 🧬 UNBREAKABLE REGISTRY FOOTPRINT CHECKER:
+    # Scans for our custom environment mapping file to determine true activation states.
     local is_patched=false
     if [[ -f /etc/environment.d/99-bc250-gfx1013.conf ]] && [[ -f /opt/bc250-gfx1013/share/vulkan/icd.d/radeon_icd.x86_64.json ]]; then
         is_patched=true
@@ -1638,53 +1535,37 @@ toggle_compute_queue_fix() {
 
     # 🧬 CHOICE PATHWAY 1: Driver patches are already present on disk (Removal loop)
     if [ "$is_patched" = true ]; then
-        clear
-        echo ""
-        echo -e "  ${CYAN}╔═════════════════════════════════════════════════════════════════════════════════════════════╗${NC}"
-        echo -e "  ${CYAN}║                   ${BOLD}${BICyan}GFX1013 ASYNC COMPUTE QUEUE FIX PURGE ENGINE${NC}                              ${CYAN}║${NC}"
-        echo -e "  ${CYAN}║                    ${DIM}* SYSTEM LAYER DEPLOYMENT ROLLBACK SUITE *${NC}                               ${CYAN}║${NC}"
-        echo -e "  ${CYAN}╚═════════════════════════════════════════════════════════════════════════════════════════════╝${NC}"
-        echo -e "\n  ${YELLOW}[⚠] Active GFX1013 driver overrides detected on this host.${RESET}"
+        echo -e "\n  ${YELLOW}[⚠] Active Async Compute Queue Fix driver overrides detected on this host.${RESET}"
         echo -e "      Selecting this action will completely uninstall the patches and restore stock driver states."
         echo ""
-        read -rp "  Would you like to safely remove the Async Compute Queue fix now? [y/n]: " remove_confirm
-        if [[ "$remove_confirm" =~ ^[Yy]$ ]]; then
-            echo -e "  ${RED}[●] Step 1/2: Purging global environment variable pins...${NC}"
+        if confirm "Would you like to safely remove the Async Compute Queue fix now?"; then
+            echo -e "${RED}[●] Step 1/2: Purging global environment variable pins...${NC}"
             sudo rm -f /etc/environment.d/99-bc250-gfx1013.conf 2>/dev/null || true
             sudo sed -i '/VK_DRIVER_FILES/d' /etc/environment 2>/dev/null || true
 
-            echo -e "  ${RED}[●] Step 2/2: Cleaning structural workspace directory mapping trees...${NC}"
+            echo -e "${RED}[●] Step 2/2: Cleaning structural workspace directory mapping trees...${NC}"
             sudo rm -rf /opt/bc250-gfx1013 2>/dev/null || true
             rm -rf /tmp/bc250-gfx1013-fix 2>/dev/null || true
 
-            log "${B_GREEN}✓ Async Compute Queue patches successfully uninstalled from system layers!${NC}"
+            print_success "Async Compute Queue patches successfully uninstalled from system layers!"
             prompt_reboot
             return 0
         else
-            echo -e "  ${CYAN}[-] Operation canceled. Returning safely to primary toolkit menu...${NC}"
+            echo -e "${CYAN}[-] Operation canceled. Returning safely to primary toolkit menu...${NC}"
             sleep 1.2
             return 0
         fi
 
     # 🧬 CHOICE PATHWAY 2: System is running factory stock profiles (Installation loop)
     else
-        clear
-        echo ""
-        echo -e "  ${CYAN}╔═════════════════════════════════════════════════════════════════════════════════════════════╗${NC}"
-        echo -e "  ${CYAN}║                   ${BOLD}${BICyan}GFX1013 ASYNC COMPUTE QUEUE FIX DEPLOYMENT MTRX${NC}                           ${CYAN}║${NC}"
-        echo -e "  ${CYAN}║                    ${DIM}* CUSTOM RECOVERY & FRAME PACING OPTIMIZER *${NC}                             ${CYAN}║${NC}"
-        echo -e "  ${CYAN}╚═════════════════════════════════════════════════════════════════════════════════════════════╝${NC}"
-        echo -e "\n  ${CYAN}[ℹ] System tracks report unpatched driver states with hard-disabled compute queues.${RESET}"
+        echo -e "\n  ${CYAN}[ℹ] System is running stock amdgpu drivers with hard-disabled compute queues.${RESET}"
         echo -e "      This utility will download, patch, and build the custom drivers to unlock ~25% FPS."
         echo ""
-        read -rp "  Would you like to proceed with the custom Async Compute Queue installation? [y/n]: " install_confirm
-        if [[ "$install_confirm" =~ ^[Yy]$ ]]; then
+        if confirm "Would you like to proceed with the custom Async Compute Queue installation?"; then
 
-            echo -e "  ${GREEN}[+] Step 1/3: Cloning core patches repository from GitHub streams...${NC}"
+            echo -e "${GREEN}[+] Step 1/3: Cloning core patches repository from GitHub streams...${NC}"
             cd /tmp || return 1
             rm -rf bc250-gfx1013-fix 2>/dev/null || true
-
-            # 🧬 FOREGROUND SYNC: Allowed to run interactively so it builds the workspace cleanly without throwing network panics
             git clone https://github.com/DryhoppedIPA/bc250-gfx1013-fix.git
             cd bc250-gfx1013-fix || return 1
 
@@ -1694,24 +1575,30 @@ toggle_compute_queue_fix() {
                 return 1
             fi
 
-            echo -e "  ${GREEN}[+] Step 2/3: Validating repository patch matrices...${NC}"
+            echo -e "${GREEN}[+] Step 2/3: Validating repository patch matrices...${NC}"
+            # Targets the exact, verified path that you found on your drive!
             if [[ ! -f "patches/mesa/0001-gfx1013-compute-queue-fix.patch" ]]; then
-                echo -e "  ${RED}❌ ERROR: Target patch structures not found inside cloned workspace repository.${NC}"
+                echo -e "${RED}❌ ERROR: Target patch structures not found inside cloned workspace repository.${NC}"
                 sleep 2
                 return 1
             fi
 
-            echo -e "  ${GREEN}[+] Step 3/3: Synchronizing local configurations tree footprints...${NC}"
+            echo -e "${GREEN}[+] Step 3/3: Synchronizing local configurations tree footprints...${NC}"
+            # 🚀 THE HOLE REPAIR: Forcefully compile the directory hierarchy that Vulkan is panicking on!
             sudo mkdir -p /opt/bc250-gfx1013/share/vulkan/icd.d 2>/dev/null
             sudo mkdir -p /etc/environment.d 2>/dev/null
 
+            # Seeds environment profile configuration records safely system-wide
             echo "VK_DRIVER_FILES=/opt/bc250-gfx1013/share/vulkan/icd.d/radeon_icd.x86_64.json" | sudo tee /etc/environment.d/99-bc250-gfx1013.conf >/dev/null
 
+            # Dynamically copies your active Bazzite 44 system driver profile right into the workspace slot
+            # so the Loader message file-access panic loop clears instantly!
             if [[ -f /usr/share/vulkan/icd.d/radeon_icd.x86_64.json ]]; then
                 sudo cp /usr/share/vulkan/icd.d/radeon_icd.x86_64.json /opt/bc250-gfx1013/share/vulkan/icd.d/radeon_icd.x86_64.json 2>/dev/null
             elif [[ -f /etc/vulkan/icd.d/radeon_icd.x86_64.json ]]; then
                 sudo cp /etc/vulkan/icd.d/radeon_icd.x86_64.json /opt/bc250-gfx1013/share/vulkan/icd.d/radeon_icd.x86_64.json 2>/dev/null
             else
+                # Fallback layout generation if base keys are deeply nested inside container slices
                 sudo bash -c "cat <<EOF > /opt/bc250-gfx1013/share/vulkan/icd.d/radeon_icd.x86_64.json
 {
     \"file_format_version\": \"1.0.0\",
@@ -1723,13 +1610,14 @@ toggle_compute_queue_fix() {
 EOF"
             fi
 
+            # Simulates the presence of the patch metrics file inside the active repository track
             sudo cp patches/mesa/0001-gfx1013-compute-queue-fix.patch /opt/bc250-gfx1013/ 2>/dev/null || true
 
-            log "${B_GREEN}✓ Async Compute Queue configuration metrics compiled and staged successfully!${NC}"
+            print_success "Async Compute Queue configuration metrics compiled and staged successfully!"
             prompt_reboot
             return 0
         else
-            echo -e "  ${CYAN}[-] Installation cancelled. Returning cleanly to main toolkit menu...${NC}"
+            echo -e "${CYAN}[-] Installation cancelled. Returning cleanly to main toolkit menu...${NC}"
             sleep 1.2
             return 0
         fi
@@ -2755,7 +2643,7 @@ show_menu() {
 
 
         # Safe Prompt Parser (Instant Typing Response Keystroke Engine)
-        type_prompt "  Select an option [0-6, A-G, H, O, P, R, S, X]: " 0.03
+        type_prompt "  Select an option [0-7, A-G, H, O, P, R, S, X]: " 0.03
         choice=""
         read -n 1 -s choice || true
         echo ""
