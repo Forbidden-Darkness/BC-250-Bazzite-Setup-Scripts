@@ -225,24 +225,6 @@ finalize_settings() {
     fi
     read -p "Press [Enter] to return to the tuning menu..."
 }
-stress_settings() {
-    log "${GREEN}[Step 9] Stressing CPU...${NC}"
-    stress --cpu 16 --timeout 150 >> "$LOG_FILE" 2>&1
-
-    # 🧬 Check if the service actually exists before trying to touch it!
-    if [[ -f "/etc/systemd/system/bc250-smu-oc.service" ]]; then
-        sudo systemctl daemon-reload >> "$LOG_FILE" 2>&1
-        sudo systemctl restart bc250-smu-oc.service >> "$LOG_FILE" 2>&1
-        sudo systemctl enable bc250-smu-oc.service >> "$LOG_FILE" 2>&1
-        clear
-        echo -e "${YELLOW}--- Current SMU Service Status ${RED}Press [Enter] to return to menu ---${NC}"
-        sudo systemctl status bc250-smu-oc.service
-    else
-        clear
-        echo -e "${GREEN}[✓] Stress test completed! Toolchain installation required to monitor live background service.${NC}"
-    fi
-    read -p "Press [Enter] to return to the tuning menu..."
-}
 
 run_cpu_core_stress_test() {
     clear
@@ -659,6 +641,7 @@ launch_tuning_menu() {
         echo -e "    ${CYAN}3)${NC} 38/40 CU - Extreme Overclock  ${BIBlack}───${NC}  3500 MHz  @  1020 mV  ${BIBlack}│${NC}  Max 85°C"
         echo -e "    ${CYAN}4)${NC} 38/40 CU - Balanced Gaming    ${BIBlack}───${NC}  3000 MHz  @   945 mV  ${BIBlack}│${NC}  Max 80°C"
         echo -e "    ${CYAN}5)${NC} 36/40 CU - Silent / Eco Core  ${BIBlack}───${NC}  2800 MHz  @   890 mV  ${BIBlack}│${NC}  Max 75°C"
+        echo -e "    ${RED}W)${NC} 40/40 CU - WATER-COOLED BEAST ${BIBlack}───${NC}  3850 MHz  @  1150 mV  ${RED}│  AIO/WATER REQ.${NC}"
         echo ""
         echo -e "    ${BIGreen}6) Manual Custom Profile${NC}       ${BIBlack}(Fill MHz, mV, Max Temp manually)${NC}"
         echo -e "    ${BIGreen}7) Manual Test Profile${NC}         ${BIBlack}(Fill MHz, mV, Max Temp for safety test)${NC}"
@@ -666,16 +649,14 @@ launch_tuning_menu() {
         echo -e "    ${RED}↵) Return to Main Menu${NC}         ${BIBlack}(Skip auto-tuning routine)${NC}"
         echo -e "  ${BIBlack}─────────────────────────────────────────────────────────────────────${NC}"
         echo ""
-        read -p "  Enter selection [1-7, ↵]: " tune_choice
+        read -p "  Enter selection [1-7, W, ↵]: " tune_choice
 
-        # Resolves exact drive storage target folders dynamically
         local target_dir="."
         if [ -d "$REAL_HOME/Bazzite_Toolbox/Overclock" ]; then target_dir="$REAL_HOME/Bazzite_Toolbox/Overclock"; fi
 
-                case "$tune_choice" in
+        case "$tune_choice" in
             1) 
                 log "${GREEN}Staging 40/40 CU - Extreme Overclock template...${NC}"
-                # 🧬 Unified Structured Text Layout: Perfectly matches your patched Python driver
                 printf "[overclock]\nfrequency=3500\nscale=-19\nmax_temperature=85\nkeep=True\n" > "$target_dir/overclock.conf"
                 run_preset_stress_flow
                 ;;
@@ -699,7 +680,26 @@ launch_tuning_menu() {
                 printf "[overclock]\nfrequency=2800\nscale=-19\nmax_temperature=75\nkeep=True\n" > "$target_dir/overclock.conf"
                 run_preset_stress_flow
                 ;;
-                        6|7)
+            w|W)
+                clear
+                echo -e "${RED}╔═════════════════════════════════════════════════════════════════════════════════════════════╗${NC}"
+                echo -e "${RED}║ [⚠] CRITICAL SAFETY WARNING: CUSTOM WATER COOLING LOOP REQURED FOR 3850MHz                 ║${NC}"
+                echo -e "${RED}╠═════════════════════════════════════════════════════════════════════════════════════════════╣${NC}"
+                echo -e "${RED}║ Running 1150mV on basic air cooling WILL cause rapid thermal degradation or instant crash.   ║${NC}"
+                echo -e "${RED}║ DO NOT proceed unless you have verified custom liquid block mounting active.               ║${NC}"
+                echo -e "${RED}╚═════════════════════════════════════════════════════════════════════════════════════════════╝${NC}"
+                echo ""
+                read -rp "  Type 'RUN' to confirm you are water cooled, or press Enter to abort: " water_confirm
+                if [[ "$water_confirm" != "RUN" ]]; then
+                    echo -e "${YELLOW}Operation aborted safely. Returning to menu...${NC}"
+                    sleep 2
+                    continue
+                fi
+                log "${RED}Staging 40/40 CU - Water-Cooled Extreme Beast Mode template...${NC}"
+                printf "[overclock]\nfrequency=3850\nscale=-19\nmax_temperature=90\nkeep=True\n" > "$target_dir/overclock.conf"
+                run_preset_stress_flow
+                ;;
+            6|7)
                 while true; do
                     clear
                     echo -e "${YELLOW}====================================================${NC}"
@@ -724,7 +724,6 @@ launch_tuning_menu() {
                     done
                     log "${GREEN}Running custom tuning profile optimization...${NC}"
                     
-                    # 🧬 Beautiful, 100% unified template generation for all custom entries!
                     printf "[overclock]\nfrequency=%s\nscale=-19\nmax_temperature=%s\nkeep=True\n" "$custom_freq" "$custom_temp" > "$target_dir/overclock.conf"
                     
                     if [ "$tune_choice" = "6" ]; then
@@ -755,7 +754,7 @@ launch_tuning_menu() {
                 done
                 ;;
             0|"") echo "Exiting."; exit 0 ;;
-            *) echo -e "${RED}Invalid option selected. Please enter [1-7].${NC}"; sleep 2 ;;
+            *) echo -e "${RED}Invalid option selected. Please enter [1-7, W].${NC}"; sleep 2 ;;
         esac
     done
 }
