@@ -679,11 +679,9 @@ launch_tuning_menu() {
                 run_preset_stress_flow
                 ;;
             2) 
-                log "${GREEN}Launching 40/40 CU - High-Efficiency profile...${NC}"
-                bc250-detect -f 3500 -v 920 -t 78 -k >/dev/null 2>&1
-                
-                # 🧬 Ghost-Profile Override: Safely updates frequency down to your custom target
-                if [ -f "$target_dir/overclock.conf" ]; then sed -i "s/frequency=.*/frequency=3000/g" "$target_dir/overclock.conf" 2>/dev/null || true; fi
+                log "${GREEN}Staging 40/40 CU - High-Efficiency template...${NC}"
+                # 🧬 Pure Text Framework configuration generation skips calibration deadlocks entirely
+                printf "frequency=3000\nvid=920\ntemperature=78\nkeep=True\n" > "$target_dir/overclock.conf"
                 run_preset_stress_flow
                 ;;
             3) 
@@ -692,19 +690,15 @@ launch_tuning_menu() {
                 run_preset_stress_flow
                 ;;
             4) 
-                log "${GREEN}Launching 38/40 CU - Balanced Gaming sweet spot...${NC}"
-                bc250-detect -f 3500 -v 945 -t 80 -k >/dev/null 2>&1
-                
-                # 🧬 Ghost-Profile Override: Safely updates frequency down to your custom target
-                if [ -f "$target_dir/overclock.conf" ]; then sed -i "s/frequency=.*/frequency=3000/g" "$target_dir/overclock.conf" 2>/dev/null || true; fi
+                log "${GREEN}Staging 38/40 CU - Balanced Gaming template...${NC}"
+                # 🧬 Pure Text Framework configuration generation skips calibration deadlocks entirely
+                printf "frequency=3000\nvid=945\ntemperature=80\nkeep=True\n" > "$target_dir/overclock.conf"
                 run_preset_stress_flow
                 ;;
             5) 
-                log "${GREEN}Launching 36/40 CU - Silent / Eco Core...${NC}"
-                bc250-detect -f 3500 -v 890 -t 75 -k >/dev/null 2>&1
-                
-                # 🧬 Ghost-Profile Override: Safely updates frequency down to your custom target
-                if [ -f "$target_dir/overclock.conf" ]; then sed -i "s/frequency=.*/frequency=2800/g" "$target_dir/overclock.conf" 2>/dev/null || true; fi
+                log "${GREEN}Staging 36/40 CU - Silent / Eco Core...${NC}"
+                # 🧬 Pure Text Framework configuration generation skips calibration deadlocks entirely
+                printf "frequency=2800\nvid=890\ntemperature=75\nkeep=True\n" > "$target_dir/overclock.conf"
                 run_preset_stress_flow
                 ;;
             6|7)
@@ -733,8 +727,7 @@ launch_tuning_menu() {
                     log "${GREEN}Running custom tuning profile optimization...${NC}"
                     
                     if [ "$custom_freq" -lt 3500 ]; then
-                        bc250-detect -f 3500 -v "$custom_vid" -t "$custom_temp" -k >/dev/null 2>&1
-                        if [ -f "$target_dir/overclock.conf" ]; then sed -i "s/frequency=.*/frequency=$custom_freq/g" "$target_dir/overclock.conf" 2>/dev/null || true; fi
+                        printf "frequency=%s\nvid=%s\ntemperature=%s\nkeep=True\n" "$custom_freq" "$custom_vid" "$custom_temp" > "$target_dir/overclock.conf"
                     else
                         bc250-detect -f "$custom_freq" -v "$custom_vid" -t "$custom_temp" -k
                     fi
@@ -744,7 +737,7 @@ launch_tuning_menu() {
                     else
                         local sandbox_threads=$(nproc 2>/dev/null || echo "12")
                         if [[ "$live_threads" =~ ^[0-9]+$ ]] && [ "$live_threads" -gt 0 ]; then sandbox_threads="$live_threads"; fi
-                        echo -e "\n  ${YELLOW}[●] Initializing Sandbox Stability Sweep Utilizing ${sandbox_threads} Threads...${NC}"
+                        echo -ne "\n  ${YELLOW}[●] Initializing Sandbox Stability Sweep Utilizing ${sandbox_threads} Threads...${NC}"
                         stress --cpu "$sandbox_threads" --timeout 150 >> "$LOG_FILE" 2>&1 &
                         local stress_pid=$!
                         local seconds_left=150
