@@ -654,7 +654,7 @@ launch_tuning_menu() {
         echo -e "  ${CYAN}╚═══════════════════════════════════════════════════════════════════╝${NC}"
         echo ""
         echo -e "  ${YELLOW}Select a baseline template for your hardware variant:${NC}"
-        echo -e "  ${BIBlack}─────────────────────────────────────────────────────────────────────${NC}"
+        echo -e "  ${BIBlack}──────────────────────────────────────────────────────────────────────────${NC}"
         echo -e "    ${CYAN}1)${NC} 40/40 CU - Extreme Overclock  ${BIBlack}───${NC}  3500 MHz  @  1000 mV  ${BIBlack}│${NC}  Max 85°C"
         echo -e "    ${CYAN}2)${NC} 40/40 CU - High-Efficiency    ${BIBlack}───${NC}  3000 MHz  @   920 mV  ${BIBlack}│${NC}  Max 78°C"
         echo -e "    ${RED}W)${NC} 40/40 CU - WATER-COOLED BEAST ${BIBlack}───${NC}  3850 MHz  @  1150 mV  ${RED}│  AIO/WATER REQ.${NC}"
@@ -665,8 +665,8 @@ launch_tuning_menu() {
         echo -e "    ${BIGreen}6) Manual Custom Profile${NC}       ${BIBlack}(Fill MHz, mV, Max Temp manually)${NC}"
         echo -e "    ${BIGreen}7) Manual Custom Sandbox${NC}       ${BIBlack}(Test parameters safely without saving)${NC}"
         echo ""
-        echo -e "    ${RED}↵) Return to BC-250 CPU OVERCLOCK & Compute Unit Live Manager Setup Tool ${NC}         ${BIBlack}(Skip auto-tuning routine)${NC}"
-        echo -e "  ${BIBlack}─────────────────────────────────────────────────────────────────────${NC}"
+        echo -e "    ${RED}↵) Return to BC-250 CPU OVERCLOCK & Compute Unit Live Manager Setup Tool ${NC}    ${BIBlack}(Skip auto-tuning routine)${NC}"
+        echo -e "  ${BIBlack}──────────────────────────────────────────────────────────────────────────${NC}"
         echo ""
         read -p "  Enter selection [1-7, W, ↵]: " tune_choice
 
