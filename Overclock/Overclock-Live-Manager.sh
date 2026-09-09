@@ -307,11 +307,14 @@ configure_governor_profile() {
     echo -e "  ${CYAN}╚═════════════════════════════════════════════════════════════════════════════════════════════╝${NC}"
     echo ""
 
-    # 📋 AUDIT NO. 1: COOLING INFRASTRUCTURE
-    echo -e "  ${BOLD}${BLUE}[1/5] Select the physical cooling system configuration currently active:${RESET}"
-    echo -e "    1) Stock / Factory OEM Basic Air Cooler"
-    echo -e "    2) High-End Aftermarket Air Cooled (Heavy Fin Stack / High CFM Fans)"
-    echo -e "    3) Liquid Cooled / AIO Closed Loop / Custom Water Block"
+        # 📋 AUDIT NO. 1: COOLING INFRASTRUCTURE
+    echo -e "  ${CYAN}╔═ [1/5] HARDWARE AUDIT: COOLING INFRASTRUCTURE ══════════════════════════════════════════════╗${NC}"
+    echo -e "  ${CYAN}║${NC}  Select the physical cooling system configuration currently active on this node:          ${CYAN}║${NC}"
+    echo -e "  ${CYAN}╠═════════════════════════════════════════════════════════════════════════════════════════════╣${NC}"
+    echo -e "  ${CYAN}║${NC}   ${BIWhite}1)${NC} Stock / Factory OEM Basic Air Cooler                                                 ${CYAN}║${NC}"
+    echo -e "  ${CYAN}║${NC}   ${BIWhite}2)${NC} High-End Aftermarket Air Cooled (Heavy Fin Stack / High CFM Fans)                    ${CYAN}║${NC}"
+    echo -e "  ${CYAN}║${NC}   ${BIWhite}3)${NC} Liquid Cooled / AIO Closed Loop / Custom Water Block                                   ${CYAN}║${NC}"
+    echo -e "  ${CYAN}╚═════════════════════════════════════════════════════════════════════════════════════════════╝${NC}"
     echo ""
     local cooling_choice=""
     read -p "  Enter cooling profile option [1-3]: " cooling_choice
@@ -327,9 +330,13 @@ configure_governor_profile() {
         *) echo -e "  ${RED}❌ Invalid choice. Falling back to safe Stock Air parameters.${NC}"; THROTTLE_TEMP=72;;
     esac
     echo ""
-    # 📋 AUDIT NO. 2: POWER BUDGET (300W - 500W+ STRATA)
-    echo -e "  ${BOLD}${BLUE}[2/5] Enter your current Power Supply (PSU) maximum wattage rating:${RESET}"
-    echo -e "        ${DIM}(Accepts 300W baseline up to 500W+ extreme power overhead profiles)${RESET}"
+
+        # 📋 AUDIT NO. 2: POWER BUDGET (300W - 500W+ STRATA)
+    echo -e "  ${CYAN}╔═ [2/5] HARDWARE AUDIT: POWER INFRASTRUCTURE overhead ══════════════════════════════════════╗${NC}"
+    echo -e "  ${CYAN}║${NC}  Enter your physical Power Supply Unit (PSU) maximum continuous wattage rating:          ${CYAN}║${NC}"
+    echo -e "  ${CYAN}╠═════════════════════════════════════════════════════════════════════════════════════════════╣${NC}"
+    echo -e "  ${CYAN}║${NC}   ${DIM}* Platform registers custom profiles from a 300W baseline up to a 500W+ extreme ceiling * ${CYAN}║${NC}"
+    echo -e "  ${CYAN}╚═════════════════════════════════════════════════════════════════════════════════════════════╝${NC}"
     echo ""
     local psu_wattage=""
     read -p "  PSU Wattage Rating (e.g., 300, 450, 500): " psu_wattage
@@ -340,12 +347,16 @@ configure_governor_profile() {
     fi
     echo ""
 
-        # 📋 AUDIT NO. 3: FUTURE TARGET COMPUTE UNITS (INTELLIGENT HYBRID CONFIRMATION)
-    echo -e "  ${BOLD}${BLUE}[3/5] I do see you have ${detected_cus}/40 CUs currently active on this system.${RESET}"
-    echo -e "        Are you planning to change or target a different configuration footprint?"
-    echo -e "    1) Target 36 CUs Active  ${DIM}(Down-binned / Maximum High-Efficiency Target Layout)${RESET}"
-    echo -e "    2) Target 38 CUs Active  ${DIM}(Optimal Mid-Tier Custom Performance Curve Baseline)${RESET}"
-    echo -e "    3) Target 40 CUs Active  ${DIM}(Absolute Full Die Silicon Array Matrix Unlocked)${RESET}"
+            # 📋 AUDIT NO. 3: FUTURE TARGET COMPUTE UNITS (INTELLIGENT HYBRID CONFIRMATION)
+    echo -e "  ${CYAN}╔═ [3/5] HARDWARE AUDIT: GRAPHICS COMPUTE UNIT PROFILES ══════════════════════════════════════╗${NC}"
+    echo -e "  ${CYAN}║${NC}  Live scanner path reports ${detected_cus}/40 Compute Units (CUs) currently active on this core.     ${CYAN}║${NC}"
+    echo -e "  ${CYAN}╠═════════════════════════════════════════════════════════════════════════════════════════════╣${NC}"
+    echo -e "  ${CYAN}║${NC}   Are you planning to change or target a different operational footprint?                   ${CYAN}║${NC}"
+    echo -e "  ${CYAN}║${NC}                                                                                             ${CYAN}║${NC}"
+    echo -e "  ${CYAN}║${NC}   ${BIWhite}1)${NC} Target 36 CUs Active  ${DIM}(Down-binned / Maximum High-Efficiency Target Layout)${NC}       ${CYAN}║${NC}"
+    echo -e "  ${CYAN}║${NC}   ${BIWhite}2)${NC} Target 38 CUs Active  ${DIM}(Optimal Mid-Tier Custom Performance Curve Baseline)${NC}        ${CYAN}║${NC}"
+    echo -e "  ${CYAN}║${NC}   ${BIWhite}3)${NC} Target 40 CUs Active  ${DIM}(Absolute Full Die Silicon Array Matrix Unlocked)${NC}           ${CYAN}║${NC}"
+    echo -e "  ${CYAN}╚═════════════════════════════════════════════════════════════════════════════════════════════╝${NC}"
     echo ""
     local cu_choice=""
     read -p "  Select target CU configuration profile [1-3]: " cu_choice
@@ -359,14 +370,15 @@ configure_governor_profile() {
     esac
     echo ""
 
-    # ==============================================================================
-    # 🚀 NEW INJECTED TRACK: AUDIT NO. 4 (12-THREAD ASYMMETRICAL SAFETY ALIGNMENT)
-    # ==============================================================================
-    # 📋 AUDIT NO. 4: FUTURE TARGET CPU CORES
-    echo -e "  ${BOLD}${BLUE}[4/5] I do see you have ${detected_cores} CPU Cores / ${live_threads} Threads active.${RESET}"
-    echo -e "        Select your target configuration profile layout:"
-    echo -e "    1) Target 6 Cores / 12 Threads  ${DIM}(Power-saving / High-Efficiency Sweet Spot)${RESET}"
-    echo -e "    2) Target 8 Cores / 16 Threads  ${DIM}(Full Hardware Multithreading Unlocked)${RESET}"
+        # 📋 AUDIT NO. 4: FUTURE TARGET CPU CORES
+    echo -e "  ${CYAN}╔═ [4/5] HARDWARE AUDIT: CPU CORE COMPLEX ALLOCATION ════════════════════════════════════════╗${NC}"
+    echo -e "  ${CYAN}║${NC}  Live scanner path reports ${detected_cores} CPU Cores / ${live_threads} Threads currently active on this node.  ${CYAN}║${NC}"
+    echo -e "  ${CYAN}╠═════════════════════════════════════════════════════════════════════════════════════════════╣${NC}"
+    echo -e "  ${CYAN}║${NC}   Select your target operational profile layout:                                           ${CYAN}║${NC}"
+    echo -e "  ${CYAN}║${NC}                                                                                             ${CYAN}║${NC}"
+    echo -e "  ${CYAN}║${NC}   ${BIWhite}1)${NC} Target 6 Cores / 12 Threads  ${DIM}(Power-saving / High-Efficiency Sweet Spot)${NC}         ${CYAN}║${NC}"
+    echo -e "  ${CYAN}║${NC}   ${BIWhite}2)${NC} Target 8 Cores / 16 Threads  ${DIM}(Full Hardware Multithreading Unlocked)${NC}          ${CYAN}║${NC}"
+    echo -e "  ${CYAN}╚═════════════════════════════════════════════════════════════════════════════════════════════╝${NC}"
     echo ""
     local core_choice=""
     read -p "  Select target CPU core complex [1-2]: " core_choice
@@ -391,10 +403,13 @@ configure_governor_profile() {
     echo ""
 
     # 📋 SYSTEM TARGET TUNING LEVEL SELECTION
-    echo -e "  ${BOLD}${BLUE}[5/5] Select desired system tuning optimization profile layer:${RESET}"
-    echo -e "    1) Normal Computer Use  ${DIM}(Silent profile, low voltage, browser/desktop work)${RESET}"
-    echo -e "    2) Standard Gaming      ${DIM}(Balanced high-efficiency foundation at 1800MHz)${RESET}"
-    echo -e "    3) Heavy Overclocking   ${DIM}(Absolute Max Custom Curve: Up to 2150MHz @ 1020mV)${RESET}"
+    echo -e "  ${CYAN}╔═ [5/5] HARDWARE AUDIT: SYSTEM TUNING OPTIMIZATION PROFILE ══════════════════════════════════╗${NC}"
+    echo -e "  ${CYAN}║${NC}  Select the desired optimization and frequency scaling profile layer for this host:       ${CYAN}║${NC}"
+    echo -e "  ${CYAN}╠═════════════════════════════════════════════════════════════════════════════════════════════╣${NC}"
+    echo -e "  ${CYAN}║${NC}   ${BIWhite}1)${NC} Normal Computer Use  ${DIM}(Silent profile, low voltage, browser/desktop work)${NC}           ${CYAN}║${NC}"
+    echo -e "  ${CYAN}║${NC}   ${BIWhite}2)${NC} Standard Gaming      ${DIM}(Balanced high-efficiency foundation at 1800MHz)${NC}          ${CYAN}║${NC}"
+    echo -e "  ${CYAN}║${NC}   ${BIWhite}3)${NC} Heavy Overclocking   ${DIM}(Absolute Max Custom Curve: Up to 2150MHz @ 1020mV)${NC}       ${CYAN}║${NC}"
+    echo -e "  ${CYAN}╚═════════════════════════════════════════════════════════════════════════════════════════════╝${NC}"
     echo ""
     local tuning_choice=""
     read -p "  Select tuning profile [1-3]: " tuning_choice
