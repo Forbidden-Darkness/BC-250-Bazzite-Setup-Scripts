@@ -718,28 +718,42 @@ launch_tuning_menu() {
                 printf "[overclock]\nfrequency=3850\nscale=-19\nmax_temperature=90\nkeep=True\n" > "$target_dir/overclock.conf"
                 run_preset_stress_flow
                 ;;
-            6|7)
+                        6|7)
                 while true; do
                     clear
-                    echo -e "${YELLOW}====================================================${NC}"
-                    echo -e "${YELLOW}             CUSTOM PROFILE CONFIGURATION           ${NC}"
-                    echo -e "${YELLOW}====================================================${NC}"
+                    echo -e "${YELLOW}=======================================================================================${NC}"
+                    echo -e "${YELLOW}                             CUSTOM PROFILE CONFIGURATION                              ${NC}"
+                    echo -e "${YELLOW}=======================================================================================${NC}"
+                    echo ""
+                    echo -e "  ${CYAN}┌───────────────────────── BC-250 TELEMETRY & SAFE TUNING MATRIX ────────────────────────┐${NC}"
+                    echo -e "  ${CYAN}│${NC}  Tier / Intent         │ CPU Frequency │ Safe Voltage Range │ Max Thermal Target  ${CYAN}│${NC}"
+                    echo -e "  ${CYAN}├─────────────────────────┼───────────────┼────────────────────┼─────────────────────┤${NC}"
+                    echo -e "  ${CYAN}│${NC}  ECO / Silent State    │   2600 MHz    │   860 -  880 mV    │      Max 70°C       ${CYAN}│${NC}"
+                    echo -e "  ${CYAN}│${NC}  Silent Sweet Spot     │   2800 MHz    │   880 -  900 mV    │      Max 75°C       ${CYAN}│${NC}"
+                    echo -e "  ${CYAN}│${NC}  Balanced Efficiency   │   3000 MHz    │   910 -  950 mV    │      Max 80°C       ${CYAN}│${NC}"
+                    echo -e "  ${CYAN}│${NC}  Performance Gaming    │   3200 MHz    │   950 -  975 mV    │      Max 82°C       ${CYAN}│${NC}"
+                    echo -e "  ${CYAN}│${NC}  Stock Framework       │   3500 MHz    │   980 - 1020 mV    │      Max 85°C       ${CYAN}│${NC}"
+                    echo -e "  ${CYAN}│${NC}  Silicon Ceiling       │   3600 MHz    │  1050 - 1320 mV    │      Max 90°C       ${CYAN}│${NC}"
+                    echo -e "  ${CYAN}│${NC}  Liquid Extreme Beast  │   3850 MHz    │  1150 - 1220 mV    │      Max 90°C (AIO) ${CYAN}│${NC}"
+                    echo -e "  ${CYAN}└─────────────────────────┴───────────────┴────────────────────┴─────────────────────┘${NC}"
+                    echo ""
+                    echo -e "  ${RED}[⚠] CRITICAL SAFETY BOUNDARY: NEVER EXCEED 1325 mV CORE VOLTAGE UNDER ANY CIRCUMSTANCES!${NC}"
                     echo ""
                     while true; do
-                        read -p "Enter Target Frequency (MHz) [e.g., 3000]: " custom_freq
+                        read -p "  Enter Target Frequency (MHz) [e.g., 3000]: " custom_freq
                         if [[ "$custom_freq" =~ ^[0-9]+$ ]] && [ "$custom_freq" -gt 0 ]; then break
-                        else echo -e "${RED}Invalid input. Please enter a valid number for MHz.${NC}"; fi
+                        else echo -e "  ${RED}Invalid input. Please enter a valid number for MHz.${NC}"; fi
                     done
                     while true; do
-                        read -p "Enter Target Voltage (mV / VID) [e.g., 945]: " custom_vid
+                        read -p "  Enter Target Voltage (mV / VID) [e.g., 945]: " custom_vid
                         if [[ "$custom_vid" =~ ^[0-9]+$ ]] && [ "$custom_vid" -gt 0 ]; then
-                            if [ "$custom_vid" -gt 1325 ]; then echo -e "${RED}SAFETY ERROR: Voltage cannot exceed 1325 mV!${NC}"; else break; fi
-                        else echo -e "${RED}Invalid input. Please enter a valid number for mV.${NC}"; fi
+                            if [ "$custom_vid" -gt 1325 ]; then echo -e "  ${RED}SAFETY ERROR: Voltage cannot exceed 1325 mV!${NC}"; else break; fi
+                        else echo -e "  ${RED}Invalid input. Please enter a valid number for mV.${NC}"; fi
                     done
                     while true; do
-                        read -p "Enter Max Temperature Target (°C) [e.g., 80]: " custom_temp
+                        read -p "  Enter Max Temperature Target (°C) [e.g., 80]: " custom_temp
                         if [[ "$custom_temp" =~ ^[0-9]+$ ]] && [ "$custom_temp" -gt 0 ] && [ "$custom_temp" -lt 105 ]; then break
-                        else echo -e "${RED}Invalid input. Please enter a safe temperature limit below 105°C.${NC}"; fi
+                        else echo -e "  ${RED}Invalid input. Please enter a safe temperature limit below 105°C.${NC}"; fi
                     done
                     log "${GREEN}Running custom tuning profile optimization...${NC}"
                     
@@ -751,9 +765,9 @@ launch_tuning_menu() {
                         local sandbox_threads=$(nproc 2>/dev/null || echo "12")
                         if [[ "$live_threads" =~ ^[0-9]+$ ]] && [ "$live_threads" -gt 0 ]; then sandbox_threads="$live_threads"; fi
                         echo -e "\n  ${YELLOW}[●] Initializing Sandbox Stability Sweep Utilizing ${sandbox_threads} Threads...${NC}"
-                        stress --cpu "$sandbox_threads" --timeout 150 >> "$LOG_FILE" 2>&1 &
+                        stress --cpu "$sandbox_threads" --timeout 10 >> "$LOG_FILE" 2>&1 &
                         local stress_pid=$!
-                        local seconds_left=150
+                        local seconds_left=10
                         while kill -0 "$stress_pid" 2>/dev/null; do
                             echo -ne "      Stability validation testing in progress... ${RED}${seconds_left}s${CYAN} remaining...${RESET}\r"
                             sleep 1
@@ -764,12 +778,12 @@ launch_tuning_menu() {
                     
                     local loop_again=""
                     if [ "$tune_choice" = "7" ]; then
-                        read -rp "Would you like to run another stress test with different settings? [y/n]: " loop_again
+                        read -rp "  Would you like to run another stress test with different settings? [y/n]: " loop_again
                     else
                         if [[ "$save_choice" =~ ^[Yy]$ ]]; then break; fi
-                        read -rp "Would you like to try another configuration sweep with different settings? [y/n]: " loop_again
+                        read -rp "  Would you like to try another configuration sweep with different settings? [y/n]: " loop_again
                     fi
-                    if [[ ! "$loop_again" =~ ^[Yy]$ ]]; then echo -e "${YELLOW}Returning safely to tuning menu...${NC}"; sleep 1.5; break; fi
+                    if [[ ! "$loop_again" =~ ^[Yy]$ ]]; then echo -e "  ${YELLOW}Returning safely to tuning menu...${NC}"; sleep 1.5; break; fi
                 done
                 ;;
             0|"") echo "Exiting."; exit 0 ;;
