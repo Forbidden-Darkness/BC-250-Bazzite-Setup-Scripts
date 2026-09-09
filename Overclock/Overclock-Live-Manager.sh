@@ -726,24 +726,42 @@ launch_tuning_menu() {
             6|7)
                 while true; do
                     clear
-                    echo -e "  ${CYAN}╔═════════════════════════════════════════════════════════════════════════════════════════════╗${NC}"
-    echo -e "  ${CYAN}║                    ${BOLD}${BICyan}BC-250 SILICON VOLTAGE & THERMAL SCALING MATRIX${NC}                                       ${CYAN}║${NC}"
+    # 🧬 PREMIUM SYMMETRICAL SILICON PROFILER DISPLAY GRID
+    echo -e "  ${CYAN}╔═════════════════════════════════════════════════════════════════════════════════════════════╗${NC}"
+    echo -e "  ${CYAN}║                    ${BOLD}${BICyan}BC-250 SILICON VOLTAGE & THERMAL SCALING MATRIX${NC}                   ${CYAN}║${NC}"
     echo -e "  ${CYAN}╚═════════════════════════════════════════════════════════════════════════════════════════════╝${NC}"
-    printf "     ${BOLD}%-15s │ %-18s │ %-12s │ %-34s${RESET}\n" "Freq Block" "Voltage (VID)" "Thermal Load" "Silicon Performance Profile"
-    echo -e "     ${BIBlack}────────────────┼────────────────────┼──────────────┼──────────────────────────────────${NC}"
-    printf "     %-15s │ %-18s │ %-12s │ %-34s\n" "2000-2300 MHz" "800 mV - 840 mV" "50°C - 60°C" "Absolute Eco Floor (Dead Silent)"
-    printf "     %-15s │ %-18s │ %-12s │ %-34s\n" "2400-2500 MHz" "840 mV - 860 mV" "58°C - 65°C" "Balanced Power Light Emulation"
-    printf "     %-15s │ %-18s │ %-12s │ %-34s\n" "2600-2700 MHz" "860 mV - 890 mV" "62°C - 72°C" "Hardened Software Guard Floor Tiers"
-    printf "     ${BIGreen}%-15s${NC} │ ${BIGreen}%-18s${NC} │ ${BIGreen}%-12s${NC} │ ${BIGreen}%-34s${NC}\n" "2800 MHz" "890 mV - 905 mV" "65°C - 75°C" "🎯 EFFICIENCY SWEET SPOT (Opt 5)"
-    printf "     ${BIGreen}%-15s${NC} │ ${BIGreen}%-18s${NC} │ ${BIGreen}%-12s${NC} │ ${BIGreen}%-34s${NC}\n" "3000 MHz" "920 mV - 940 mV" "70°C - 80°C" "🎯 GAMING SWEET SPOT (Opt 2/4)"
-    printf "     %-15s │ %-18s │ %-12s │ %-34s\n" "3100-3400 MHz" "940 mV - 1000 mV" "72°C - 84°C" "Aggressive Air Tier (High Current)"
-    printf "     %-15s │ %-18s │ %-12s │ %-34s\n" "3500 MHz" "1000 mV - 1020 mV" "80°C - 85°C" "Stock Factory Air Ceiling Reference"
-    printf "     %-15s │ %-18s │ %-12s │ %-34s\n" "3600-3700 MHz" "1030 mV - 1100 mV" "82°C - 88°C" "Extreme Overclock (High Fan Speed)"
-    printf "     %-15s │ %-18s │ %-12s │ %-34s\n" "3800 MHz" "1120 mV - 1160 mV" "88°C - 94°C" "Option W Liquid-Cooled Loop Only"
-    printf "     ${RED}%-15s${NC} │ ${RED}%-18s${NC} │ ${RED}%-12s${NC} │ ${RED}%-34s${NC}\n" "3900-4000 MHz" "1160 mV - 1325 mV" "92°C - 105°C+" "DANGER ZONE (Rapid Silicon Decay)"
+    
+    # Header alignment block
+    printf "  ${CYAN}║${NC}   %-13s │ %-20s │ %-12s │ %-34s ${CYAN}║${NC}\n" "${BOLD}Freq Block" "Voltage (VID)" "Thermal Load" "Silicon Performance Profile${RESET}"
+    echo -e "  ${CYAN}║${BIBlack} ──────────────┼──────────────────────┼──────────────┼────────────────────────────────── ${CYAN}║${NC}"
+    
+    # Core Data Mapping Matrix (Leveled out character-for-character)
+    printf "  ${CYAN}║${NC}   %-13s │ %-20s │ %-12s │ %-34s ${CYAN}║${NC}\n" "2000-2300 MHz" "800 mV - 840 mV" "50°C - 60°C" "Absolute Eco Floor (Dead Silent)"
+    printf "  ${CYAN}║${NC}   %-13s │ %-20s │ %-12s │ %-34s ${CYAN}║${NC}\n" "2400-2500 MHz" "840 mV - 860 mV" "58°C - 65°C" "Balanced Power Light Emulation"
+    printf "  ${CYAN}║${NC}   %-13s │ %-20s │ %-12s │ %-34s ${CYAN}║${NC}\n" "2600-2700 MHz" "860 mV - 890 mV" "62°C - 72°C" "Software Guard Floor Tiers"
+    
+    # Highlight Tiers: Injected raw text tags separately from printf column masks to hold symmetry
+    printf "  ${CYAN}║${NC}   "
+    echo -ne "\033[1;92m%-13s\033[0m │ \033[1;92m%-20s\033[0m │ \033[1;92m%-12s\033[0m │ \033[1;92m%-34s\033[0m" "2800 MHz" "890 mV - 905 mV" "65°C - 75°C" "🎯 EFFICIENCY SWEET SPOT (Opt 5)"
+    echo -e " ${CYAN}║${NC}"
+
+    printf "  ${CYAN}║${NC}   "
+    echo -ne "\033[1;92m%-13s\033[0m │ \033[1;92m%-20s\033[0m │ \033[1;92m%-12s\033[0m │ \033[1;92m%-34s\033[0m" "3000 MHz" "920 mV - 940 mV" "70°C - 80°C" "🎯 GAMING SWEET SPOT (Opt 2/4)"
+    echo -e " ${CYAN}║${NC}"
+
+    printf "  ${CYAN}║${NC}   %-13s │ %-20s │ %-12s │ %-34s ${CYAN}║${NC}\n" "3100-3400 MHz" "940 mV - 1000 mV" "72°C - 84°C" "Aggressive Air Tier (High Current)"
+    printf "  ${CYAN}║${NC}   %-13s │ %-20s │ %-12s │ %-34s ${CYAN}║${NC}\n" "3500 MHz" "1000 mV - 1020 mV" "80°C - 85°C" "Stock Factory Air Ceiling"
+    printf "  ${CYAN}║${NC}   %-13s │ %-20s │ %-12s │ %-34s ${CYAN}║${NC}\n" "3600-3700 MHz" "1030 mV - 1100 mV" "82°C - 88°C" "Extreme Overclock (High Fan Speed)"
+    printf "  ${CYAN}║${NC}   %-13s │ %-20s │ %-12s │ %-34s ${CYAN}║${NC}\n" "3800 MHz" "1120 mV - 1160 mV" "88°C - 94°C" "Option W Liquid-Cooled Loop"
+    
+    # Danger Zone High-Visibility Highlighting Row
+    printf "  ${CYAN}║${NC}   "
+    echo -ne "\033[0;31m%-13s\033[0m │ \033[0;31m%-20s\033[0m │ \033[0;31m%-12s\033[0m │ \033[0;31m%-34s\033[0m" "3900-4000 MHz" "1160 mV - 1325 mV" "92°C - 105°C+" "DANGER ZONE (Silicon Decay)"
+    echo -e " ${CYAN}║${NC}"
+
     echo -e "  ${CYAN}╚═════════════════════════════════════════════════════════════════════════════════════════════╝${NC}"
     echo ""
-                                        # ==============================================================================
+                    # ==============================================================================
                     # HARDENED INPUT VALIDATION FILTERS (ENFORCING 2600MHz CEILING HOODS)
                     # ==============================================================================
                     while true; do
