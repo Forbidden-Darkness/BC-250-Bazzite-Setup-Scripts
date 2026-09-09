@@ -21,6 +21,11 @@ BICyan='\033[1;96m'       # Cyan
 BIWhite='\033[1;97m'      # White
 NC='\033[0m' # No Color (Reset)
 
+# 🧬 DYNAMIC GITHUB STRINGS FOR MODDED PYTHON OVERRIDES
+# (Make sure to replace 'YourGitHubUsername' and 'YourRepoName' with your exact info after uploading!)
+MODDED_APPLY_URL="https://raw.githubusercontent.com/Forbidden-Darkness/Bazzite_Toolbox/main/Overclock/bc250_apply.py"
+MODDED_LIMITS_URL="https://raw.githubusercontent.com/Forbidden-Darkness/Bazzite_Toolbox/main/Overclock/bc250_limits.py"
+
 # Verify root/sudo privileges
 if [ "$EUID" -ne 0 ]; then
     echo -e "${RED}Error: This script must be run with sudo or as root."
@@ -1035,9 +1040,26 @@ clear
 
     read -p "  Select an option [ 1a-4, M, ↵ ]: " choice
 
-    case "$choice" in
+        case "$choice" in
         1a) run_phase1 ;;
-        1b) run_phase2 ;;
+        1b) 
+                # 🚀 Step 1: Run the standard phase 2 compilation installation tree
+                run_phase2 
+
+                # 🚀 Step 2: Intercept the virtual environment immediately post-install to force our low-power fixes
+                log "${GREEN}[⚙] Injecting custom low-power overrides from your repository...${NC}"
+                local py_packages="/opt/bc250_smu_tools/venv/lib64/python3.14/site-packages"
+                
+                sudo curl -sSL -o "$py_packages/bc250_apply.py" "$MODDED_APPLY_URL" >> "$LOG_FILE" 2>&1
+                sudo curl -sSL -o "$py_packages/bc250_limits.py" "$MODDED_LIMITS_URL" >> "$LOG_FILE" 2>&1
+                
+                # Obliterate any cached python compilation files so systemd reads your changes natively on boot
+                sudo rm -rf "$py_packages/__pycache__" 2>/dev/null || true
+                
+                log "${B_GREEN}✓ Overclock environment unlocked. Low-power constraints completely removed!${NC}"
+                sleep 2
+                ;;
+
         2a) run_manager_phase1 ;;
         2b) run_manager_phase2 ;;
         m|M) configure_governor_profile ;;
