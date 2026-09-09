@@ -51,8 +51,10 @@ def write_service(service_path, config_path):
 def apply_config(path):
     frequency, scale, max_temp = get_config(path)
 
-    if frequency > limits.freq_max or frequency < limits.freq_min:
-        raise ValueError("Frequency out of range")
+    # 🧬 UNIFIED OVERRIDE FLOOR: Lowers validation check constraints down to a stable 2000MHz baseline
+    local_min_floor = 2000
+    if frequency > limits.freq_max or frequency < local_min_floor:
+        raise ValueError(f"Frequency out of range: {frequency} MHz")
 
     if scale > limits.scale_max or scale < limits.scale_min:
         raise ValueError("Scale out of range")
