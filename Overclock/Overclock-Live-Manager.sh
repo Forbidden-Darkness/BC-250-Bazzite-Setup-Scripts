@@ -263,8 +263,8 @@ configure_governor_profile() {
         clear
     echo ""
     echo -e "  ${CYAN}╔═════════════════════════════════════════════════════════════════════════════════════════════╗${NC}"
-    echo -e "  ${CYAN}║               ${BOLD}${BICyan}BC-250 SILICON GOVERNOR & PERFORMANCE PROFILE MANAGER${NC}                           ${CYAN}║${NC}"
-    echo -e "  ${CYAN}║                    ${DIM}* HARDWARE SPECIFICATIONS AUDIT WIZARD *${NC}                                    ${CYAN}║${NC}"
+    echo -e "  ${CYAN}║               ${BOLD}${BICyan}BC-250 SILICON GOVERNOR & PERFORMANCE PROFILE MANAGER${NC}                         ${CYAN}║${NC}"
+    echo -e "  ${CYAN}║                    ${DIM}* HARDWARE SPECIFICATIONS AUDIT WIZARD *${NC}                                 ${CYAN}║${NC}"
     echo -e "  ${CYAN}╚═════════════════════════════════════════════════════════════════════════════════════════════╝${NC}"
     echo ""
     echo -e "  ${CYAN}╔═ Dynamic Telemetry Scanner ═════════════════════════════════════════════════════════════════╗${NC}"
@@ -303,7 +303,7 @@ configure_governor_profile() {
     local live_threads=$(nproc 2>/dev/null || echo "12")
     local detected_cores=$(( live_threads / 2 ))
     
-    echo -e "  ${CYAN}║${NC}   ${BOLD}${GREEN}✔ ACTIVE HARDWARE IDENTIFIED:${NC} ${detected_cus}/40 Compute Units  │  ${detected_cores} CPU Cores / ${live_threads} Threads              ${CYAN}║${NC}"
+    echo -e "  ${CYAN}║${NC}   ${BOLD}${GREEN}✔ ACTIVE HARDWARE IDENTIFIED:${NC} ${detected_cus}/40 Compute Units  │  ${detected_cores} CPU Cores / ${live_threads} Threads            ${CYAN}║${NC}"
     echo -e "  ${CYAN}╚═════════════════════════════════════════════════════════════════════════════════════════════╝${NC}"
     echo ""
 
@@ -333,7 +333,7 @@ configure_governor_profile() {
 
         # 📋 AUDIT NO. 2: POWER BUDGET (300W - 500W+ STRATA)
     echo -e "  ${CYAN}╔═ [2/5] HARDWARE AUDIT: POWER INFRASTRUCTURE overhead ═══════════════════════════════════════╗${NC}"
-    echo -e "  ${CYAN}║${NC}  Enter your physical Power Supply Unit (PSU) maximum continuous wattage rating:            ${CYAN}║${NC}"
+    echo -e "  ${CYAN}║${NC}  Enter your physical Power Supply Unit (PSU) maximum continuous wattage rating:             ${CYAN}║${NC}"
     echo -e "  ${CYAN}╠═════════════════════════════════════════════════════════════════════════════════════════════╣${NC}"
     echo -e "  ${CYAN}║${NC}   ${DIM}* Platform registers custom profiles from a 300W baseline up to a 500W+ extreme ceiling * ${CYAN}║${NC}"
     echo -e "  ${CYAN}╚═════════════════════════════════════════════════════════════════════════════════════════════╝${NC}"
@@ -349,13 +349,13 @@ configure_governor_profile() {
 
             # 📋 AUDIT NO. 3: FUTURE TARGET COMPUTE UNITS (INTELLIGENT HYBRID CONFIRMATION)
     echo -e "  ${CYAN}╔═ [3/5] HARDWARE AUDIT: GRAPHICS COMPUTE UNIT PROFILES ══════════════════════════════════════╗${NC}"
-    echo -e "  ${CYAN}║${NC}  Live scanner path reports ${detected_cus}/40 Compute Units (CUs) currently active on this core.           ${CYAN}║${NC}"
+    echo -e "  ${CYAN}║${NC}  Live scanner path reports ${detected_cus}/40 Compute Units (CUs) currently active on this core.         ${CYAN}║${NC}"
     echo -e "  ${CYAN}╠═════════════════════════════════════════════════════════════════════════════════════════════╣${NC}"
     echo -e "  ${CYAN}║${NC}   Are you planning to change or target a different operational footprint?                   ${CYAN}║${NC}"
     echo -e "  ${CYAN}║${NC}                                                                                             ${CYAN}║${NC}"
-    echo -e "  ${CYAN}║${NC}   ${BIWhite}1)${NC} Target 36 CUs Active  ${DIM}(Down-binned / Maximum High-Efficiency Target Layout)${NC}              ${CYAN}║${NC}"
-    echo -e "  ${CYAN}║${NC}   ${BIWhite}2)${NC} Target 38 CUs Active  ${DIM}(Optimal Mid-Tier Custom Performance Curve Baseline)${NC}               ${CYAN}║${NC}"
-    echo -e "  ${CYAN}║${NC}   ${BIWhite}3)${NC} Target 40 CUs Active  ${DIM}(Absolute Full Die Silicon Array Matrix Unlocked)${NC}                  ${CYAN}║${NC}"
+    echo -e "  ${CYAN}║${NC}   ${BIWhite}1)${NC} Target 36 CUs Active  ${DIM}(Down-binned / Maximum High-Efficiency Target Layout)${NC}            ${CYAN}║${NC}"
+    echo -e "  ${CYAN}║${NC}   ${BIWhite}2)${NC} Target 38 CUs Active  ${DIM}(Optimal Mid-Tier Custom Performance Curve Baseline)${NC}             ${CYAN}║${NC}"
+    echo -e "  ${CYAN}║${NC}   ${BIWhite}3)${NC} Target 40 CUs Active  ${DIM}(Absolute Full Die Silicon Array Matrix Unlocked)${NC}                ${CYAN}║${NC}"
     echo -e "  ${CYAN}╚═════════════════════════════════════════════════════════════════════════════════════════════╝${NC}"
     echo ""
     local cu_choice=""
@@ -371,13 +371,13 @@ configure_governor_profile() {
     echo ""
 
         # 📋 AUDIT NO. 4: FUTURE TARGET CPU CORES
-    echo -e "  ${CYAN}╔═ [4/5] HARDWARE AUDIT: CPU CORE COMPLEX ALLOCATION ════════════════════════════════════════╗${NC}"
-    echo -e "  ${CYAN}║${NC}  Live scanner path reports ${detected_cores} CPU Cores / ${live_threads} Threads currently active on this node.        ${CYAN}║${NC}"
+    echo -e "  ${CYAN}╔═ [4/5] HARDWARE AUDIT: CPU CORE COMPLEX ALLOCATION ═════════════════════════════════════════╗${NC}"
+    echo -e "  ${CYAN}║${NC}  Live scanner path reports ${detected_cores} CPU Cores / ${live_threads} Threads currently active on this node.          ${CYAN}║${NC}"
     echo -e "  ${CYAN}╠═════════════════════════════════════════════════════════════════════════════════════════════╣${NC}"
     echo -e "  ${CYAN}║${NC}   Select your target operational profile layout:                                            ${CYAN}║${NC}"
     echo -e "  ${CYAN}║${NC}                                                                                             ${CYAN}║${NC}"
-    echo -e "  ${CYAN}║${NC}   ${BIWhite}1)${NC} Target 6 Cores / 12 Threads  ${DIM}(Power-saving / High-Efficiency Sweet Spot)${NC}                ${CYAN}║${NC}"
-    echo -e "  ${CYAN}║${NC}   ${BIWhite}2)${NC} Target 8 Cores / 16 Threads  ${DIM}(Full Hardware Multithreading Unlocked)${NC}                    ${CYAN}║${NC}"
+    echo -e "  ${CYAN}║${NC}   ${BIWhite}1)${NC} Target 6 Cores / 12 Threads  ${DIM}(Power-saving / High-Efficiency Sweet Spot)${NC}               ${CYAN}║${NC}"
+    echo -e "  ${CYAN}║${NC}   ${BIWhite}2)${NC} Target 8 Cores / 16 Threads  ${DIM}(Full Hardware Multithreading Unlocked)${NC}                   ${CYAN}║${NC}"
     echo -e "  ${CYAN}╚═════════════════════════════════════════════════════════════════════════════════════════════╝${NC}"
     echo ""
     local core_choice=""
@@ -404,11 +404,11 @@ configure_governor_profile() {
 
     # 📋 SYSTEM TARGET TUNING LEVEL SELECTION
     echo -e "  ${CYAN}╔═ [5/5] HARDWARE AUDIT: SYSTEM TUNING OPTIMIZATION PROFILE ══════════════════════════════════╗${NC}"
-    echo -e "  ${CYAN}║${NC}  Select the desired optimization and frequency scaling profile layer for this host:          ${CYAN}║${NC}"
+    echo -e "  ${CYAN}║${NC}  Select the desired optimization and frequency scaling profile layer for this host:         ${CYAN}║${NC}"
     echo -e "  ${CYAN}╠═════════════════════════════════════════════════════════════════════════════════════════════╣${NC}"
-    echo -e "  ${CYAN}║${NC}   ${BIWhite}1)${NC} Normal Computer Use  ${DIM}(Silent profile, low voltage, browser/desktop work)${NC}                ${CYAN}║${NC}"
-    echo -e "  ${CYAN}║${NC}   ${BIWhite}2)${NC} Standard Gaming      ${DIM}(Balanced high-efficiency foundation at 1800MHz)${NC}                   ${CYAN}║${NC}"
-    echo -e "  ${CYAN}║${NC}   ${BIWhite}3)${NC} Heavy Overclocking   ${DIM}(Absolute Max Custom Curve: Up to 2150MHz @ 1020mV)${NC}                ${CYAN}║${NC}"
+    echo -e "  ${CYAN}║${NC}   ${BIWhite}1)${NC} Normal Computer Use  ${DIM}(Silent profile, low voltage, browser/desktop work)${NC}               ${CYAN}║${NC}"
+    echo -e "  ${CYAN}║${NC}   ${BIWhite}2)${NC} Standard Gaming      ${DIM}(Balanced high-efficiency foundation at 1800MHz)${NC}                  ${CYAN}║${NC}"
+    echo -e "  ${CYAN}║${NC}   ${BIWhite}3)${NC} Heavy Overclocking   ${DIM}(Absolute Max Custom Curve: Up to 2150MHz @ 1020mV)${NC}               ${CYAN}║${NC}"
     echo -e "  ${CYAN}╚═════════════════════════════════════════════════════════════════════════════════════════════╝${NC}"
     echo ""
     local tuning_choice=""
