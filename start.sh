@@ -214,7 +214,7 @@ echo -e "\033[38;2;0;255;0m  ║                                                
 echo -e "\033[38;2;0;255;0m  ║                                █ █ █ █▀▀ █   █▀▀ █▀█ █▄█ █▀▀                                ║\033[0m"
 echo -e "\033[38;2;0;255;0m  ║                                ▀▄▀▄▀ ██▄ █▄▄ █▄▄ █▄█ █ █ ██▄                                ║\033[0m"
 echo -e "\033[38;2;0;255;0m  ║                                                                                             ║\033[0m"
-echo -e "\033[38;2;0;255;0m  ║    ${B_BLUE}[●] BLUE Pill\033[38;2;0;255;0m            🔑  System Architecture Unlocks  🔑            ${RED}RED Pill [●]\033[38;2;0;255;0m     ║\033[0m"
+echo -e "\033[38;2;0;255;0m  ║    ${B_BLUE}[●] BLUE Pill\033[38;2;0;255;0m           🔑🔑  System Architecture Unlocks  🔑🔑           ${RED}RED Pill [●]\033[38;2;0;255;0m     ║\033[0m"
 echo -e "\033[38;2;0;255;0m  ║                                                                                             ║\033[0m"
 echo -e "\033[38;2;0;255;0m  ╚═════════════════════════════════════════════════════════════════════════════════════════════╝\033[0m"
 echo -e "  ${DIM}→ Press ANY KEY to instantly bypass connection logs and initialization streams...${NC}\n"
