@@ -75,7 +75,7 @@ CORE_UNLOCK_CONF="/etc/bc250-core-unlock.conf"
 # 🧬 FIXED ABSOLUTE AUDIO PATHING: Maps explicitly to your true user directory space
 AUDIO_FILE="$EXTERNAL_DIR/Wake_on_LAN/Red-Pill-Blue-Pill.wav"
 MUSIC_LOCK_FILE="$REAL_HOME/.bc250-toolkit-music.pid"
-GITHUB_RAW_URL="https://githubusercontent.com"
+GITHUB_RAW_URL="https://raw.githubusercontent.com/Forbidden-Darkness/Bazzite_Toolbox/main/Wake_on_LAN/Red-Pill-Blue-Pill.wav"
 
 # ==============================================================================
 # STEP 3: CORE TOOLKIT INTERACTIVE ANIMATION ENGINES
