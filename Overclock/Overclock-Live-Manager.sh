@@ -246,7 +246,7 @@ run_cpu_core_stress_test() {
 
     echo -e "${YELLOW}[●] Step 2/3: Fetching upstream stability configuration maps...${NC}"
     (sudo rm -f test-cores.sh) &>/dev/null
-    (sudo -u "$REAL_USER" wget https://githubusercontent.com 2>/dev/null || true) &>/dev/null
+    (sudo -u "$REAL_USER" wget https://raw.githubusercontent.com/Forbidden-Darkness/Bazzite_Toolbox/main/Overclock/main.cpp 2>/dev/null || true) &>/dev/null
 
     echo -e "${YELLOW}[●] Step 3/3: Initializing per-core transaction sweep matrices...${NC}\n"
     if [[ -s "test-cores.sh" ]]; then
