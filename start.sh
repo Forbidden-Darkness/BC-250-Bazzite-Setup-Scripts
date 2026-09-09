@@ -1416,11 +1416,23 @@ install_overclock() {
     cd "$oc_dir" || return 1
     chown -R "$REAL_USER":"$REAL_USER" "$oc_dir"
 
-    # 🧬 DYNAMIC CHANGE DETECTION: Only downloads if remote file is newer than local copy
-    echo -e "${YELLOW}[●] Checking GitHub for script updates...${NC}"
-    sudo -u "$REAL_USER" wget -N https://github.com/Forbidden-Darkness/Bazzite_Toolbox/raw/refs/heads/main/Overclock/Overclock-Live-Manager.sh 2>/dev/null
+    local oc_url="https://raw.githubusercontent.com/Forbidden-Darkness/Bazzite_Toolbox/main/Overclock/Overclock-Live-Manager.sh"
+    local run_download=false
 
-    # Safety Net: Verification ensures we have a valid file to execute (either updated or cached)
+    # 🧬 OFFLINE-FIRST ENFORCEMENT: Fast 2-second pre-flight connectivity handshake
+    if curl -s -I -L --connect-timeout 2 "$oc_url" > /dev/null; then
+        run_download=true
+    fi
+
+    if [ "$run_download" = true ]; then
+        echo -e "${YELLOW}[●] Checking GitHub for script updates...${NC}"
+        sudo -u "$REAL_USER" wget -N "$oc_url" 2>/dev/null
+    else
+        log "${YELLOW}[ℹ] Network connection down or GitHub unreachable. Using localized cache layers...${NC}"
+        sleep 1.5
+    fi
+
+    # Safety Net Validation Shield
     if [ ! -s "Overclock-Live-Manager.sh" ]; then
         echo -e "${RED}ERROR: Script file not found on disk and cannot be downloaded! Check network.${NC}"
         sleep 4
@@ -1436,7 +1448,7 @@ install_overclock() {
     sleep 2
 }
 
-# Function to Launch Wake on LAN
+# Function to Launch wake on lan
 install_wake_on_lan() {
     echo -e "${B_RED}=== Launching Wake on LAN Menu ===${NC}"
 
@@ -1445,11 +1457,23 @@ install_wake_on_lan() {
     cd "$wol_dir" || return 1
     chown -R "$REAL_USER":"$REAL_USER" "$wol_dir"
 
-    # 🧬 DYNAMIC CHANGE DETECTION: Only downloads if remote file is newer than local copy
-    echo -e "${YELLOW}[●] Checking GitHub for script updates...${NC}"
-    sudo -u "$REAL_USER" wget -N https://github.com/Forbidden-Darkness/Bazzite_Toolbox/raw/refs/heads/main/Wake_on_LAN/Wake-on-LAN-Manager.sh 2>/dev/null
+    local wol_url="https://raw.githubusercontent.com/Forbidden-Darkness/Bazzite_Toolbox/main/Wake_on_LAN/Wake-on-LAN-Manager.sh"
+    local run_download=false
 
-    # Safety Net: Verification ensures we have a valid file to execute (either updated or cached)
+    # 🧬 OFFLINE-FIRST ENFORCEMENT: Run a rapid 2-second pre-flight connection handshake pass
+    if curl -s -I -L --connect-timeout 2 "$wol_url" > /dev/null; then
+        run_download=true
+    fi
+
+    if [ "$run_download" = true ]; then
+        echo -e "${YELLOW}[●] Checking GitHub for script updates...${NC}"
+        sudo -u "$REAL_USER" wget -N "$wol_url" 2>/dev/null
+    else
+        log "${YELLOW}[ℹ] Network connection down or GitHub unreachable. Using localized cache layers...${NC}"
+        sleep 1.5
+    fi
+
+    # Safety Net Validation Shield
     if [ ! -s "Wake-on-LAN-Manager.sh" ]; then
         echo -e "${RED}ERROR: Script file not found on disk and cannot be downloaded! Check network.${NC}"
         sleep 4
