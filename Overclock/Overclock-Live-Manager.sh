@@ -718,23 +718,23 @@ launch_tuning_menu() {
                 printf "[overclock]\nfrequency=3850\nscale=-19\nmax_temperature=90\nkeep=True\n" > "$target_dir/overclock.conf"
                 run_preset_stress_flow
                 ;;
-                        6|7)
+            6|7)
                 while true; do
                     clear
                     echo -e "${YELLOW}=======================================================================================${NC}"
                     echo -e "${YELLOW}                             CUSTOM PROFILE CONFIGURATION                              ${NC}"
                     echo -e "${YELLOW}=======================================================================================${NC}"
                     echo ""
-                    echo -e "  ${CYAN}┌───────────────────────── BC-250 TELEMETRY & SAFE TUNING MATRIX ────────────────────────┐${NC}"
-                    echo -e "  ${CYAN}│${NC}  Tier / Intent         │ CPU Frequency │ Safe Voltage Range │ Max Thermal Target  ${CYAN}│${NC}"
+                    echo -e "  ${CYAN}┌───────────────────────── BC-250 TELEMETRY & SAFE TUNING MATRIX ─────────────────────┐${NC}"
+                    echo -e "  ${CYAN}│${NC}   Tier / Intent         │ CPU Frequency │ Safe Voltage Range │ Max Thermal Target  ${CYAN}│${NC}"
                     echo -e "  ${CYAN}├─────────────────────────┼───────────────┼────────────────────┼─────────────────────┤${NC}"
-                    echo -e "  ${CYAN}│${NC}  ECO / Silent State    │   2600 MHz    │   860 -  880 mV    │      Max 70°C       ${CYAN}│${NC}"
-                    echo -e "  ${CYAN}│${NC}  Silent Sweet Spot     │   2800 MHz    │   880 -  900 mV    │      Max 75°C       ${CYAN}│${NC}"
-                    echo -e "  ${CYAN}│${NC}  Balanced Efficiency   │   3000 MHz    │   910 -  950 mV    │      Max 80°C       ${CYAN}│${NC}"
-                    echo -e "  ${CYAN}│${NC}  Performance Gaming    │   3200 MHz    │   950 -  975 mV    │      Max 82°C       ${CYAN}│${NC}"
-                    echo -e "  ${CYAN}│${NC}  Stock Framework       │   3500 MHz    │   980 - 1020 mV    │      Max 85°C       ${CYAN}│${NC}"
-                    echo -e "  ${CYAN}│${NC}  Silicon Ceiling       │   3600 MHz    │  1050 - 1320 mV    │      Max 90°C       ${CYAN}│${NC}"
-                    echo -e "  ${CYAN}│${NC}  Liquid Extreme Beast  │   3850 MHz    │  1150 - 1220 mV    │      Max 90°C (AIO) ${CYAN}│${NC}"
+                    echo -e "  ${CYAN}│${NC}   ECO / Silent State    │   2600 MHz    │   860 -  880 mV    │      Max 70°C       ${CYAN}│${NC}"
+                    echo -e "  ${CYAN}│${NC}   Silent Sweet Spot     │   2800 MHz    │   880 -  900 mV    │      Max 75°C       ${CYAN}│${NC}"
+                    echo -e "  ${CYAN}│${NC}   Balanced Efficiency   │   3000 MHz    │   910 -  950 mV    │      Max 80°C       ${CYAN}│${NC}"
+                    echo -e "  ${CYAN}│${NC}   Performance Gaming    │   3200 MHz    │   950 -  975 mV    │      Max 82°C       ${CYAN}│${NC}"
+                    echo -e "  ${CYAN}│${NC}   Stock Framework       │   3500 MHz    │   980 - 1020 mV    │      Max 85°C       ${CYAN}│${NC}"
+                    echo -e "  ${CYAN}│${NC}   Silicon Ceiling       │   3600 MHz    │  1050 - 1320 mV    │      Max 90°C       ${CYAN}│${NC}"
+                    echo -e "  ${CYAN}│${NC}   Liquid Extreme Beast  │   3850 MHz    │  1150 - 1220 mV    │      Max 90°C (AIO) ${CYAN}│${NC}"
                     echo -e "  ${CYAN}└─────────────────────────┴───────────────┴────────────────────┴─────────────────────┘${NC}"
                     echo ""
                     echo -e "  ${RED}[⚠] CRITICAL SAFETY BOUNDARY: NEVER EXCEED 1325 mV CORE VOLTAGE UNDER ANY CIRCUMSTANCES!${NC}"
