@@ -628,11 +628,11 @@ run_preset_stress_flow() {
     echo -e "\n  ${YELLOW}[●] Initializing Silicon Stability Sweep Utilizing ${target_threads} Active Threads...${NC}"
     
     # Spawns stress silently into a background process thread block
-    stress --cpu "$target_threads" --timeout 10 >> "$LOG_FILE" 2>&1 &
+    stress --cpu "$target_threads" --timeout 150 >> "$LOG_FILE" 2>&1 &
     local stress_pid=$!
     
     # Universal Countdown Loop Tracker
-    local seconds_left=10
+    local seconds_left=150
     while kill -0 "$stress_pid" 2>/dev/null; do
         echo -ne "      Stability validation testing in progress... ${RED}${seconds_left}s${CYAN} remaining...${RESET}\r"
         sleep 1
