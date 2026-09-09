@@ -263,8 +263,8 @@ configure_governor_profile() {
         clear
     echo ""
     echo -e "  ${CYAN}╔═════════════════════════════════════════════════════════════════════════════════════════════╗${NC}"
-    echo -e "  ${CYAN}║               ${BOLD}${BICyan}BC-250 SILICON GOVERNOR & PERFORMANCE PROFILE MANAGER${NC}                ${CYAN}║${NC}"
-    echo -e "  ${CYAN}║                    ${DIM}* HARDWARE SPECIFICATIONS AUDIT WIZARD *${NC}                          ${CYAN}║${NC}"
+    echo -e "  ${CYAN}║               ${BOLD}${BICyan}BC-250 SILICON GOVERNOR & PERFORMANCE PROFILE MANAGER${NC}                           ${CYAN}║${NC}"
+    echo -e "  ${CYAN}║                    ${DIM}* HARDWARE SPECIFICATIONS AUDIT WIZARD *${NC}                                    ${CYAN}║${NC}"
     echo -e "  ${CYAN}╚═════════════════════════════════════════════════════════════════════════════════════════════╝${NC}"
     echo ""
     echo -e "  ${CYAN}╔═ Dynamic Telemetry Scanner ═════════════════════════════════════════════════════════════════╗${NC}"
@@ -303,16 +303,16 @@ configure_governor_profile() {
     local live_threads=$(nproc 2>/dev/null || echo "12")
     local detected_cores=$(( live_threads / 2 ))
     
-    echo -e "  ${CYAN}║${NC}   ${BOLD}${GREEN}✔ ACTIVE HARDWARE IDENTIFIED:${NC} ${detected_cus}/40 Compute Units  │  ${detected_cores} CPU Cores / ${live_threads} Threads   ${CYAN}║${NC}"
+    echo -e "  ${CYAN}║${NC}   ${BOLD}${GREEN}✔ ACTIVE HARDWARE IDENTIFIED:${NC} ${detected_cus}/40 Compute Units  │  ${detected_cores} CPU Cores / ${live_threads} Threads              ${CYAN}║${NC}"
     echo -e "  ${CYAN}╚═════════════════════════════════════════════════════════════════════════════════════════════╝${NC}"
     echo ""
 
         # 📋 AUDIT NO. 1: COOLING INFRASTRUCTURE
     echo -e "  ${CYAN}╔═ [1/5] HARDWARE AUDIT: COOLING INFRASTRUCTURE ══════════════════════════════════════════════╗${NC}"
-    echo -e "  ${CYAN}║${NC}  Select the physical cooling system configuration currently active on this node:          ${CYAN}║${NC}"
+    echo -e "  ${CYAN}║${NC}  Select the physical cooling system configuration currently active on this node:            ${CYAN}║${NC}"
     echo -e "  ${CYAN}╠═════════════════════════════════════════════════════════════════════════════════════════════╣${NC}"
-    echo -e "  ${CYAN}║${NC}   ${BIWhite}1)${NC} Stock / Factory OEM Basic Air Cooler                                                 ${CYAN}║${NC}"
-    echo -e "  ${CYAN}║${NC}   ${BIWhite}2)${NC} High-End Aftermarket Air Cooled (Heavy Fin Stack / High CFM Fans)                    ${CYAN}║${NC}"
+    echo -e "  ${CYAN}║${NC}   ${BIWhite}1)${NC} Stock / Factory OEM Basic Air Cooler                                                   ${CYAN}║${NC}"
+    echo -e "  ${CYAN}║${NC}   ${BIWhite}2)${NC} High-End Aftermarket Air Cooled (Heavy Fin Stack / High CFM Fans)                      ${CYAN}║${NC}"
     echo -e "  ${CYAN}║${NC}   ${BIWhite}3)${NC} Liquid Cooled / AIO Closed Loop / Custom Water Block                                   ${CYAN}║${NC}"
     echo -e "  ${CYAN}╚═════════════════════════════════════════════════════════════════════════════════════════════╝${NC}"
     echo ""
