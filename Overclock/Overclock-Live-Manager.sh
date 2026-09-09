@@ -786,11 +786,19 @@ launch_tuning_menu() {
                     if [[ ! "$loop_again" =~ ^[Yy]$ ]]; then echo -e "  ${YELLOW}Returning safely to tuning menu...${NC}"; sleep 1.5; break; fi
                 done
                 ;;
-            0|"") echo "Exiting."; exit 0 ;;
-            *) echo -e "${RED}Invalid option selected. Please enter [1-7, W].${NC}"; sleep 2 ;;
+            0|""|q|Q)
+                echo -e "\n  ${YELLOW}[←] Returning safely to Master Setup Tool layout...${NC}"
+                sleep 1.2
+                return 0
+                ;;
+            *)
+                echo -e "  ${RED}Invalid option selected. Please enter [1-7, W].${NC}"
+                sleep 2
+                ;;
         esac
     done
 }
+
 
 prompt_reboot() {
     echo ""
