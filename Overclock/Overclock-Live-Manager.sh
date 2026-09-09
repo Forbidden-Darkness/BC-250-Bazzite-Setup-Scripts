@@ -739,21 +739,50 @@ launch_tuning_menu() {
                     echo ""
                     echo -e "  ${RED}[⚠] CRITICAL SAFETY BOUNDARY: NEVER EXCEED 1325 mV CORE VOLTAGE UNDER ANY CIRCUMSTANCES!${NC}"
                     echo ""
+                                        # ==============================================================================
+                    # HARDENED INPUT VALIDATION FILTERS (ENFORCING 2600MHz CEILING HOODS)
+                    # ==============================================================================
                     while true; do
-                        read -p "  Enter Target Frequency (MHz) [e.g., 3000]: " custom_freq
-                        if [[ "$custom_freq" =~ ^[0-9]+$ ]] && [ "$custom_freq" -gt 0 ]; then break
-                        else echo -e "  ${RED}Invalid input. Please enter a valid number for MHz.${NC}"; fi
+                        read -p "  Enter Target Frequency (MHz) [2600 - 3850]: " custom_freq
+                        if [[ "$custom_freq" =~ ^[0-9]+$ ]]; then
+                            if [ "$custom_freq" -lt 2600 ]; then
+                                echo -e "  ${RED}SAFETY ERROR: Target cannot be below the 2600 MHz ECO floor!${NC}"
+                            elif [ "$custom_freq" -gt 3850 ]; then
+                                echo -e "  ${RED}SAFETY ERROR: Target cannot exceed the 3850 MHz maximum ceiling!${NC}"
+                            else
+                                break
+                            fi
+                        else
+                            echo -e "  ${RED}Invalid input. Please enter a valid number for MHz.${NC}"
+                        fi
                     done
+
                     while true; do
-                        read -p "  Enter Target Voltage (mV / VID) [e.g., 945]: " custom_vid
-                        if [[ "$custom_vid" =~ ^[0-9]+$ ]] && [ "$custom_vid" -gt 0 ]; then
-                            if [ "$custom_vid" -gt 1325 ]; then echo -e "  ${RED}SAFETY ERROR: Voltage cannot exceed 1325 mV!${NC}"; else break; fi
-                        else echo -e "  ${RED}Invalid input. Please enter a valid number for mV.${NC}"; fi
+                        read -p "  Enter Target Voltage (mV / VID) [800 - 1325]: " custom_vid
+                        if [[ "$custom_vid" =~ ^[0-9]+$ ]]; then
+                            if [ "$custom_vid" -lt 800 ]; then
+                                echo -e "  ${RED}SAFETY ERROR: Target cannot drop below the 800 mV efficiency floor!${NC}"
+                            elif [ "$custom_vid" -gt 1325 ]; then
+                                echo -e "  ${RED}SAFETY ERROR: Voltage cannot exceed the absolute 1325 mV threshold!${NC}"
+                            else
+                                break
+                            fi
+                        else
+                            echo -e "  ${RED}Invalid input. Please enter a valid number for mV.${NC}"
+                        fi
                     done
+
                     while true; do
-                        read -p "  Enter Max Temperature Target (°C) [e.g., 80]: " custom_temp
-                        if [[ "$custom_temp" =~ ^[0-9]+$ ]] && [ "$custom_temp" -gt 0 ] && [ "$custom_temp" -lt 105 ]; then break
-                        else echo -e "  ${RED}Invalid input. Please enter a safe temperature limit below 105°C.${NC}"; fi
+                        read -p "  Enter Max Temperature Target (°C) [60 - 95]: " custom_temp
+                        if [[ "$custom_temp" =~ ^[0-9]+$ ]]; then
+                            if [ "$custom_temp" -lt 60 ] || [ "$custom_temp" -gt 95 ]; then
+                                echo -e "  ${RED}SAFETY ERROR: Temperature limit must sit between 60°C and 95°C!${NC}"
+                            else
+                                break
+                            fi
+                        else
+                            echo -e "  ${RED}Invalid input. Please enter a safe temperature limit.${NC}"
+                        fi
                     done
                     log "${GREEN}Running custom tuning profile optimization...${NC}"
                     
