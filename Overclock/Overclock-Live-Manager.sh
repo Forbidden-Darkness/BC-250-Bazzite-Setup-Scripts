@@ -622,11 +622,11 @@ run_preset_stress_flow() {
     echo -e "\n  ${YELLOW}[●] Initializing Silicon Stability Sweep Utilizing ${target_threads} Active Threads...${NC}"
     
     # Spawns stress silently into a background process thread block
-    stress --cpu "$target_threads" --timeout 150 >> "$LOG_FILE" 2>&1 &
+    stress --cpu "$target_threads" --timeout 10 >> "$LOG_FILE" 2>&1 &
     local stress_pid=$!
     
     # Universal Countdown Loop Tracker
-    local seconds_left=150
+    local seconds_left=10
     while kill -0 "$stress_pid" 2>/dev/null; do
         echo -ne "      Stability validation testing in progress... ${RED}${seconds_left}s${CYAN} remaining...${RESET}\r"
         sleep 1
@@ -671,30 +671,30 @@ launch_tuning_menu() {
         case "$tune_choice" in
             1) 
                 log "${GREEN}Launching 40/40 CU extreme overclock...${NC}"
-                bc250-detect --frequency 3500 --vid 1000 -t 85 --keep >/dev/null 2>&1                               
+                bc250-detect --frequency 3500 --vid 1000 -t 85 --keep
                 run_preset_stress_flow
                 ;;
             2) 
                 log "${GREEN}Launching 40/40 CU high-efficiency profile...${NC}"
                 # Quiet pass sets the configuration layout using safe baseline clock
-                bc250-detect --frequency 3000 --vid 920 -t 78 --keep >/dev/null 2>&1                            
+                bc250-detect --frequency 3000 --vid 920 -t 78 --keep
                 run_preset_stress_flow 
                 ;;
             3) 
                 log "${GREEN}Launching 38/40 CU extreme overclock...${NC}"
-                bc250-detect --frequency 3500 --vid 1020 -t 85 --keep >/dev/null 2>&1                              
+                bc250-detect --frequency 3500 --vid 1020 -t 85 --keep
                 run_preset_stress_flow
                 ;;
             4) 
                 log "${GREEN}Launching 38/40 CU balanced gaming sweet spot...${NC}"
                 # Quiet pass sets the configuration layout using safe baseline clock
-                bc250-detect --frequency 3000 --vid 945 -t 80 --keep >/dev/null 2>&1                
+                bc250-detect --frequency 3000 --vid 945 -t 80 --keep
                 run_preset_stress_flow 
                 ;;
             5) 
                 log "${GREEN}Launching 36/40 CU silent eco profile...${NC}"
                 # Quiet pass sets the configuration layout using safe baseline clock
-                bc250-detect --frequency 2800 --vid 890 -t 75 --keep >/dev/null 2>&1                
+                bc250-detect --frequency 2800 --vid 890 -t 75 --keep
                 run_preset_stress_flow 
                 ;;
             6|7)
