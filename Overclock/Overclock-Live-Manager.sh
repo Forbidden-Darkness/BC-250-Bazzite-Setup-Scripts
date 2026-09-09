@@ -665,7 +665,7 @@ launch_tuning_menu() {
         echo -e "    ${BIGreen}6) Manual Custom Profile${NC}       ${BIBlack}(Fill MHz, mV, Max Temp manually)${NC}"
         echo -e "    ${BIGreen}7) Manual Custom Sandbox${NC}       ${BIBlack}(Test parameters safely without saving)${NC}"
         echo ""
-        echo -e "    ${RED}↵) Return to Main Menu${NC}         ${BIBlack}(Skip auto-tuning routine)${NC}"
+        echo -e "    ${RED}↵) Return to BC-250 CPU OVERCLOCK & Compute Unit Live Manager Setup Tool ${NC}         ${BIBlack}(Skip auto-tuning routine)${NC}"
         echo -e "  ${BIBlack}─────────────────────────────────────────────────────────────────────${NC}"
         echo ""
         read -p "  Enter selection [1-7, W, ↵]: " tune_choice
